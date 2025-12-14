@@ -33,10 +33,10 @@ const Activities = () => {
 
   // Catégories avec classes CSS fixes
   const categories = [
-    { id: 'all', name: 'Toutes les activités', icon: '🏔️' },
-    { id: 'ski', name: 'Ski & Snowboard', icon: '⛷️' },
-    { id: 'randonnee', name: 'Randonnée', icon: '🥾' },
-    { id: 'escalade', name: 'Escalade', icon: '🧗‍♂️' },
+    { id: 'all', name: 'Toutes les activités', icon: '' },
+    { id: 'ski', name: 'Ski & Snowboard', icon: '' },
+    { id: 'randonnee', name: 'Randonnée', icon: '' },
+    { id: 'escalade', name: 'Escalade', icon: '' },
   ];
 
   // Filtrer les activités
@@ -237,8 +237,8 @@ const Activities = () => {
                       color: 'white',
                       fontSize: '1.5rem'
                     }}>
-                      {category === 'ski' ? '⛷️' : 
-                       category === 'randonnee' ? '🥾' : '🧗‍♂️'}
+                      {category === 'ski' ? '' : 
+                       category === 'randonnee' ? '' : ''}
                     </div>
                     <div>
                       <h2 style={{ marginBottom: '0.25rem' }}>

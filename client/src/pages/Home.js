@@ -1,4 +1,4 @@
-// src/pages/Home.js - VERSION AVEC NOUVEAU CSS PROFESSIONNEL
+// src/pages/Home.js - VERSION CORRIGÉE
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ActivityCard from '../components/ActivityCard';
@@ -22,17 +22,46 @@ const Home = () => {
   return (
     <div>
       {/* Hero Section */}
-      <section className="section-lg bg-gray-50">
+      <section style={{
+        padding: '10rem 0',
+        backgroundColor: 'var(--white)'
+      }}>
         <div className="container">
-          <div className="text-center animate-fadeIn">
-            <h1 className="mb-4">
-              Aventures Alpines
+          <div style={{ 
+            textAlign: 'center',
+            animation: 'fadeInUp 0.8s ease-out'
+          }}>
+            <h1 style={{
+              fontSize: '4rem',
+              fontWeight: 300,
+              letterSpacing: '-0.03em',
+              textTransform: 'uppercase',
+              marginBottom: '2rem',
+              color: 'var(--black-soft)'
+            }}>
+              AVENTURES ALPINES
             </h1>
-            <p className="lead mb-6 max-w-2xl mx-auto">
+            
+            <p style={{
+              fontSize: '1.25rem',
+              color: 'var(--charcoal)',
+              fontWeight: 300,
+              letterSpacing: '0.01em',
+              lineHeight: 1.8,
+              maxWidth: '42rem',
+              margin: '0 auto 3rem auto',
+              textAlign: 'center'
+            }}>
               Découvrez les plus belles activités de montagne dans les Alpes.
               Expériences uniques pour tous les niveaux.
             </p>
-            <div className="flex gap-4 justify-center">
+            
+            <div style={{
+              display: 'flex',
+              gap: '1.5rem',
+              justifyContent: 'center',
+              alignItems: 'center'
+            }}>
               <button className="btn btn-primary btn-lg">
                 Découvrir
               </button>
@@ -47,30 +76,65 @@ const Home = () => {
       {/* Featured Activities */}
       <section className="section">
         <div className="container">
-          <div className="text-center mb-10">
-            <h2 className="mb-4">Activités sélectionnées</h2>
-            <p className="text-gray max-w-xl mx-auto">
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: 300,
+              marginBottom: '1rem',
+              paddingBottom: '0.75rem',
+              borderBottom: '1px solid var(--platinum)',
+              textAlign: 'center'
+            }}>
+              Activités sélectionnées
+            </h2>
+            <p style={{
+              color: 'var(--charcoal)',
+              maxWidth: '36rem',
+              margin: '0 auto',
+              textAlign: 'center'
+            }}>
               Nos meilleures expériences, soigneusement choisies pour vous.
             </p>
           </div>
 
           {loading ? (
-            <div className="text-center p-12">
-              <div className="inline-block w-12 h-12 border-4 border-gray-200 border-t-primary rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray">Chargement des activités...</p>
+            <div style={{ textAlign: 'center', padding: '3rem' }}>
+              <div style={{
+                display: 'inline-block',
+                width: '2rem',
+                height: '2rem',
+                border: '2px solid var(--gray-medium)',
+                borderTopColor: 'var(--black)',
+                borderRadius: 0,
+                animation: 'spin 1s linear infinite',
+                marginBottom: '1rem'
+              }}></div>
+              <p style={{ color: 'var(--gray-dark)' }}>Chargement des activités...</p>
             </div>
           ) : (
             <>
-              <div className="grid grid-3 gap-8 mb-10">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '2rem',
+                marginBottom: '3rem'
+              }}>
                 {activities.slice(0, 3).map((activity, index) => (
-                  <ActivityCard key={activity.id || index} activity={activity} />
+                  <ActivityCard 
+                    key={activity.id || index} 
+                    activity={activity}
+                  />
                 ))}
               </div>
 
-              <div className="text-center">
+              <div style={{ textAlign: 'center' }}>
                 <a 
                   href="/activities" 
                   className="btn btn-secondary"
+                  style={{
+                    display: 'inline-block',
+                    textDecoration: 'none'
+                  }}
                 >
                   Voir toutes les activités →
                 </a>
@@ -81,42 +145,78 @@ const Home = () => {
       </section>
 
       {/* Features */}
-      <section className="section bg-gray-50">
+      <section style={{
+        padding: '6rem 0',
+        backgroundColor: 'var(--white-smoke)'
+      }}>
         <div className="container">
-          <div className="text-center mb-12">
-            <h2 className="mb-4">Pourquoi nous choisir</h2>
-            <p className="text-gray max-w-xl mx-auto">
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: 300,
+              marginBottom: '1rem',
+              paddingBottom: '0.75rem',
+              borderBottom: '1px solid var(--platinum)',
+              textAlign: 'center'
+            }}>
+              Pourquoi nous choisir
+            </h2>
+            <p style={{
+              color: 'var(--charcoal)',
+              maxWidth: '36rem',
+              margin: '0 auto',
+              textAlign: 'center'
+            }}>
               Tout ce qui fait de nous votre partenaire idéal pour l'aventure en montagne.
             </p>
           </div>
           
-          <div className="grid grid-3 gap-8">
-            <div className="card p-8 text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-6">
-                ⛰️
-              </div>
-              <h3 className="mb-4">Expériences uniques</h3>
-              <p className="text-gray">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '2rem'
+          }}>
+            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+     
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: 400,
+                marginBottom: '1rem',
+                color: 'var(--black-soft)'
+              }}>
+                Expériences uniques
+              </h3>
+              <p style={{ color: 'var(--charcoal)' }}>
                 Des activités soigneusement sélectionnées pour leur qualité et leur originalité.
               </p>
             </div>
             
-            <div className="card p-8 text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-6">
-                👨‍🏫
-              </div>
-              <h3 className="mb-4">Guides experts</h3>
-              <p className="text-gray">
+            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: 400,
+                marginBottom: '1rem',
+                color: 'var(--black-soft)'
+              }}>
+                Guides experts
+              </h3>
+              <p style={{ color: 'var(--charcoal)' }}>
                 Accompagnement par des professionnels certifiés et passionnés.
               </p>
             </div>
             
-            <div className="card p-8 text-center">
-              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white text-2xl mx-auto mb-6">
-                🏔️
-              </div>
-              <h3 className="mb-4">Lieux exceptionnels</h3>
-              <p className="text-gray">
+            <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+ 
+              <h3 style={{
+                fontSize: '1.5rem',
+                fontWeight: 400,
+                marginBottom: '1rem',
+                color: 'var(--black-soft)'
+              }}>
+                Lieux exceptionnels
+              </h3>
+              <p style={{ color: 'var(--charcoal)' }}>
                 Accès aux plus beaux sites des Alpes, préservés et authentiques.
               </p>
             </div>
@@ -127,68 +227,71 @@ const Home = () => {
       {/* Stats */}
       <section className="section">
         <div className="container">
-          <div className="grid grid-3 gap-8 max-w-3xl mx-auto">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-primary mb-2">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '2rem',
+            maxWidth: '48rem',
+            margin: '0 auto'
+          }}>
+            <div style={{ textAlign: 'center', padding: '1.5rem', border: '1px solid var(--gray-light)' }}>
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: 300,
+                letterSpacing: '-0.02em',
+                marginBottom: '0.5rem',
+                color: 'var(--black-soft)'
+              }}>
                 {activities.length}
               </div>
-              <div className="text-gray font-medium">Activités</div>
+              <div style={{
+                color: 'var(--gray-dark)',
+                fontSize: '0.875rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                Activités
+              </div>
             </div>
             
-            <div className="text-center">
-              <div className="text-5xl font-bold text-primary mb-2">
+            <div style={{ textAlign: 'center', padding: '1.5rem', border: '1px solid var(--gray-light)' }}>
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: 300,
+                letterSpacing: '-0.02em',
+                marginBottom: '0.5rem',
+                color: 'var(--black-soft)'
+              }}>
                 100%
               </div>
-              <div className="text-gray font-medium">Satisfaction</div>
+              <div style={{
+                color: 'var(--gray-dark)',
+                fontSize: '0.875rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                Satisfaction
+              </div>
             </div>
             
-            <div className="text-center">
-              <div className="text-5xl font-bold text-primary mb-2">
+            <div style={{ textAlign: 'center', padding: '1.5rem', border: '1px solid var(--gray-light)' }}>
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: 300,
+                letterSpacing: '-0.02em',
+                marginBottom: '0.5rem',
+                color: 'var(--black-soft)'
+              }}>
                 24/7
               </div>
-              <div className="text-gray font-medium">Support</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projet BTS */}
-      <section className="section bg-gray-50">
-        <div className="container">
-          <div className="card p-8 max-w-3xl mx-auto">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-white text-xl">
-                📋
+              <div style={{
+                color: 'var(--gray-dark)',
+                fontSize: '0.875rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                Support
               </div>
-              <div>
-                <h3 className="mb-1">Projet BTS SLAM</h3>
-                <p className="text-gray text-sm">
-                  Aventures Alpines - Site éducatif
-                </p>
-              </div>
-            </div>
-            
-            <p className="mb-6">
-              Ce site est développé dans le cadre du BTS Services Logiciels et Applications Métiers.
-              Une application complète avec frontend React, backend Node.js/Express et base de données MySQL.
-            </p>
-            
-            <div className="flex flex-wrap gap-3">
-              <span className="badge badge-primary">React</span>
-              <span className="badge badge-secondary">Node.js</span>
-              <span className="badge badge-success">Express</span>
-              <span className="badge badge-warning">MySQL</span>
-              <span className="badge badge-danger">Axios</span>
-              <span className="badge">JavaScript</span>
-              <span className="badge">CSS3</span>
-              <span className="badge">HTML5</span>
-            </div>
-            
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray">
-                <strong>Note pédagogique :</strong> Cette application démontre la maîtrise des compétences 
-                du BTS SLAM : développement full-stack, gestion de bases de données, API REST, et déploiement.
-              </p>
             </div>
           </div>
         </div>
