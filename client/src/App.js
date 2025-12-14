@@ -12,7 +12,7 @@ import Profile from './pages/Profile';
 import CreatePublication from './pages/CreatePublication';
 import Blog from './pages/Blog'; // ← IMPORT de la  VRAIE PAGE BLOG
 import './App.css';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+
 
 
 function App() {
