@@ -4,7 +4,7 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-    "build": "CI=false cd client && npm install && npm run build"
+    "build": "CI=false SKIP_PREFLIGHT_CHECK=true cd client && npm install && npm run build"
   },
   "dependencies": {},
   "engines": {
