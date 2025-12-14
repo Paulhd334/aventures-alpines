@@ -440,7 +440,24 @@ app.post('/api/publications', (req, res) => {
   });
 });
 
-
+// Dans server.js, ajoute :
+app.get('/api/publications', (req, res) => {
+  const sql = `
+    SELECT p.*, u.nom_utilisateur 
+    FROM publications p
+    JOIN utilisateurs u ON p.user_id = u.id
+    ORDER BY p.date_publication DESC
+  `;
+  
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('❌ Erreur récupération publications:', err.message);
+      res.status(500).json({ error: 'Erreur serveur' });
+    } else {
+      res.json(results);
+    }
+  });
+});
 
 // GET toutes les activités
 app.get('/api/activites', (req, res) => {
