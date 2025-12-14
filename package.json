@@ -1,0 +1,1 @@
+{"name":"aventures-alpines","version":"1.0.0","main":"server/server.js","scripts":{"start":"node server/server.js","build":"cd server && npm ci"},"dependencies":{},"engines":{"node":">=18.0.0"}} 
