@@ -8,18 +8,18 @@ const jwt = require('jsonwebtoken');
 // CONFIGURATION INITIALE
 // ====================
 const app = express();
-const PORT = 5000;
-const SECRET_KEY = 'votre_secret_jwt_aventures_alpines_2024'; // À changer en production
+const PORT = process.env.PORT || 5000;
+const SECRET_KEY = process.env.JWT_SECRET || 'votre_secret_jwt_aventures_alpines_2024';
 
 // ====================
-// CONFIGURATION MAMP
+// CONFIGURATION RAILWAY MYSQL
 // ====================
 const db = mysql.createConnection({
-  host: 'localhost',
+  host: 'centerbeam.proxy.rlwy.net',
   user: 'root',
-  password: 'root',
-  database: 'aventures_alpines',
-  port: 8889,
+  password: 'NnpQXlvkNUHHyOaawaikRbzkPTwTBzqL', // ⚠️ À CHANGER !
+  database: 'railway', // Par défaut Railway nomme la base "railway"
+  port: 11303,
   connectTimeout: 10000
 });
 
@@ -36,19 +36,20 @@ app.use(cors({
 app.use(express.json());
 
 // ====================
-// TEST CONNEXION MAMP
+// TEST CONNEXION RAILWAY MYSQL
 // ====================
 db.connect((err) => {
   if (err) {
-    console.error('❌ Erreur connexion MySQL MAMP:', err.message);
+    console.error('❌ Erreur connexion MySQL Railway:', err.message);
     console.log('📌 Vérifiez que:');
-    console.log('   1. MAMP est démarré');
-    console.log('   2. MySQL tourne sur le port 8889');
-    console.log('   3. La base "aventures_alpines" existe dans phpMyAdmin');
+    console.log('   1. Le service MySQL est actif sur Railway');
+    console.log('   2. Les credentials sont corrects');
+    console.log('   3. La base de données existe');
+    console.log('   Host: centerbeam.proxy.rlwy.net:11303');
   } else {
-    console.log('✅ Connecté à MySQL MAMP!');
-    console.log('   Host: localhost:8889');
-    console.log('   Base: aventures_alpines');
+    console.log('✅ Connecté à MySQL Railway!');
+    console.log('   Host: centerbeam.proxy.rlwy.net:11303');
+    console.log('   Base: railway');
     setupAllTables();
   }
 });
@@ -117,6 +118,50 @@ async function setupAllTables() {
       });
     }
   });
+
+  // Créer la table publications
+  const createPublicationsTableSQL = `
+    CREATE TABLE IF NOT EXISTS publications (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      user_id INT NOT NULL,
+      titre VARCHAR(200) NOT NULL,
+      contenu TEXT NOT NULL,
+      type ENUM('article', 'photo', 'recit', 'conseil') DEFAULT 'recit',
+      image_url VARCHAR(255),
+      lieu VARCHAR(100),
+      date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `;
+  
+  db.query(createPublicationsTableSQL, (err) => {
+    if (err) {
+      console.error('❌ Erreur création table publications:', err.message);
+    } else {
+      console.log('✅ Table "publications" vérifiée/créée');
+    }
+  });
+
+  // Créer la table contact_messages
+  const createContactTableSQL = `
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      nom VARCHAR(100) NOT NULL,
+      email VARCHAR(100) NOT NULL,
+      sujet VARCHAR(200) NOT NULL,
+      message TEXT NOT NULL,
+      date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      traite BOOLEAN DEFAULT FALSE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `;
+  
+  db.query(createContactTableSQL, (err) => {
+    if (err) {
+      console.error('❌ Erreur création table contact:', err.message);
+    } else {
+      console.log('✅ Table "contact_messages" vérifiée/créée');
+    }
+  });
 }
 
 // ====================
@@ -142,6 +187,29 @@ function insertSampleActivites() {
     }
   });
 }
+
+// ====================
+// DÉMARRAGE SERVEUR
+// ====================
+app.listen(PORT, () => {
+  console.log(`\n🚀 Serveur API démarré sur le port ${PORT}`);
+  console.log(`📡 Endpoints disponibles:`);
+  console.log(`   🔐 AUTH: /api/auth/register`);
+  console.log(`   🏔️ ACTIVITÉS: /api/activites`);
+  console.log(`\n📊 MySQL Railway: centerbeam.proxy.rlwy.net:11303`);
+  console.log(`👤 Base: railway`);
+  console.log(`\n🔄 Redémarrage automatique avec nodemon`);
+  console.log(`==============================================\n`);
+});
+
+// Gestion des erreurs non capturées
+process.on('uncaughtException', (err) => {
+  console.error('❌ Erreur non capturée:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Promesse rejetée non gérée:', reason);
+});
 
 // ====================
 // ROUTES D'AUTHENTIFICATION
@@ -343,41 +411,20 @@ app.get('/', (req, res) => {
         all: 'GET /api/activites',
         byId: 'GET /api/activites/:id',
         create: 'POST /api/activites'
+      },
+      publications: {
+        all: 'GET /api/publications',
+        create: 'POST /api/publications',
+        byUser: 'GET /api/users/:userId/publications'
+      },
+      contact: {
+        send: 'POST /api/contact'
       }
     }
   });
 });
 
-
-// ====================
-// ROUTES DES PUBLICATIONS
-// ====================
-
-// Créer la table publications si elle n'existe pas (AJOUTE CETTE LIGNE)
-const createPublicationsTableSQL = `
-  CREATE TABLE IF NOT EXISTS publications (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    titre VARCHAR(200) NOT NULL,
-    contenu TEXT NOT NULL,
-    type ENUM('article', 'photo', 'recit', 'conseil') DEFAULT 'recit',
-    image_url VARCHAR(255),
-    lieu VARCHAR(100),
-    date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-`;
-
-// Exécuter la création de table (AJOUTE CETTE FONCTION)
-db.query(createPublicationsTableSQL, (err) => {
-  if (err) {
-    console.error('❌ Erreur création table publications:', err.message);
-  } else {
-    console.log('✅ Table "publications" vérifiée/créée');
-  }
-});
-
-// Route pour récupérer les publications d'un utilisateur (AJOUTE CETTE ROUTE)
+// Route pour récupérer les publications d'un utilisateur
 app.get('/api/users/:userId/publications', (req, res) => {
   const userId = req.params.userId;
   
@@ -399,7 +446,7 @@ app.get('/api/users/:userId/publications', (req, res) => {
   });
 });
 
-// Route pour créer une publication (AJOUTE CETTE ROUTE)
+// Route pour créer une publication
 app.post('/api/publications', (req, res) => {
   // Vérifier l'authentification
   const authHeader = req.headers.authorization;
@@ -440,7 +487,7 @@ app.post('/api/publications', (req, res) => {
   });
 });
 
-// Dans server.js, ajoute :
+// Route pour récupérer toutes les publications
 app.get('/api/publications', (req, res) => {
   const sql = `
     SELECT p.*, u.nom_utilisateur 
@@ -457,29 +504,6 @@ app.get('/api/publications', (req, res) => {
       res.json(results);
     }
   });
-});
-
-// Dans server.js, ajoute cette table et route :
-
-// Créer la table contact_messages
-const createContactTableSQL = `
-  CREATE TABLE IF NOT EXISTS contact_messages (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    nom VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    sujet VARCHAR(200) NOT NULL,
-    message TEXT NOT NULL,
-    date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    traite BOOLEAN DEFAULT FALSE
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-`;
-
-db.query(createContactTableSQL, (err) => {
-  if (err) {
-    console.error('❌ Erreur création table contact:', err.message);
-  } else {
-    console.log('✅ Table "contact_messages" vérifiée/créée');
-  }
 });
 
 // Route pour recevoir les messages de contact
@@ -507,7 +531,6 @@ app.post('/api/contact', (req, res) => {
     }
   });
 });
-
 
 // GET toutes les activités
 app.get('/api/activites', (req, res) => {
@@ -563,27 +586,4 @@ app.post('/api/activites', (req, res) => {
       });
     }
   });
-});
-
-// ====================
-// DÉMARRAGE SERVEUR
-// ====================
-app.listen(PORT, () => {
-  console.log(`\n🚀 Serveur API démarré sur http://localhost:${PORT}`);
-  console.log(`📡 Endpoints disponibles:`);
-  console.log(`   🔐 AUTH: http://localhost:${PORT}/api/auth/register`);
-  console.log(`   🏔️ ACTIVITÉS: http://localhost:${PORT}/api/activites`);
-  console.log(`\n📊 MySQL: localhost:8889/aventures_alpines`);
-  console.log(`👤 User: root | Pass: root`);
-  console.log(`\n🔄 Redémarrage: Ctrl+C puis "npm run dev"`);
-  console.log(`==============================================\n`);
-});
-
-// Gestion des erreurs non capturées
-process.on('uncaughtException', (err) => {
-  console.error('❌ Erreur non capturée:', err);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Promesse rejetée non gérée:', reason);
 });
