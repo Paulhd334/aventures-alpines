@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Profile = () => {
@@ -231,16 +231,19 @@ const Profile = () => {
               marginBottom: '1.5rem'
             }}>
               <h2>Mes publications</h2>
-              <button style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#000',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}>
-                + Nouvelle publication
-              </button>
+              {/* BOUTON FONCTIONNEL : Nouvelle publication */}
+              <Link to="/blog/new" style={{ textDecoration: 'none' }}>
+                <button style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#000',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}>
+                  + Nouvelle publication
+                </button>
+              </Link>
             </div>
             
             {publications.length === 0 ? (
@@ -253,16 +256,19 @@ const Profile = () => {
                 <p style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>
                   Vous n'avez pas encore publié d'expérience
                 </p>
-                <button style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#000',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}>
-                  Publier ma première expérience
-                </button>
+                {/* BOUTON FONCTIONNEL : Publier première expérience */}
+                <Link to="/blog/new" style={{ textDecoration: 'none' }}>
+                  <button style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#000',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}>
+                    Publier ma première expérience
+                  </button>
+                </Link>
               </div>
             ) : (
               <div style={{ display: 'grid', gap: '1rem' }}>

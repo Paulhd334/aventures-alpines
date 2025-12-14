@@ -348,6 +348,100 @@ app.get('/', (req, res) => {
   });
 });
 
+
+// ====================
+// ROUTES DES PUBLICATIONS
+// ====================
+
+// Créer la table publications si elle n'existe pas (AJOUTE CETTE LIGNE)
+const createPublicationsTableSQL = `
+  CREATE TABLE IF NOT EXISTS publications (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    titre VARCHAR(200) NOT NULL,
+    contenu TEXT NOT NULL,
+    type ENUM('article', 'photo', 'recit', 'conseil') DEFAULT 'recit',
+    image_url VARCHAR(255),
+    lieu VARCHAR(100),
+    date_publication TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES utilisateurs(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+`;
+
+// Exécuter la création de table (AJOUTE CETTE FONCTION)
+db.query(createPublicationsTableSQL, (err) => {
+  if (err) {
+    console.error('❌ Erreur création table publications:', err.message);
+  } else {
+    console.log('✅ Table "publications" vérifiée/créée');
+  }
+});
+
+// Route pour récupérer les publications d'un utilisateur (AJOUTE CETTE ROUTE)
+app.get('/api/users/:userId/publications', (req, res) => {
+  const userId = req.params.userId;
+  
+  const sql = `
+    SELECT p.*, u.nom_utilisateur 
+    FROM publications p
+    JOIN utilisateurs u ON p.user_id = u.id
+    WHERE p.user_id = ?
+    ORDER BY p.date_publication DESC
+  `;
+  
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error('❌ Erreur publications:', err.message);
+      res.status(500).json({ error: 'Erreur serveur' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
+// Route pour créer une publication (AJOUTE CETTE ROUTE)
+app.post('/api/publications', (req, res) => {
+  // Vérifier l'authentification
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  let userId;
+  
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    userId = decoded.userId;
+  } catch (error) {
+    return res.status(401).json({ error: 'Token invalide' });
+  }
+
+  const { titre, contenu, type, image_url, lieu } = req.body;
+  
+  // Validation
+  if (!titre || !contenu) {
+    return res.status(400).json({ error: 'Titre et contenu requis' });
+  }
+
+  const sql = 'INSERT INTO publications (user_id, titre, contenu, type, image_url, lieu) VALUES (?, ?, ?, ?, ?, ?)';
+  const values = [userId, titre, contenu, type || 'recit', image_url, lieu];
+  
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('❌ Erreur création publication:', err.message);
+      res.status(500).json({ error: 'Erreur création publication' });
+    } else {
+      res.status(201).json({ 
+        message: 'Publication créée avec succès',
+        id: result.insertId 
+      });
+    }
+  });
+});
+
+
+
 // GET toutes les activités
 app.get('/api/activites', (req, res) => {
   const sql = 'SELECT * FROM activites ORDER BY created_at DESC';

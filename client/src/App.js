@@ -9,6 +9,7 @@ import Contact from './pages/Contact';
 import Login from './pages/Login'; // IMPORTE de Login
 import Register from './pages/Register'; // IMPORTE de Register
 import Profile from './pages/Profile';  // Importation du profil utilisateur
+import CreatePublication from './pages/CreatePublication';
 import './App.css';
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="/login" element={<Login />} /> {/* AJOUTÉ ICI */}
             <Route path="/register" element={<Register />} /> {/* AJOUTÉ ICI */}
             <Route path="/profile" element={<Profile />} />
+            <Route path="/blog/new" element={<CreatePublication />} />
             <Route path="/blog" element={
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <h2>📰 Blog Aventures Alpines</h2>
