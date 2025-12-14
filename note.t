@@ -14,6 +14,6 @@ git push
 
 git add .
 
-git commit -m "Le message"
+git commit -m "Add files"
 
 git push

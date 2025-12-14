@@ -95,14 +95,18 @@ function setupDatabase() {
 function insertSampleData() {
   const activites = [
     // nom, type, difficulte, description, image_url, lieu, prix, duree, saison
-    ['Ski alpin à Chamonix', 'ski', 'Intermédiaire', 'Des pistes mythiques pour tous les niveaux', 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=400&h=250&fit=crop', 'Chamonix', 45.00, '1 journée', 'Hiver'],
-    ['Randonnée du Lac Blanc', 'randonnee', 'Facile', 'Randonnée familiale avec vue magnifique', 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=250&fit=crop', 'Argentière', 25.00, '3h30', 'Été'],
-    ['Escalade aux Drus', 'escalade', 'Expert', 'Voies techniques en haute montagne', 'https://images.unsplash.com/photo-1519627913492-3f77d9ec0e20?w=400&h=250&fit=crop', 'Les Drus', 120.00, '8-10 heures', 'Été'],
-    ['Ski de fond aux Contamines', 'ski', 'Débutant', '100km de pistes damées', 'https://images.unsplash.com/photo-1543321269-9d86d3680e1c?w=400&h=250&fit=crop', 'Les Contamines', 25.00, '1 journée', 'Hiver'],
-    ['Via Ferrata du Brevent', 'escalade', 'Intermédiaire', 'Parcours sécurisé avec échelles', 'https://images.unsplash.com/photo-1559295807-7d10f5370e82?w=400&h=250&fit=crop', 'Chamonix', 65.00, '4 heures', 'Été'],
-    ['Raquettes au Col de Balme', 'randonnee', 'Facile', 'Balade en raquettes', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&h=250&fit=crop', 'Col de Balme', 35.00, '2h30', 'Hiver']
+    ['Ski alpin à Chamonix', 'ski', 'Intermédiaire', 'Des pistes mythiques pour tous les niveaux', 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80', 'Chamonix', 45.00, '1 journée', 'Hiver'],
+    
+    ['Randonnée du Lac Blanc', 'randonnee', 'Facile', 'Randonnée familiale avec vue magnifique', 'https://images.unsplash.com/photo-1601224748193-d24f166b5c77?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Argentière', 25.00, '3h30', 'Été'],
+    
+    ['Escalade aux Drus', 'escalade', 'Expert', 'Voies techniques en haute montagne', 'https://images.unsplash.com/photo-1601224748193-d24f166b5c77?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Les Drus', 120.00, '8-10 heures', 'Été'],
+    
+    ['Ski de fond aux Contamines', 'ski', 'Débutant', '100km de pistes damées', 'https://images.unsplash.com/photo-1645999139629-9fd6e5128a17?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Les Contamines', 25.00, '1 journée', 'Hiver'],
+    
+    ['Via Ferrata du Brevent', 'escalade', 'Intermédiaire', 'Parcours sécurisé avec échelles', 'https://images.unsplash.com/photo-1597250861267-429663f244a8?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Chamonix', 65.00, '4 heures', 'Été'],
+    
+    ['Raquettes au Col de Balme', 'randonnee', 'Facile', 'Balade en raquettes', 'https://images.unsplash.com/photo-1728081931321-259cebd46e2c?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Col de Balme', 35.00, '2h30', 'Hiver']
   ];
-  
   const sql = 'INSERT INTO activites (nom, type, difficulte, description, image_url, lieu, prix, duree, saison) VALUES ?';
   
   db.query(sql, [activites], (err, result) => {
