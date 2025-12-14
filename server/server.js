@@ -97,6 +97,20 @@ function diagnosticComplet() {
   });
 }
 
+const path = require('path');
+
+// Sert React build
+app.use(express.static(path.join(__dirname, '../client/build')));
+
+// Toutes les autres routes non API → React
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api')) {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  }
+});
+
+
+
 // ====================
 // CRÉATION FORCÉE DES TABLES
 // ====================
