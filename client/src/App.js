@@ -10,8 +10,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import CreatePublication from './pages/CreatePublication';
-import Blog from './pages/Blog'; // ← IMPORTE LA VRAIE PAGE BLOG
+import Blog from './pages/Blog'; // ← IMPORT de la  VRAIE PAGE BLOG
 import './App.css';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+
 
 function App() {
   return (
