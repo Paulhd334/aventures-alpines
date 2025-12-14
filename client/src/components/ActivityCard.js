@@ -1,6 +1,17 @@
 import React from 'react';
 
 const ActivityCard = ({ activity }) => {
+  // Compatibilité avec les deux formats de données
+  const name = activity.name || activity.nom;
+  const difficulty = activity.difficulty || activity.difficulte;
+  const description = activity.description;
+  const image = activity.image || activity.image_url;  // ← ICI LE CHANGEMENT
+  const price = activity.price || activity.prix;
+  const duration = activity.duration || activity.duree;
+  const location = activity.location || activity.lieu;
+  const type = activity.type;
+  const season = activity.season || activity.saison;
+
   const cardStyle = {
     backgroundColor: 'var(--white)',
     border: '1px solid var(--gray-light)',
@@ -38,12 +49,15 @@ const ActivityCard = ({ activity }) => {
       display: 'inline-block'
     };
 
-    switch(difficulty) {
-      case 'Facile':
+    const diff = difficulty || '';
+    switch(diff.toLowerCase()) {
+      case 'facile':
+      case 'débutant':
         return { ...baseStyle, borderColor: 'var(--gray-medium)', color: 'var(--gray-dark)' };
-      case 'Intermédiaire':
+      case 'intermédiaire':
         return { ...baseStyle, borderColor: 'var(--gray-dark)', color: 'var(--charcoal)' };
-      case 'Difficile':
+      case 'difficile':
+      case 'expert':
         return { ...baseStyle, borderColor: 'var(--black)', color: 'var(--black)' };
       default:
         return { ...baseStyle, borderColor: 'var(--gray-light)', color: 'var(--gray-medium)' };
@@ -72,10 +86,14 @@ const ActivityCard = ({ activity }) => {
       {/* Image */}
       <div style={imageContainerStyle}>
         <img 
-          src={activity.image} 
-          alt={activity.name}
+          src={image || '/default-mountain.jpg'} // Image par défaut si aucune
+          alt={name}
           className="card-image"
           style={imageStyle}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = '/default-mountain.jpg';
+          }}
         />
         {/* Badge de difficulté */}
         <div style={{
@@ -83,10 +101,27 @@ const ActivityCard = ({ activity }) => {
           top: '1rem',
           right: '1rem'
         }}>
-          <span style={getDifficultyStyle(activity.difficulty)}>
-            {activity.difficulty}
+          <span style={getDifficultyStyle(difficulty)}>
+            {difficulty || 'N/A'}
           </span>
         </div>
+        
+        {/* Badge de type */}
+        {type && (
+          <div style={{
+            position: 'absolute',
+            top: '1rem',
+            left: '1rem',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: '0.25rem 0.75rem',
+            fontSize: '0.75rem',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }}>
+            {type}
+          </div>
+        )}
       </div>
 
       {/* Contenu */}
@@ -105,19 +140,23 @@ const ActivityCard = ({ activity }) => {
           marginBottom: '0.75rem',
           transition: 'font-weight var(--transition-fast)'
         }}>
-          {activity.name}
+          {name || 'Activité'}
         </h3>
 
         {/* Description */}
-        <p style={{
-          fontSize: '0.875rem',
-          color: 'var(--charcoal)',
-          lineHeight: 1.6,
-          marginBottom: '1rem',
-          flex: 1
-        }}>
-          {activity.description}
-        </p>
+        {description && (
+          <p style={{
+            fontSize: '0.875rem',
+            color: 'var(--charcoal)',
+            lineHeight: 1.6,
+            marginBottom: '1rem',
+            flex: 1
+          }}>
+            {description.length > 120 
+              ? `${description.substring(0, 120)}...` 
+              : description}
+          </p>
+        )}
 
         {/* Métadonnées */}
         <div style={{
@@ -129,45 +168,55 @@ const ActivityCard = ({ activity }) => {
           alignItems: 'center'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ 
-                fontSize: '0.75rem', 
-                marginRight: '0.5rem',
-                opacity: 0.6
-              }}>⏱</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--gray-dark)' }}>
-                {activity.duration || '2-4h'}
-              </span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ 
-                fontSize: '0.75rem', 
-                marginRight: '0.5rem',
-                opacity: 0.6
-              }}>👤</span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--gray-dark)' }}>
-                {activity.participants || '1-8'}
-              </span>
-            </div>
+            {/* Durée */}
+            {duration && (
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ 
+                  fontSize: '0.75rem', 
+                  marginRight: '0.5rem',
+                  opacity: 0.6
+                }}>⏱</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-dark)' }}>
+                  {duration}
+                </span>
+              </div>
+            )}
+            
+            {/* Saison */}
+            {season && (
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ 
+                  fontSize: '0.75rem', 
+                  marginRight: '0.5rem',
+                  opacity: 0.6
+                }}>🌤️</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--gray-dark)' }}>
+                  {season}
+                </span>
+              </div>
+            )}
           </div>
 
           <div style={{ textAlign: 'right' }}>
+            {/* Prix */}
             <div style={{
               fontSize: '0.875rem',
               fontWeight: 300,
               letterSpacing: '0.02em'
             }}>
-              {activity.price || 'Sur devis'}
+              {price ? `${price}${typeof price === 'string' && !price.includes('€') ? '€' : ''}` : 'Sur devis'}
             </div>
-            <div style={{
-              fontSize: '0.75rem',
-              color: 'var(--gray-dark)',
-              marginTop: '0.25rem',
-              letterSpacing: '0.05em',
-              textTransform: 'uppercase'
-            }}>
-              Détails →
-            </div>
+            
+            {/* Lieu */}
+            {location && (
+              <div style={{
+                fontSize: '0.75rem',
+                color: 'var(--gray-dark)',
+                marginTop: '0.25rem'
+              }}>
+                📍 {location}
+              </div>
+            )}
           </div>
         </div>
       </div>

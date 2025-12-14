@@ -6,6 +6,9 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Activities from './pages/Activities';
 import Contact from './pages/Contact';
+import Login from './pages/Login'; // IMPORTE de Login
+import Register from './pages/Register'; // IMPORTE de Register
+import Profile from './pages/Profile';  // Importation du profil utilisateur
 import './App.css';
 
 function App() {
@@ -18,6 +21,9 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/activities" element={<Activities />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/login" element={<Login />} /> {/* AJOUTÉ ICI */}
+            <Route path="/register" element={<Register />} /> {/* AJOUTÉ ICI */}
+            <Route path="/profile" element={<Profile />} />
             <Route path="/blog" element={
               <div style={{ padding: '40px', textAlign: 'center' }}>
                 <h2>📰 Blog Aventures Alpines</h2>
