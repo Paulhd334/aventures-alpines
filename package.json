@@ -6,7 +6,9 @@
     "start": "node server/server.js",
     "build": "cd client && npm install && SKIP_PREFLIGHT_CHECK=true GENERATE_SOURCEMAP=false CI=false npx react-scripts build"
   },
-  "dependencies": {},
+  "dependencies": {
+    "http-proxy-middleware": "^3.0.5"
+  },
   "engines": {
     "node": ">=18.0.0"
   }

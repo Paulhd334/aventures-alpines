@@ -1,4 +1,4 @@
-// src/pages/Home.js - VERSION CORRIGÉE
+// src/pages/Home.js - VERSION FINALE PROPRE
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ActivityCard from '../components/ActivityCard';
@@ -6,11 +6,21 @@ import ActivityCard from '../components/ActivityCard';
 const Home = () => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [randomActivities, setRandomActivities] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/activites')
+    axios.get('/api/activites')
       .then(response => {
         setActivities(response.data);
+        
+        // Sélectionner 3 activités aléatoires
+        if (response.data.length > 0) {
+          const shuffled = [...response.data]
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
+          setRandomActivities(shuffled);
+        }
+        
         setLoading(false);
       })
       .catch(error => {
@@ -93,7 +103,7 @@ const Home = () => {
               margin: '0 auto',
               textAlign: 'center'
             }}>
-              Nos meilleures expériences, soigneusement choisies pour vous.
+              3 activités aléatoires parmi nos {activities.length} expériences
             </p>
           </div>
 
@@ -119,7 +129,7 @@ const Home = () => {
                 gap: '2rem',
                 marginBottom: '3rem'
               }}>
-                {activities.slice(0, 3).map((activity, index) => (
+                {randomActivities.map((activity, index) => (
                   <ActivityCard 
                     key={activity.id || index} 
                     activity={activity}
@@ -136,7 +146,7 @@ const Home = () => {
                     textDecoration: 'none'
                   }}
                 >
-                  Voir toutes les activités →
+                  Voir toutes les activités ({activities.length}) →
                 </a>
               </div>
             </>
@@ -177,7 +187,6 @@ const Home = () => {
             gap: '2rem'
           }}>
             <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-     
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 400,
@@ -192,7 +201,6 @@ const Home = () => {
             </div>
             
             <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
-
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 400,
@@ -207,7 +215,6 @@ const Home = () => {
             </div>
             
             <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
- 
               <h3 style={{
                 fontSize: '1.5rem',
                 fontWeight: 400,
@@ -296,6 +303,14 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Style pour l'animation de spin */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
