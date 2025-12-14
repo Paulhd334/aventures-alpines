@@ -459,6 +459,56 @@ app.get('/api/publications', (req, res) => {
   });
 });
 
+// Dans server.js, ajoute cette table et route :
+
+// Créer la table contact_messages
+const createContactTableSQL = `
+  CREATE TABLE IF NOT EXISTS contact_messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nom VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    sujet VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    date_envoi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    traite BOOLEAN DEFAULT FALSE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+`;
+
+db.query(createContactTableSQL, (err) => {
+  if (err) {
+    console.error('❌ Erreur création table contact:', err.message);
+  } else {
+    console.log('✅ Table "contact_messages" vérifiée/créée');
+  }
+});
+
+// Route pour recevoir les messages de contact
+app.post('/api/contact', (req, res) => {
+  const { nom, email, sujet, message } = req.body;
+  
+  // Validation
+  if (!nom || !email || !sujet || !message) {
+    return res.status(400).json({ error: 'Tous les champs sont requis' });
+  }
+
+  const sql = 'INSERT INTO contact_messages (nom, email, sujet, message) VALUES (?, ?, ?, ?)';
+  const values = [nom, email, sujet, message];
+  
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('❌ Erreur enregistrement contact:', err.message);
+      res.status(500).json({ error: 'Erreur serveur' });
+    } else {
+      console.log('📧 Message contact reçu:', { nom, email, sujet });
+      res.status(201).json({ 
+        message: 'Message envoyé avec succès',
+        id: result.insertId 
+      });
+    }
+  });
+});
+
+
 // GET toutes les activités
 app.get('/api/activites', (req, res) => {
   const sql = 'SELECT * FROM activites ORDER BY created_at DESC';
