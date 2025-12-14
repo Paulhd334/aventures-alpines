@@ -1,9 +1,15 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
+// ====================
+// CONFIGURATION INITIALE
+// ====================
 const app = express();
 const PORT = 5000;
+const SECRET_KEY = 'votre_secret_jwt_aventures_alpines_2024'; // À changer en production
 
 // ====================
 // CONFIGURATION MAMP
@@ -18,101 +24,119 @@ const db = mysql.createConnection({
 });
 
 // ====================
+// MIDDLEWARE
+// ====================
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
+app.use(express.json());
+
+// ====================
 // TEST CONNEXION MAMP
 // ====================
 db.connect((err) => {
   if (err) {
     console.error('❌ Erreur connexion MySQL MAMP:', err.message);
+    console.log('📌 Vérifiez que:');
+    console.log('   1. MAMP est démarré');
+    console.log('   2. MySQL tourne sur le port 8889');
+    console.log('   3. La base "aventures_alpines" existe dans phpMyAdmin');
   } else {
     console.log('✅ Connecté à MySQL MAMP!');
     console.log('   Host: localhost:8889');
     console.log('   Base: aventures_alpines');
-    setupDatabase(); // UNE SEULE FONCTION
+    setupAllTables();
   }
 });
 
 // ====================
-// SETUP DATABASE (une seule fonction)
+// SETUP DE TOUTES LES TABLES
 // ====================
-function setupDatabase() {
-  console.log('📦 Configuration de la base de données...');
+async function setupAllTables() {
+  console.log('📦 Configuration des tables...');
   
-  // Étape 1: Supprimer l'ancienne table si elle existe
-  db.query('DROP TABLE IF EXISTS activites', (dropErr) => {
-    if (dropErr) {
-      console.error('❌ Erreur suppression table:', dropErr.message);
-      return;
+  // Créer la table utilisateurs si elle n'existe pas
+  const createUsersTableSQL = `
+    CREATE TABLE IF NOT EXISTS utilisateurs (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      nom_utilisateur VARCHAR(50) UNIQUE NOT NULL,
+      email VARCHAR(100) UNIQUE NOT NULL,
+      mot_de_passe VARCHAR(255) NOT NULL,
+      date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      role ENUM('user', 'admin') DEFAULT 'user'
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `;
+  
+  db.query(createUsersTableSQL, (err) => {
+    if (err) {
+      console.error('❌ Erreur création table utilisateurs:', err.message);
+    } else {
+      console.log('✅ Table "utilisateurs" vérifiée/créée');
     }
-    
-    console.log('♻️  Ancienne table supprimée (si existante)');
-    
-    // Étape 2: Créer la nouvelle table
-    const createTableSQL = `
-      CREATE TABLE activites (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        nom VARCHAR(100) NOT NULL,
-        type VARCHAR(50) NOT NULL,
-        difficulte VARCHAR(50),
-        description TEXT,
-        image_url VARCHAR(255),
-        lieu VARCHAR(100),
-        prix DECIMAL(10,2),
-        duree VARCHAR(50),
-        saison VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-    `;
-    
-    db.query(createTableSQL, (createErr) => {
-      if (createErr) {
-        console.error('❌ Erreur création table:', createErr.message);
-        return;
-      }
+  });
+  
+  // Créer la table activités si elle n'existe pas
+  const createActivitesTableSQL = `
+    CREATE TABLE IF NOT EXISTS activites (
+      id INT PRIMARY KEY AUTO_INCREMENT,
+      nom VARCHAR(100) NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      difficulte VARCHAR(50),
+      description TEXT,
+      image_url VARCHAR(255),
+      lieu VARCHAR(100),
+      prix DECIMAL(10,2),
+      duree VARCHAR(50),
+      saison VARCHAR(50),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `;
+  
+  db.query(createActivitesTableSQL, (err) => {
+    if (err) {
+      console.error('❌ Erreur création table activites:', err.message);
+    } else {
+      console.log('✅ Table "activites" vérifiée/créée');
       
-      console.log('✅ Table "activites" créée');
-      
-      // Étape 3: Vérifier si la table est vide
+      // Vérifier si la table est vide
       db.query('SELECT COUNT(*) as count FROM activites', (countErr, results) => {
         if (countErr) {
-          console.error('❌ Erreur vérification données:', countErr.message);
-          return;
-        }
-        
-        if (results[0].count === 0) {
-          console.log('📥 Table vide, insertion des données...');
-          insertSampleData();
+          console.error('❌ Erreur vérification données activites:', countErr.message);
         } else {
-          console.log(`📊 ${results[0].count} activités déjà présentes`);
+          if (results[0].count === 0) {
+            console.log('📥 Table activites vide, insertion des données...');
+            insertSampleActivites();
+          } else {
+            console.log(`📊 ${results[0].count} activités déjà présentes`);
+          }
         }
       });
-    });
+    }
   });
 }
 
 // ====================
-// INSERTION DONNÉES
+// INSERTION DONNÉES D'EXEMPLE (activités)
 // ====================
-function insertSampleData() {
+function insertSampleActivites() {
   const activites = [
-    // nom, type, difficulte, description, image_url, lieu, prix, duree, saison
-    ['Ski alpin à Chamonix', 'ski', 'Intermédiaire', 'Des pistes mythiques pour tous les niveaux', 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80', 'Chamonix', 45.00, '1 journée', 'Hiver'],
-    
-    ['Randonnée du Lac Blanc', 'randonnee', 'Facile', 'Randonnée familiale avec vue magnifique', 'https://images.unsplash.com/photo-1601224748193-d24f166b5c77?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Argentière', 25.00, '3h30', 'Été'],
-    
-    ['Escalade aux Drus', 'escalade', 'Expert', 'Voies techniques en haute montagne', 'https://images.unsplash.com/photo-1601224748193-d24f166b5c77?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Les Drus', 120.00, '8-10 heures', 'Été'],
-    
-    ['Ski de fond aux Contamines', 'ski', 'Débutant', '100km de pistes damées', 'https://images.unsplash.com/photo-1645999139629-9fd6e5128a17?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Les Contamines', 25.00, '1 journée', 'Hiver'],
-    
-    ['Via Ferrata du Brevent', 'escalade', 'Intermédiaire', 'Parcours sécurisé avec échelles', 'https://images.unsplash.com/photo-1597250861267-429663f244a8?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Chamonix', 65.00, '4 heures', 'Été'],
-    
-    ['Raquettes au Col de Balme', 'randonnee', 'Facile', 'Balade en raquettes', 'https://images.unsplash.com/photo-1728081931321-259cebd46e2c?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'Col de Balme', 35.00, '2h30', 'Hiver']
+    ['Ski alpin à Chamonix', 'ski', 'Intermédiaire', 'Des pistes mythiques pour tous les niveaux', 'https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=800&h=600&fit=crop', 'Chamonix', 45.00, '1 journée', 'Hiver'],
+    ['Randonnée du Lac Blanc', 'randonnee', 'Facile', 'Randonnée familiale avec vue magnifique', 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&h=600&fit=crop', 'Argentière', 25.00, '3h30', 'Été'],
+    ['Escalade aux Drus', 'escalade', 'Expert', 'Voies techniques en haute montagne', 'https://images.unsplash.com/photo-1597250861267-429663f244a8?w=800&h=600&fit=crop', 'Les Drus', 120.00, '8-10 heures', 'Été'],
+    ['Ski de fond aux Contamines', 'ski', 'Débutant', '100km de pistes damées', 'https://images.unsplash.com/photo-1645999139629-9fd6e5128a17?w=800&h=600&fit=crop', 'Les Contamines', 25.00, '1 journée', 'Hiver'],
+    ['Via Ferrata du Brevent', 'escalade', 'Intermédiaire', 'Parcours sécurisé avec échelles', 'https://images.unsplash.com/photo-1597250861267-429663f244a8?w=800&h=600&fit=crop', 'Chamonix', 65.00, '4 heures', 'Été'],
+    ['Raquettes au Col de Balme', 'randonnee', 'Facile', 'Balade en raquettes au coucher du soleil', 'https://images.unsplash.com/photo-1728081931321-259cebd46e2c?w=800&h=600&fit=crop', 'Col de Balme', 35.00, '2h30', 'Hiver']
   ];
+  
   const sql = 'INSERT INTO activites (nom, type, difficulte, description, image_url, lieu, prix, duree, saison) VALUES ?';
   
   db.query(sql, [activites], (err, result) => {
     if (err) {
-      console.error('❌ Erreur insertion:', err.message);
-      console.log('Détail:', err.sqlMessage);
+      console.error('❌ Erreur insertion activités:', err.message);
     } else {
       console.log(`✅ ${result.affectedRows} activités insérées`);
     }
@@ -120,22 +144,207 @@ function insertSampleData() {
 }
 
 // ====================
-// MIDDLEWARE
+// ROUTES D'AUTHENTIFICATION
 // ====================
-app.use(cors());
-app.use(express.json());
+
+// Route d'inscription
+app.post('/api/auth/register', async (req, res) => {
+  const { nom_utilisateur, email, mot_de_passe } = req.body;
+
+  // Validation basique
+  if (!nom_utilisateur || !email || !mot_de_passe) {
+    return res.status(400).json({ error: 'Tous les champs sont requis' });
+  }
+
+  if (mot_de_passe.length < 6) {
+    return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+  }
+
+  try {
+    // Vérifier si l'utilisateur existe déjà
+    const checkSql = 'SELECT * FROM utilisateurs WHERE email = ? OR nom_utilisateur = ?';
+    db.query(checkSql, [email, nom_utilisateur], async (err, results) => {
+      if (err) {
+        console.error('❌ Erreur vérification utilisateur:', err.message);
+        return res.status(500).json({ error: 'Erreur serveur' });
+      }
+      
+      if (results.length > 0) {
+        return res.status(400).json({ error: 'Email ou nom d\'utilisateur déjà utilisé' });
+      }
+
+      // Hacher le mot de passe
+      const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
+
+      // Insérer l'utilisateur
+      const insertSql = 'INSERT INTO utilisateurs (nom_utilisateur, email, mot_de_passe) VALUES (?, ?, ?)';
+      db.query(insertSql, [nom_utilisateur, email, hashedPassword], (err, result) => {
+        if (err) {
+          console.error('❌ Erreur insertion utilisateur:', err.message);
+          return res.status(500).json({ error: 'Erreur lors de l\'inscription' });
+        }
+
+        // Créer un token JWT
+        const token = jwt.sign(
+          { 
+            userId: result.insertId, 
+            nom_utilisateur, 
+            email,
+            role: 'user'
+          },
+          SECRET_KEY,
+          { expiresIn: '24h' }
+        );
+
+        res.status(201).json({
+          message: 'Inscription réussie',
+          token,
+          user: {
+            id: result.insertId,
+            nom_utilisateur,
+            email,
+            role: 'user'
+          }
+        });
+      });
+    });
+  } catch (error) {
+    console.error('❌ Erreur inscription:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// Route de connexion
+app.post('/api/auth/login', (req, res) => {
+  const { email, mot_de_passe } = req.body;
+
+  if (!email || !mot_de_passe) {
+    return res.status(400).json({ error: 'Email et mot de passe requis' });
+  }
+
+  const sql = 'SELECT * FROM utilisateurs WHERE email = ?';
+  
+  db.query(sql, [email], async (err, results) => {
+    if (err) {
+      console.error('❌ Erreur connexion:', err.message);
+      return res.status(500).json({ error: 'Erreur serveur' });
+    }
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    const user = results[0];
+
+    // Vérifier le mot de passe
+    const validPassword = await bcrypt.compare(mot_de_passe, user.mot_de_passe);
+    
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+    }
+
+    // Créer un token JWT
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        nom_utilisateur: user.nom_utilisateur, 
+        email: user.email,
+        role: user.role
+      },
+      SECRET_KEY,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Connexion réussie',
+      token,
+      user: {
+        id: user.id,
+        nom_utilisateur: user.nom_utilisateur,
+        email: user.email,
+        role: user.role,
+        date_inscription: user.date_inscription
+      }
+    });
+  });
+});
+
+// Route pour vérifier le token
+app.get('/api/auth/verify', (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ valid: false, error: 'Token manquant' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    res.json({ 
+      valid: true, 
+      user: decoded 
+    });
+  } catch (error) {
+    res.status(401).json({ 
+      valid: false, 
+      error: 'Token invalide ou expiré' 
+    });
+  }
+});
+
+// Route pour récupérer le profil utilisateur
+app.get('/api/auth/profile', (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    
+    const sql = 'SELECT id, nom_utilisateur, email, date_inscription, role FROM utilisateurs WHERE id = ?';
+    db.query(sql, [decoded.userId], (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: 'Erreur serveur' });
+      }
+      
+      if (results.length === 0) {
+        return res.status(404).json({ error: 'Utilisateur non trouvé' });
+      }
+      
+      res.json({ user: results[0] });
+    });
+  } catch (error) {
+    res.status(401).json({ error: 'Token invalide' });
+  }
+});
 
 // ====================
-// ROUTES API
+// ROUTES DES ACTIVITÉS
 // ====================
 
 // Route de test
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'API Aventures Alpines fonctionne !',
-    status: 'online',
-    database: 'MySQL MAMP',
-    timestamp: new Date().toISOString()
+    message: 'API Aventures Alpines',
+    version: '1.0.0',
+    endpoints: {
+      auth: {
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login',
+        verify: 'GET /api/auth/verify',
+        profile: 'GET /api/auth/profile'
+      },
+      activities: {
+        all: 'GET /api/activites',
+        byId: 'GET /api/activites/:id',
+        create: 'POST /api/activites'
+      }
+    }
   });
 });
 
@@ -146,24 +355,9 @@ app.get('/api/activites', (req, res) => {
   db.query(sql, (err, results) => {
     if (err) {
       console.error('❌ Erreur MySQL:', err.message);
-      // Fallback aux données mockées
-      res.json(getMockData());
+      res.status(500).json({ error: 'Erreur base de données' });
     } else {
-      // Transformer les noms de champs
-      const activites = results.map(activite => ({
-        id: activite.id,
-        name: activite.nom,
-        type: activite.type,
-        difficulty: activite.difficulte,
-        description: activite.description,
-        image: activite.image_url,
-        location: activite.lieu,
-        price: activite.prix,
-        duration: activite.duree,
-        season: activite.saison,
-        created_at: activite.created_at
-      }));
-      res.json(activites);
+      res.json(results);
     }
   });
 });
@@ -179,60 +373,56 @@ app.get('/api/activites/:id', (req, res) => {
     } else if (results.length === 0) {
       res.status(404).json({ error: 'Activité non trouvée' });
     } else {
-      const activite = results[0];
-      res.json({
-        id: activite.id,
-        name: activite.nom,
-        type: activite.type,
-        difficulty: activite.difficulte,
-        description: activite.description,
-        image: activite.image_url,
-        location: activite.lieu,
-        price: activite.prix,
-        duration: activite.duree,
-        season: activite.saison
+      res.json(results[0]);
+    }
+  });
+});
+
+// POST nouvelle activité (protégé)
+app.post('/api/activites', (req, res) => {
+  // Vérifier l'authentification
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Non autorisé. Connectez-vous d\'abord.' });
+  }
+
+  const { nom, type, difficulte, description, image_url, lieu, prix, duree, saison } = req.body;
+  
+  const sql = 'INSERT INTO activites (nom, type, difficulte, description, image_url, lieu, prix, duree, saison) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  const values = [nom, type, difficulte, description, image_url, lieu, prix || 0, duree, saison];
+  
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('❌ Erreur insertion activité:', err.message);
+      res.status(500).json({ error: 'Erreur création activité' });
+    } else {
+      res.status(201).json({ 
+        message: 'Activité créée avec succès',
+        id: result.insertId 
       });
     }
   });
 });
 
-// Données mockées en cas d'erreur
-function getMockData() {
-  return [
-    { 
-      id: 1, 
-      name: "Ski à Chamonix",
-      type: "ski", 
-      difficulty: "Intermédiaire",
-      description: "Des pistes mythiques pour tous les niveaux",
-      image: "https://images.unsplash.com/photo-1519817914152-22d216bb9170?w=400&h=250&fit=crop",
-      location: "Chamonix",
-      price: 45.00,
-      duration: "1 journée",
-      season: "Hiver"
-    },
-    { 
-      id: 2, 
-      name: "Randonnée Lac Blanc", 
-      type: "randonnee", 
-      difficulty: "Facile",
-      description: "Randonnée familiale avec vue magnifique",
-      image: "https://images.unsplash.com/photo-1551632811-561732d1e306?w=400&h=250&fit=crop",
-      location: "Argentière",
-      price: 25.00,
-      duration: "3h30",
-      season: "Été"
-    }
-  ];
-}
-
 // ====================
-// DÉMARRAGE
+// DÉMARRAGE SERVEUR
 // ====================
 app.listen(PORT, () => {
   console.log(`\n🚀 Serveur API démarré sur http://localhost:${PORT}`);
-  console.log(`📊 MySQL MAMP: localhost:8889`);
-  console.log(`👤 Utilisateur: root`);
-  console.log(`💾 Base: aventures_alpines`);
-  console.log(`🔄 Redémarrage: Ctrl+C puis "npm run dev"\n`);
+  console.log(`📡 Endpoints disponibles:`);
+  console.log(`   🔐 AUTH: http://localhost:${PORT}/api/auth/register`);
+  console.log(`   🏔️ ACTIVITÉS: http://localhost:${PORT}/api/activites`);
+  console.log(`\n📊 MySQL: localhost:8889/aventures_alpines`);
+  console.log(`👤 User: root | Pass: root`);
+  console.log(`\n🔄 Redémarrage: Ctrl+C puis "npm run dev"`);
+  console.log(`==============================================\n`);
+});
+
+// Gestion des erreurs non capturées
+process.on('uncaughtException', (err) => {
+  console.error('❌ Erreur non capturée:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Promesse rejetée non gérée:', reason);
 });
