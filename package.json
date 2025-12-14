@@ -4,8 +4,7 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
-   "build": "SKIP_PREFLIGHT_CHECK=true cd client && npm install && GENERATE_SOURCEMAP=false react-scripts build"
-
+    "build": "cd client && npm install && SKIP_PREFLIGHT_CHECK=true GENERATE_SOURCEMAP=false npx react-scripts build"
   },
   "dependencies": {},
   "engines": {
