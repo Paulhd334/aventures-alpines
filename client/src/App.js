@@ -1,6 +1,7 @@
 // src/App.js
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { inject } from '@vercel/analytics';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -14,6 +15,10 @@ import Articles from './pages/Articles'; // ← ON GARDE Articles.js
 import ProfilePublic from './pages/ProfilePublic'; // ← AJOUT
 
 function App() {
+  useEffect(() => {
+    inject();
+  }, []);
+
   return (
     <Router>
       <div className="App" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
