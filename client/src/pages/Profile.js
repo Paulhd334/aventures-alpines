@@ -141,9 +141,9 @@ const Profile = () => {
           fontSize: '2rem',
           fontWeight: 'bold',
           color: '#333'
-        }}>
+        }}> 
           {user.nom_utilisateur?.charAt(0).toUpperCase() || 'U'}
-        </div>
+        </div> 
         
         <div style={{ flex: 1 }}>
           <h1 style={{ 
@@ -152,7 +152,7 @@ const Profile = () => {
             fontWeight: '600'
           }}>
             {user.nom_utilisateur}
-          </h1>
+          </h1><br></br>
           <p style={{ 
             color: '#666', 
             marginBottom: '0.5rem',

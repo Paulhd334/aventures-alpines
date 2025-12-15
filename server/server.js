@@ -667,6 +667,63 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ====================
+// METTRE À JOUR LE PROFIL (NOUVELLE ROUTE AJOUTÉE)
+// ====================
+app.put('/api/auth/profile', async (req, res) => {
+  console.log('📝 PUT /api/auth/profile appelé');
+  
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ error: 'Non autorisé. Token manquant.' });
+  }
+
+  try {
+    const jwt = require('jsonwebtoken');
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, process.env.SECRET_KEY || 'dev-key');
+    
+    const { nom_utilisateur, email } = req.body;
+    console.log('📦 Données reçues:', { nom_utilisateur, email });
+    
+    if (!nom_utilisateur || !email) {
+      return res.status(400).json({ error: 'Nom d\'utilisateur et email requis' });
+    }
+    
+    // Mettre à jour l'objet utilisateur
+    const updatedUser = {
+      id: decoded.userId || decoded.id || 1,
+      nom_utilisateur: nom_utilisateur,
+      email: email,
+      date_inscription: decoded.date_inscription || new Date().toISOString(),
+      role: decoded.role || 'user'
+    };
+    
+    // Générer un NOUVEAU token avec les infos mises à jour
+    const newToken = jwt.sign(
+      updatedUser,
+      process.env.SECRET_KEY || 'dev-key',
+      { expiresIn: '24h' }
+    );
+    
+    console.log('✅ Profil mis à jour pour:', updatedUser.nom_utilisateur);
+    
+    res.json({
+      message: '✅ Profil mis à jour avec succès',
+      token: newToken,
+      user: updatedUser
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur mise à jour profil backend:', error.message);
+    res.status(500).json({ 
+      error: 'Erreur serveur', 
+      details: error.message 
+    });
+  }
+});
+
+// ====================
 // SERVIR LE FRONTEND
 // ====================
 
@@ -707,7 +764,8 @@ app.get('/', (req, res) => {
         user_profile: '/api/users/:username/profile',
         profile: 'GET /api/auth/profile',
         register: 'POST /api/auth/register',
-        login: 'POST /api/auth/login'
+        login: 'POST /api/auth/login',
+        update_profile: 'PUT /api/auth/profile'
       }
     });
   }
@@ -740,5 +798,6 @@ app.listen(PORT, () => {
   console.log(`Activités: http://localhost:${PORT}/api/activites`);
   console.log(`Articles: http://localhost:${PORT}/api/articles`);
   console.log(`Créer article: POST http://localhost:${PORT}/api/articles`);
+  console.log(`Mettre à jour profil: PUT http://localhost:${PORT}/api/auth/profile`);
   console.log('='.repeat(50));
 });
