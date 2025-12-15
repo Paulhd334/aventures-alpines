@@ -7,6 +7,8 @@ const Profile = () => {
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('infos');
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({});
   
   const navigate = useNavigate();
 
@@ -22,15 +24,23 @@ const Profile = () => {
     try {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
+      setEditData({
+        nom_utilisateur: parsedUser.nom_utilisateur,
+        email: parsedUser.email
+      });
       
       // Charger les publications de CET utilisateur spécifique
-     axios.get(`https://aventures-alpines-production.up.railway.app/api/users/${parsedUser.nom_utilisateur}/articles`)
+      axios.get(`https://aventures-alpines-production.up.railway.app/api/users/${parsedUser.nom_utilisateur}/articles`)
         .then(response => {
-          setPublications(response.data);
+          // FILTRE : N'afficher que les publications RÉELLES (pas les tests)
+          const realPublications = response.data.filter(pub => 
+            pub.titre && pub.titre !== 'test' && 
+            pub.contenu && pub.contenu !== 'test'
+          );
+          setPublications(realPublications);
         })
         .catch(error => {
           console.error('Erreur chargement publications:', error);
-          // Si l'API n'est pas disponible, montrer tableau vide
           setPublications([]);
         });
     } catch (error) {
@@ -49,6 +59,41 @@ const Profile = () => {
     navigate('/login');
   };
 
+  const handleEdit = () => {
+    setEditing(true);
+  };
+
+  const handleSave = async () => {
+    try {
+      // API call pour mettre à jour l'utilisateur (à implémenter dans le backend)
+      const response = await axios.put('https://aventures-alpines-production.up.railway.app/api/auth/profile', editData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      
+      setUser(response.data.user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      setEditing(false);
+    } catch (error) {
+      console.error('Erreur mise à jour profil:', error);
+      alert('Erreur lors de la mise à jour du profil');
+    }
+  };
+
+  const handleCancel = () => {
+    setEditData({
+      nom_utilisateur: user.nom_utilisateur,
+      email: user.email
+    });
+    setEditing(false);
+  };
+
+  const handleChange = (e) => {
+    setEditData({
+      ...editData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   if (loading) {
     return (
       <div style={{ 
@@ -63,6 +108,11 @@ const Profile = () => {
   if (!user) {
     return null;
   }
+
+  // Vérifier si c'est un nouveau compte (moins de 24h)
+  const isNewAccount = user.date_inscription ? 
+    (Date.now() - new Date(user.date_inscription).getTime()) < 24 * 60 * 60 * 1000 : 
+    true;
 
   return (
     <div style={{ 
@@ -102,13 +152,13 @@ const Profile = () => {
             fontWeight: '600'
           }}>
             {user.nom_utilisateur}
-          </h1><br></br>
+          </h1>
           <p style={{ 
             color: '#666', 
             marginBottom: '0.5rem',
             fontSize: '1rem'
           }}>
-             {user.email}
+            {user.email}
           </p>
           <p style={{ 
             color: '#888', 
@@ -179,18 +229,45 @@ const Profile = () => {
       <div>
         {activeTab === 'infos' && (
           <div>
-            <h2 style={{ 
-              marginBottom: '1.5rem',
-              fontSize: '1.5rem',
-              fontWeight: '600'
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '1.5rem'
             }}>
-              Informations personnelles
-            </h2>
+              <h2 style={{ 
+                fontSize: '1.5rem',
+                fontWeight: '600'
+              }}>
+                Informations personnelles
+              </h2>
+              {!editing && (
+                <button
+                  onClick={handleEdit}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: 'transparent',
+                    border: '1px solid #666',
+                    color: '#666',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  ✏️ Modifier
+                </button>
+              )}
+            </div>
+            
             <div style={{ 
               backgroundColor: '#f9f9f9', 
               padding: '2rem',
               borderRadius: '8px'
             }}>
+              {/* Nom d'utilisateur */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ 
                   display: 'block', 
@@ -200,17 +277,35 @@ const Profile = () => {
                 }}>
                   Nom d'utilisateur
                 </label>
-                <div style={{ 
-                  padding: '0.75rem',
-                  backgroundColor: 'white',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  color: '#333'
-                }}>
-                  {user.nom_utilisateur}
-                </div>
+                {editing ? (
+                  <input
+                    type="text"
+                    name="nom_utilisateur"
+                    value={editData.nom_utilisateur}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      color: '#333'
+                    }}
+                  />
+                ) : (
+                  <div style={{ 
+                    padding: '0.75rem',
+                    backgroundColor: 'white',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    color: '#333'
+                  }}>
+                    {user.nom_utilisateur}
+                  </div>
+                )}
               </div>
               
+              {/* Email */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ 
                   display: 'block', 
@@ -220,18 +315,36 @@ const Profile = () => {
                 }}>
                   Email
                 </label>
-                <div style={{ 
-                  padding: '0.75rem',
-                  backgroundColor: 'white',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  color: '#333'
-                }}>
-                  {user.email}
-                </div>
+                {editing ? (
+                  <input
+                    type="email"
+                    name="email"
+                    value={editData.email}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      backgroundColor: 'white',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      color: '#333'
+                    }}
+                  />
+                ) : (
+                  <div style={{ 
+                    padding: '0.75rem',
+                    backgroundColor: 'white',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    color: '#333'
+                  }}>
+                    {user.email}
+                  </div>
+                )}
               </div>
               
-              <div style={{ marginBottom: '1.5rem' }}>
+              {/* Date d'inscription (lecture seule) */}
+              <div style={{ marginBottom: '2rem' }}>
                 <label style={{ 
                   display: 'block', 
                   marginBottom: '0.5rem', 
@@ -242,10 +355,11 @@ const Profile = () => {
                 </label>
                 <div style={{ 
                   padding: '0.75rem',
-                  backgroundColor: 'white',
+                  backgroundColor: '#f5f5f5',
                   border: '1px solid #ddd',
                   borderRadius: '4px',
-                  color: '#333'
+                  color: '#666',
+                  fontStyle: 'italic'
                 }}>
                   {user.date_inscription ? 
                     new Date(user.date_inscription).toLocaleDateString('fr-FR', {
@@ -258,28 +372,66 @@ const Profile = () => {
                 </div>
               </div>
               
-              <button
-                onClick={handleLogout}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #ef4444',
-                  color: '#ef4444',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  fontWeight: '500',
-                  fontSize: '1rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = '#fee';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = 'transparent';
-                }}
-              >
-                Se déconnecter
-              </button>
+              {/* Boutons */}
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                {editing ? (
+                  <>
+                    <button
+                      onClick={handleSave}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: '#000',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      💾 Enregistrer
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: 'transparent',
+                        border: '1px solid #666',
+                        color: '#666',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        fontSize: '1rem'
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: 'transparent',
+                      border: '1px solid #ef4444',
+                      color: '#ef4444',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease',
+                      fontWeight: '500',
+                      fontSize: '1rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = '#fee';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'transparent';
+                    }}
+                  >
+                    Se déconnecter
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -340,14 +492,16 @@ const Profile = () => {
                   marginBottom: '1rem',
                   color: '#333'
                 }}>
-                  Vous n'avez pas encore publié d'article
+                  {isNewAccount ? `👋 Bienvenue ${user.nom_utilisateur} !` : `Bonjour ${user.nom_utilisateur} !`}
                 </p>
                 <p style={{ 
                   color: '#666', 
                   marginBottom: '2rem',
                   fontSize: '1rem'
                 }}>
-                  Partagez votre première aventure avec la communauté !
+                  {isNewAccount 
+                    ? 'Commencez votre aventure en partageant votre première expérience en montagne !' 
+                    : 'Partagez votre prochaine aventure avec la communauté !'}
                 </p>
                 <Link to="/blog/new" style={{ textDecoration: 'none' }}>
                   <button style={{
@@ -367,7 +521,7 @@ const Profile = () => {
                   onMouseLeave={(e) => {
                     e.target.style.backgroundColor = '#000';
                   }}>
-                    Publier mon premier article
+                    {isNewAccount ? 'Publier mon premier article' : 'Nouvelle publication'}
                   </button>
                 </Link>
               </div>
