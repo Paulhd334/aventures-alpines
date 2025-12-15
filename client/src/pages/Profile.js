@@ -63,21 +63,37 @@ const Profile = () => {
     setEditing(true);
   };
 
-  const handleSave = async () => {
-    try {
-      // API call pour mettre à jour l'utilisateur (à implémenter dans le backend)
-      const response = await axios.put('https://aventures-alpines-production.up.railway.app/api/auth/profile', editData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      setEditing(false);
-    } catch (error) {
-      console.error('Erreur mise à jour profil:', error);
-      alert('Erreur lors de la mise à jour du profil');
-    }
-  };
+const handleSave = async () => {
+  try {
+    const response = await axios.put(
+      'https://aventures-alpines-production.up.railway.app/api/auth/profile', 
+      editData, 
+      {
+        headers: { 
+          Authorization: `Bearer ${localStorage.getItem('token')}` 
+        }
+      }
+    );
+    
+    // METTRE À JOUR le state
+    setUser(response.data.user);
+    
+    // METTRE À JOUR le localStorage
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    localStorage.setItem('token', response.data.token);
+    
+    // METTRE À JOUR le header globalement
+    window.dispatchEvent(new CustomEvent('userUpdated', {
+      detail: response.data.user
+    }));
+    
+    setEditing(false);
+    
+  } catch (error) {
+    console.error('Erreur mise à jour profil:', error);
+    alert('Erreur lors de la mise à jour du profil');
+  }
+};
 
   const handleCancel = () => {
     setEditData({
