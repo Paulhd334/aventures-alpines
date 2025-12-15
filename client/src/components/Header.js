@@ -5,30 +5,65 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // ÉTAT pour suivre l'utilisateur
+  // ÉTAT pour suivre l'utilisateur - CORRIGÉ
   const [userState, setUserState] = useState(() => {
-    // Charger depuis localStorage au démarrage
     const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      return null;
+    }
   });
 
-  // ÉCOUTER l'événement userUpdated
+  // ÉCOUTER les messages postMessage - CORRIGÉ
   useEffect(() => {
-    const handleUserUpdate = (event) => {
-      console.log('🔄 Header: Mise à jour utilisateur reçue', event.detail);
-      setUserState(event.detail);
+    const handleMessage = (event) => {
+      console.log('📢 Header: Message reçu', event.data);
+      
+      // Vérifier que c'est notre message ET qu'il vient de notre domaine
+      if (event.data && event.data.type === 'USER_UPDATED') {
+        console.log('✅ Header: Message USER_UPDATED détecté', event.data.user);
+        
+        // Mettre à jour l'état local
+        setUserState(event.data.user);
+        
+        // Forcer le rafraîchissement du localStorage
+        localStorage.setItem('user', JSON.stringify(event.data.user));
+        
+        // Forcer un re-render
+        window.dispatchEvent(new Event('storage'));
+      }
     };
 
-    window.addEventListener('userUpdated', handleUserUpdate);
+    window.addEventListener('message', handleMessage);
+    
+    // Écouter aussi les changements de localStorage (au cas où)
+    const handleStorageChange = () => {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          const parsed = JSON.parse(storedUser);
+          if (!userState || parsed.nom_utilisateur !== userState.nom_utilisateur) {
+            console.log('🔄 Header: Changement détecté via storage');
+            setUserState(parsed);
+          }
+        } catch (e) {
+          console.error('Erreur parsing user:', e);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
     
     return () => {
-      window.removeEventListener('userUpdated', handleUserUpdate);
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [userState]);
 
   // Vérifier si connecté
-  const isLoggedIn = userState !== null;
-  const userName = isLoggedIn ? userState.nom_utilisateur : null;
+  const isLoggedIn = !!userState;
+  const userName = userState?.nom_utilisateur || null;
 
   const navItems = [
     { path: '/', label: 'Accueil' },
@@ -40,8 +75,10 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setUserState(null); // Réinitialiser l'état
+    setUserState(null);
     navigate('/');
+    // Rafraîchir pour que le header se mette à jour
+    window.location.reload();
   };
 
   return (
@@ -184,7 +221,7 @@ const Header = () => {
                       transition: 'color 0.3s ease'
                     }}
                   >
-                    {userName} {/* Utilise l'état local */}
+                    {userName}
                   </span>
                   
                   {location.pathname === '/profile' && (

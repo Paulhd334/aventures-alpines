@@ -83,9 +83,11 @@ const handleSave = async () => {
     localStorage.setItem('token', response.data.token);
     
     // METTRE À JOUR le header globalement
-    window.dispatchEvent(new CustomEvent('userUpdated', {
-      detail: response.data.user
-    }));
+  window.postMessage({
+  type: 'USER_UPDATED',
+  user: response.data.user
+}, '*');
+console.log('📢 Message USER_UPDATED envoyé', response.data.user);
     
     setEditing(false);
     
