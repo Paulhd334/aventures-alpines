@@ -7,6 +7,15 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const cors = require('cors');
+
+
+app.use(cors({
+  origin: [
+    'https://aventures-alpines.vercel.app',
+    'http://localhost:3000'  // pour le développement
+  ]
+}));
 
 const app = express();
 
