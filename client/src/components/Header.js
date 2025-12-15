@@ -1,13 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Vérifier si l'utilisateur est connecté
-  const isLoggedIn = localStorage.getItem('token') !== null;
-  const userName = isLoggedIn ? JSON.parse(localStorage.getItem('user'))?.nom_utilisateur : null;
+  // ÉTAT pour suivre l'utilisateur
+  const [userState, setUserState] = useState(() => {
+    // Charger depuis localStorage au démarrage
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
+  // ÉCOUTER l'événement userUpdated
+  useEffect(() => {
+    const handleUserUpdate = (event) => {
+      console.log('🔄 Header: Mise à jour utilisateur reçue', event.detail);
+      setUserState(event.detail);
+    };
+
+    window.addEventListener('userUpdated', handleUserUpdate);
+    
+    return () => {
+      window.removeEventListener('userUpdated', handleUserUpdate);
+    };
+  }, []);
+
+  // Vérifier si connecté
+  const isLoggedIn = userState !== null;
+  const userName = isLoggedIn ? userState.nom_utilisateur : null;
 
   const navItems = [
     { path: '/', label: 'Accueil' },
@@ -19,8 +40,8 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    setUserState(null); // Réinitialiser l'état
     navigate('/');
-    window.location.reload();
   };
 
   return (
@@ -125,7 +146,7 @@ const Header = () => {
             })}
             
             {/* Lien vers Profile (uniquement si connecté) */}
-            {isLoggedIn && (
+            {isLoggedIn && userName && (
               <div style={{ position: 'relative', marginLeft: '1rem' }}>
                 <Link
                   to="/profile"
@@ -163,7 +184,7 @@ const Header = () => {
                       transition: 'color 0.3s ease'
                     }}
                   >
-                    {userName}
+                    {userName} {/* Utilise l'état local */}
                   </span>
                   
                   {location.pathname === '/profile' && (
