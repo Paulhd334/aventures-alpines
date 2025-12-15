@@ -11,16 +11,9 @@ const fs = require('fs');
 // CRÉER L'APP EN PREMIER
 const app = express();
 
-// Détecter la plateforme
-const isVercel = process.env.VERCEL === '1';
-const isRailway = process.env.RAILWAY === 'true' || process.env.RAILWAY_GIT_COMMIT_SHA;
-
-console.log('🔧 Démarrage serveur...');
-console.log('Platform:', isVercel ? 'Vercel' : isRailway ? 'Railway' : 'Local');
-
 // Middleware CORS
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://aventures-alpines.vercel.app'],
+  origin: ['http://localhost:3000', 'https://aventures-alpines.onrender.com'],
   credentials: true
 }));
 
@@ -35,7 +28,6 @@ app.get('/api', (req, res) => {
   res.json({
     message: 'API Aventures Alpines',
     status: 'online',
-    platform: isVercel ? 'Vercel' : isRailway ? 'Railway' : 'Local',
     timestamp: new Date().toISOString()
   });
 });
@@ -68,13 +60,6 @@ app.get('/api/activites', async (req, res) => {
       saison: "Été"
     }
   ];
-
-  if (isVercel) {
-    return res.json(baseActivities.map(act => ({
-      ...act,
-      nom: act.nom + ' (Vercel Demo)'
-    })));
-  }
 
   try {
     const mysql = require('mysql2/promise');
@@ -161,10 +146,6 @@ app.get('/api/articles', async (req, res) => {
     }
   ];
 
-  if (isVercel) {
-    return res.json(baseArticles);
-  }
-
   try {
     const mysql = require('mysql2/promise');
     
@@ -222,22 +203,6 @@ app.post('/api/articles', async (req, res) => {
   }
   
   try {
-    if (isVercel) {
-      const newArticle = {
-        id: Date.now(),
-        titre,
-        contenu,
-        nom_utilisateur,
-        lieu: lieu || 'Non spécifié',
-        type: type || 'recit',
-        date_publication: new Date().toISOString()
-      };
-      return res.status(201).json({ 
-        message: 'Article créé (simulé)', 
-        article: newArticle 
-      });
-    }
-
     const mysql = require('mysql2/promise');
     
     const connection = await mysql.createConnection({
@@ -347,22 +312,6 @@ app.post('/api/publications', async (req, res) => {
   }
   
   try {
-    if (isVercel) {
-      const newArticle = {
-        id: Date.now(),
-        titre,
-        contenu,
-        nom_utilisateur,
-        lieu: lieu || 'Non spécifié',
-        type: type || 'recit',
-        date_publication: new Date().toISOString()
-      };
-      return res.status(201).json({ 
-        message: 'Article créé (simulé)', 
-        article: newArticle 
-      });
-    }
-
     const mysql = require('mysql2/promise');
     
     const connection = await mysql.createConnection({
@@ -468,23 +417,6 @@ app.get('/api/articles/:id', async (req, res) => {
   const { id } = req.params;
   
   try {
-    if (isVercel) {
-      const demoArticles = [
-        {
-          id: 1,
-          titre: "Ma première ascension du Mont-Blanc",
-          contenu: "Une expérience inoubliable...",
-          nom_utilisateur: "Jean Dupont",
-          lieu: "Mont-Blanc, France",
-          date_publication: new Date().toISOString(),
-          type: "recit"
-        }
-      ];
-      
-      const article = demoArticles.find(a => a.id === parseInt(id)) || demoArticles[0];
-      return res.json(article);
-    }
-
     const mysql = require('mysql2/promise');
     
     const connection = await mysql.createConnection({
@@ -519,25 +451,6 @@ app.get('/api/users/:username/articles', async (req, res) => {
   const { username } = req.params;
   
   try {
-    if (isVercel) {
-      const demoArticles = [
-        {
-          id: 1,
-          titre: "Ma première ascension du Mont-Blanc",
-          contenu: "Une expérience inoubliable avec des vues à couper le souffle...",
-          nom_utilisateur: username === "jean" ? "Jean Dupont" : username,
-          lieu: "Mont-Blanc, France",
-          date_publication: new Date().toISOString(),
-          type: "recit"
-        }
-      ];
-      
-      const userArticles = demoArticles.filter(a => 
-        a.nom_utilisateur.toLowerCase() === username.toLowerCase()
-      );
-      return res.json(userArticles);
-    }
-
     const mysql = require('mysql2/promise');
     
     const connection = await mysql.createConnection({
@@ -567,16 +480,6 @@ app.get('/api/users/:username/profile', async (req, res) => {
   const { username } = req.params;
   
   try {
-    if (isVercel) {
-      return res.json({
-        user: {
-          nom_utilisateur: username,
-          nombre_articles: 1,
-          premiere_publication: new Date().toISOString()
-        }
-      });
-    }
-
     const mysql = require('mysql2/promise');
     
     const connection = await mysql.createConnection({
@@ -780,7 +683,7 @@ for (const dir of staticDirs) {
   if (fs.existsSync(dir)) {
     console.log(`Dossier frontend trouvé: ${dir}`);
     app.use(express.static(dir, {
-      maxAge: isVercel || isRailway ? '1d' : 0
+      maxAge: 0
     }));
     foundStaticDir = dir;
     break;
@@ -821,29 +724,21 @@ if (foundStaticDir) {
 }
 
 // ====================
-// EXPORT POUR VERCEL
+// DÉMARRAGE DU SERVEUR
 // ====================
-module.exports = app;
+const PORT = process.env.PORT || 5000;
 
-// ====================
-// DÉMARRAGE LOCAL/RAILWAY
-// ====================
-if (require.main === module && !isVercel) {
-  const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log('\n' + '='.repeat(50));
+  console.log(`SERVEUR DÉMARRÉ SUR LE PORT ${PORT}`);
+  console.log('='.repeat(50));
   
-  app.listen(PORT, () => {
-    console.log('\n' + '='.repeat(50));
-    console.log(`SERVEUR DÉMARRÉ SUR LE PORT ${PORT}`);
-    console.log('='.repeat(50));
-    
-    if (foundStaticDir) {
-      console.log(`Frontend: http://localhost:${PORT}`);
-    }
-    console.log(`API: http://localhost:${PORT}/api`);
-    console.log(`Activités: http://localhost:${PORT}/api/activites`);
-    console.log(`Articles: http://localhost:5000/api/articles`);
-    console.log(`Créer article: POST http://localhost:5000/api/articles`);
-    console.log(`Profil public: http://localhost:5000/api/users/:username/profile`);
-    console.log('='.repeat(50));
-  });
-}
+  if (foundStaticDir) {
+    console.log(`Frontend: http://localhost:${PORT}`);
+  }
+  console.log(`API: http://localhost:${PORT}/api`);
+  console.log(`Activités: http://localhost:${PORT}/api/activites`);
+  console.log(`Articles: http://localhost:${PORT}/api/articles`);
+  console.log(`Créer article: POST http://localhost:${PORT}/api/articles`);
+  console.log('='.repeat(50));
+});
