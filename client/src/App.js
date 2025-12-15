@@ -10,10 +10,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import CreatePublication from './pages/CreatePublication';
-import Blog from './pages/Blog'; // ← IMPORT de la  VRAIE PAGE BLOG
-import './App.css';
-
-
+import Articles from './pages/Articles'; // ← ON GARDE Articles.js
+import ProfilePublic from './pages/ProfilePublic'; // ← AJOUT
 
 function App() {
   return (
@@ -28,8 +26,13 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:username" element={<ProfilePublic />} /> {/* ← NOUVELLE ROUTE */}
             <Route path="/blog/new" element={<CreatePublication />} />
-            <Route path="/blog" element={<Blog />} /> {/* ← UTILISE LA VRAIE PAGE */}
+            <Route path="/blog" element={<Articles />} /> {/* ← UTILISE Articles.js */}
+            <Route path="/articles" element={<Articles />} /> {/* ← ALIAS OPTIONNEL */}
+            
+            {/* Route 404 */}
+            <Route path="*" element={<Home />} />
           </Routes>
         </main>
         <Footer />
