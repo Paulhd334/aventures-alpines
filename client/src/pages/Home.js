@@ -9,7 +9,7 @@ const Home = () => {
   const [randomActivities, setRandomActivities] = useState([]);
 
   useEffect(() => {
-   axios.get('https://aventures-alpines.up.railway.app/api/activites')   // ✅ Appelle Railway
+ axios.get('https://aventures-alpines-production.up.railway.app/api/activites')
       .then(response => {
         setActivities(response.data);
         
