@@ -7,16 +7,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const cors = require('cors');
 
-
-app.use(cors({
-  origin: [
-    'https://aventures-alpines.vercel.app',
-    'http://localhost:3000'  // pour le développement
-  ]
-}));
-
+// CRÉER L'APP EN PREMIER
 const app = express();
 
 // Détecter la plateforme
@@ -26,19 +18,16 @@ const isRailway = process.env.RAILWAY === 'true' || process.env.RAILWAY_GIT_COMM
 console.log('🔧 Démarrage serveur...');
 console.log('Platform:', isVercel ? 'Vercel' : isRailway ? 'Railway' : 'Local');
 
-// Middleware
+// Middleware CORS - CORRIGÉ : APPREND MAINTENANT
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5000'],
+  origin: ['http://localhost:3000', 'https://aventures-alpines.vercel.app'],
   credentials: true
 }));
+
 app.use(express.json());
 
 // ====================
-// SERVIR LE FRONTEND (MAIS APRÈS LES ROUTES API !)
-// ====================
-
-// ====================
-// ROUTES API (DOIVENT ÊTRE EN PREMIER !)
+// ROUTES API
 // ====================
 
 // Route test API

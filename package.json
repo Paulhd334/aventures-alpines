@@ -1,12 +1,26 @@
 {
-  "name": "aventures-alpines-vercel",
+  "name": "aventures-alpines-api",
   "version": "1.0.0",
+  "description": "Backend API pour Aventures Alpines",
+  "main": "server/server.js",
   "engines": {
     "node": "20.x"
+  },
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "nodemon server/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "debug": "^4.4.3",
-    "express": "^4.18.2"
-  }
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "keywords": ["api", "backend", "aventures-alpines"],
+  "author": "",
+  "license": "ISC"
 }
