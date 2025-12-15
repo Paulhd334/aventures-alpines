@@ -13,11 +13,12 @@ const ProfilePublic = () => {
     const fetchProfile = async () => {
       try {
         // Récupérer le profil public
-        const profileResponse = await axios.get(`http://localhost:5000/api/users/${username}/profile`);
+        const profileResponse = await axios.get(`https://aventures-alpines-production.up.railway.app/api/users/${username}/profile`);
         setUser(profileResponse.data.user);
         
         // Récupérer les articles de l'utilisateur
-        const articlesResponse = await axios.get(`http://localhost:5000/api/users/${username}/articles`);
+        const articlesResponse = await axios.get(`https://aventures-alpines-production.up.railway.app/api/users/${username}/articles`); 
+
         setArticles(articlesResponse.data);
       } catch (error) {
         console.error('Erreur chargement profil public:', error);
