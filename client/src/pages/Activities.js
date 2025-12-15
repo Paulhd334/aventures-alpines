@@ -10,7 +10,7 @@ const Activities = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    axios.get('/api/activites')
+      axios.get('https://aventures-alpines.up.railway.app/api/activites')  // ✅ Appelle Railway
       .then(response => {
         // GARANTIR que c'est un tableau
         const data = Array.isArray(response.data) ? response.data : [];
