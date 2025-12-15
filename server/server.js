@@ -1,106 +1,19 @@
+// AJOUTE CES LIGNES EN PREMIER
 process.env.DEBUG = '';
+delete require.cache[require.resolve('debug')];
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 
 const app = express();
-const SECRET_KEY = process.env.SECRET_KEY || 'dev-secret-key-aventures-alpines-2024';
+
+// Détecter la plateforme
+const isVercel = process.env.VERCEL === '1';
+const isRailway = process.env.RAILWAY === 'true' || process.env.RAILWAY_GIT_COMMIT_SHA;
 
 console.log('🔧 Démarrage serveur...');
-console.log('Mode:', process.env.NODE_ENV || 'development');
-
-// Vérifier si on est sur Vercel
-const isVercel = process.env.VERCEL === '1';
-
-let mysql, bcrypt, jwt, pool;
-
-// Charger les modules dynamiquement (pour éviter erreur sur Vercel si absent)
-try {
-  mysql = require('mysql2/promise');
-  bcrypt = require('bcryptjs');
-  jwt = require('jsonwebtoken');
-} catch (error) {
-  console.log('⚠️ Modules non chargés (mode Vercel ou erreur)');
-}
-
-// Configuration MySQL seulement si pas sur Vercel ET mysql disponible
-if (!isVercel && mysql) {
-  const dbConfig = {
-    host: process.env.MYSQL_HOST || 'centerbeam.proxy.rlwy.net',
-    user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD || 'NnpQXlvkNUHHyOaawaikRbzkPTwTBzqL',
-    database: process.env.MYSQL_DATABASE || 'railway',
-    port: process.env.MYSQL_PORT || 11303,
-    ssl: { rejectUnauthorized: false },
-    waitForConnections: true,
-    connectionLimit: 5,
-    connectTimeout: 10000
-  };
-
-  // Fonction pour créer le pool
-  async function createPool() {
-    try {
-      pool = mysql.createPool(dbConfig);
-      const connection = await pool.getConnection();
-      console.log('✅ Connexion MySQL Railway établie!');
-      
-      // Initialisation DB
-      await initializeDatabase(connection);
-      
-      connection.release();
-      return true;
-    } catch (error) {
-      console.error('❌ Erreur connexion MySQL:', error.message);
-      return false;
-    }
-  }
-
-  // Initialisation DB
-  async function initializeDatabase(connection) {
-    try {
-      await connection.execute(`
-        CREATE TABLE IF NOT EXISTS activites (
-          id INT PRIMARY KEY AUTO_INCREMENT,
-          nom VARCHAR(100) NOT NULL,
-          type VARCHAR(50) NOT NULL,
-          difficulte VARCHAR(50),
-          description TEXT,
-          image_url VARCHAR(255),
-          lieu VARCHAR(100),
-          prix DECIMAL(10,2),
-          duree VARCHAR(50),
-          saison VARCHAR(50),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      const [rows] = await connection.execute('SELECT COUNT(*) as count FROM activites');
-      
-      if (rows[0].count === 0) {
-        console.log('📥 Insertion des activités...');
-        const activities = [
-          ['Ski alpin à Chamonix', 'ski', 'Intermédiaire', 'Des pistes mythiques', 'https://picsum.photos/800/600?random=1', 'Chamonix', 45.00, '1 journée', 'Hiver'],
-          ['Randonnée du Lac Blanc', 'randonnee', 'Facile', 'Randonnée familiale', 'https://picsum.photos/800/600?random=2', 'Argentière', 25.00, '3h30', 'Été']
-        ];
-        
-        for (const activity of activities) {
-          await connection.execute(
-            'INSERT IGNORE INTO activites (nom, type, difficulte, description, image_url, lieu, prix, duree, saison) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            activity
-          );
-        }
-        console.log('✅ Activités insérées');
-      }
-      
-      console.log(`📊 ${rows[0].count} activités dans la base`);
-    } catch (error) {
-      console.error('❌ Erreur initialisation DB:', error.message);
-    }
-  }
-
-  // Initialiser MySQL au démarrage
-  createPool().catch(console.error);
-}
+console.log('Platform:', isVercel ? 'Vercel' : isRailway ? 'Railway' : 'Local');
 
 // Middleware
 app.use(cors({
@@ -110,66 +23,117 @@ app.use(cors({
 app.use(express.json());
 
 // ====================
-// ROUTES
+// ROUTES COMMUNES
 // ====================
 
-// Route de test
+// Route test
 app.get('/', (req, res) => {
   res.json({
     message: '🚀 API Aventures Alpines',
     status: 'online',
-    mode: isVercel ? 'vercel' : 'railway',
-    mysql: pool ? 'connecté' : isVercel ? 'mode-mock' : 'déconnecté',
+    platform: isVercel ? 'Vercel' : isRailway ? 'Railway' : 'Local',
     timestamp: new Date().toISOString()
   });
 });
 
 // Récupérer activités
 app.get('/api/activites', async (req, res) => {
-  // Si sur Vercel ou MySQL non disponible, retourner données mockées
-  if (isVercel || !pool) {
-    return res.json([
-      {
-        id: 1,
-        nom: "Ski alpin à Chamonix (Vercel)",
-        type: "ski",
-        difficulte: "Intermédiaire",
-        description: "Mode démo - API sur Vercel",
-        image_url: "https://picsum.photos/800/600?random=1",
-        lieu: "Chamonix",
-        prix: 45.00,
-        duree: "1 journée",
-        saison: "Hiver"
-      },
-      {
-        id: 2,
-        nom: "Randonnée du Lac Blanc (Vercel)",
-        type: "randonnee",
-        difficulte: "Facile",
-        description: "Mode démo - Données mockées",
-        image_url: "https://picsum.photos/800/600?random=2",
-        lieu: "Argentière",
-        prix: 25.00,
-        duree: "3h30",
-        saison: "Été"
-      }
-    ]);
+  // Données de base pour toutes les plateformes
+  const baseActivities = [
+    {
+      id: 1,
+      nom: "Ski alpin à Chamonix",
+      type: "ski",
+      difficulte: "Intermédiaire",
+      description: "Des pistes mythiques pour tous les niveaux",
+      image_url: "https://picsum.photos/800/600?random=1",
+      lieu: "Chamonix",
+      prix: 45.00,
+      duree: "1 journée",
+      saison: "Hiver"
+    },
+    {
+      id: 2,
+      nom: "Randonnée du Lac Blanc",
+      type: "randonnee",
+      difficulte: "Facile",
+      description: "Randonnée familiale avec vue magnifique",
+      image_url: "https://picsum.photos/800/600?random=2",
+      lieu: "Argentière",
+      prix: 25.00,
+      duree: "3h30",
+      saison: "Été"
+    }
+  ];
+
+  // Sur Vercel, retourner données mockées
+  if (isVercel) {
+    return res.json(baseActivities.map(act => ({
+      ...act,
+      nom: act.nom + ' (Vercel Demo)'
+    })));
   }
-  
-  // Sinon, utiliser MySQL
+
+  // Sur Railway ou Local, essayer MySQL
   try {
-    const connection = await pool.getConnection();
-    const [results] = await connection.query('SELECT * FROM activites ORDER BY created_at DESC');
-    connection.release();
+    const mysql = require('mysql2/promise');
     
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQL_HOST || 'centerbeam.proxy.rlwy.net',
+      user: process.env.MYSQL_USER || 'root',
+      password: process.env.MYSQL_PASSWORD || 'NnpQXlvkNUHHyOaawaikRbzkPTwTBzqL',
+      database: process.env.MYSQL_DATABASE || 'railway',
+      port: process.env.MYSQL_PORT || 11303,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    // Vérifier/créer table
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS activites (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        nom VARCHAR(100) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        difficulte VARCHAR(50),
+        description TEXT,
+        image_url VARCHAR(255),
+        lieu VARCHAR(100),
+        prix DECIMAL(10,2),
+        duree VARCHAR(50),
+        saison VARCHAR(50),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Vérifier si vide
+    const [rows] = await connection.execute('SELECT COUNT(*) as count FROM activites');
+    
+    if (rows[0].count === 0) {
+      // Insérer données
+      for (const activity of baseActivities) {
+        await connection.execute(
+          'INSERT IGNORE INTO activites (nom, type, difficulte, description, image_url, lieu, prix, duree, saison) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [activity.nom, activity.type, activity.difficulte, activity.description, 
+           activity.image_url, activity.lieu, activity.prix, activity.duree, activity.saison]
+        );
+      }
+    }
+
+    // Récupérer toutes les activités
+    const [results] = await connection.query('SELECT * FROM activites ORDER BY created_at DESC');
+    await connection.end();
+
     res.json(results);
   } catch (error) {
-    console.error('Erreur /api/activites:', error.message);
-    res.status(500).json({ error: 'Erreur base de données' });
+    console.error('Erreur MySQL:', error.message);
+    // Fallback: données de base
+    res.json(baseActivities.map(act => ({
+      ...act,
+      nom: act.nom + ' (DB Offline)'
+    })));
   }
 });
 
-// Routes d'authentification
+// Inscription
 app.post('/api/auth/register', async (req, res) => {
   const { nom_utilisateur, email, mot_de_passe } = req.body;
   
@@ -177,26 +141,14 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ error: 'Tous les champs requis' });
   }
   
-  // Simulation pour Vercel
-  if (isVercel || !bcrypt || !jwt) {
-    return res.json({
-      message: 'Inscription simulée (mode Vercel)',
-      token: 'mock-token-vercel-' + Date.now(),
-      user: { 
-        id: Date.now(), 
-        nom_utilisateur, 
-        email, 
-        role: 'user' 
-      }
-    });
-  }
-  
-  // Version réelle avec MySQL
   try {
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcryptjs');
+    
     const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
     const token = jwt.sign(
       { userId: Date.now(), nom_utilisateur, email, role: 'user' },
-      SECRET_KEY,
+      process.env.SECRET_KEY || 'dev-key',
       { expiresIn: '24h' }
     );
     
@@ -206,10 +158,16 @@ app.post('/api/auth/register', async (req, res) => {
       user: { id: Date.now(), nom_utilisateur, email, role: 'user' }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Fallback pour Vercel
+    res.json({
+      message: 'Inscription simulée',
+      token: 'demo-token-' + Date.now(),
+      user: { id: Date.now(), nom_utilisateur, email, role: 'user' }
+    });
   }
 });
 
+// Connexion
 app.post('/api/auth/login', async (req, res) => {
   const { email, mot_de_passe } = req.body;
   
@@ -217,20 +175,12 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'Email et mot de passe requis' });
   }
   
-  // Simulation pour Vercel
-  if (isVercel || !jwt) {
-    return res.json({
-      message: 'Connexion simulée (mode Vercel)',
-      token: 'mock-token-vercel-' + Date.now(),
-      user: { id: 1, email, role: 'user' }
-    });
-  }
-  
-  // Version réelle
   try {
+    const jwt = require('jsonwebtoken');
+    
     const token = jwt.sign(
       { userId: 1, email, role: 'user' },
-      SECRET_KEY,
+      process.env.SECRET_KEY || 'dev-key',
       { expiresIn: '24h' }
     );
     
@@ -240,7 +190,12 @@ app.post('/api/auth/login', async (req, res) => {
       user: { id: 1, email, role: 'user' }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // Fallback pour Vercel
+    res.json({
+      message: 'Connexion simulée',
+      token: 'demo-token-' + Date.now(),
+      user: { id: 1, email, role: 'user' }
+    });
   }
 });
 
@@ -250,7 +205,7 @@ app.post('/api/auth/login', async (req, res) => {
 module.exports = app;
 
 // ====================
-// DÉMARRAGE LOCAL
+// DÉMARRAGE LOCAL/RAILWAY
 // ====================
 if (require.main === module && !isVercel) {
   const PORT = process.env.PORT || 5000;
