@@ -42,7 +42,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+   const response = await axios.post('https://aventures-alpines-production.up.railway.app/api/auth/register', {
         nom_utilisateur: formData.nom_utilisateur,
         email: formData.email,
         mot_de_passe: formData.mot_de_passe

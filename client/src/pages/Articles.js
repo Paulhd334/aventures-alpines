@@ -7,7 +7,7 @@ const Articles = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/articles')
+  axios.get('https://aventures-alpines-production.up.railway.app/api/articles')
       .then(response => {
         setPublications(response.data);
         setLoading(false);

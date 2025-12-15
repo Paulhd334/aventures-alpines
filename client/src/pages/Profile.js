@@ -24,7 +24,7 @@ const Profile = () => {
       setUser(parsedUser);
       
       // Charger les publications de CET utilisateur spécifique
-      axios.get(`http://localhost:5000/api/users/${parsedUser.nom_utilisateur}/articles`)
+     axios.get(`https://aventures-alpines-production.up.railway.app/api/users/${parsedUser.nom_utilisateur}/articles`)
         .then(response => {
           setPublications(response.data);
         })
