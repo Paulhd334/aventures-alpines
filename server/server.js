@@ -5,6 +5,8 @@ delete require.cache[require.resolve('debug')];
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -23,11 +25,15 @@ app.use(cors({
 app.use(express.json());
 
 // ====================
-// ROUTES COMMUNES
+// SERVIR LE FRONTEND (MAIS APRÈS LES ROUTES API !)
 // ====================
 
-// Route test
-app.get('/', (req, res) => {
+// ====================
+// ROUTES API (DOIVENT ÊTRE EN PREMIER !)
+// ====================
+
+// Route test API
+app.get('/api', (req, res) => {
   res.json({
     message: '🚀 API Aventures Alpines',
     status: 'online',
@@ -200,6 +206,62 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ====================
+// SERVIR LE FRONTEND (EN DERNIER !)
+// ====================
+
+// Chercher les fichiers frontend à différents emplacements
+const staticDirs = [
+  path.join(__dirname, '..', 'build'),
+  path.join(__dirname, '..', 'dist'),
+  path.join(__dirname, '..', 'public'),
+  path.join(__dirname, '..', 'client', 'build')
+];
+
+let foundStaticDir = null;
+
+for (const dir of staticDirs) {
+  if (fs.existsSync(dir)) {
+    console.log(`📁 Dossier frontend trouvé: ${dir}`);
+    app.use(express.static(dir, {
+      maxAge: isVercel || isRailway ? '1d' : 0
+    }));
+    foundStaticDir = dir;
+    break;
+  }
+}
+
+// Route racine pour afficher soit l'API soit le frontend
+app.get('/', (req, res) => {
+  if (foundStaticDir) {
+    // Si frontend trouvé, servir index.html
+    res.sendFile(path.join(foundStaticDir, 'index.html'));
+  } else {
+    // Sinon, montrer les infos API
+    res.json({
+      message: '🚀 API Aventures Alpines',
+      note: 'Frontend non trouvé. Utilisez /api/ pour les endpoints API.',
+      endpoints: {
+        api: '/api',
+        activities: '/api/activites',
+        register: 'POST /api/auth/register',
+        login: 'POST /api/auth/login'
+      }
+    });
+  }
+});
+
+// Route catch-all pour servir le frontend (EN DERNIÈRE POSITION !)
+if (foundStaticDir) {
+  app.get('*', (req, res) => {
+    // Ne pas intercepter les routes API
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'Route API non trouvée' });
+    }
+    res.sendFile(path.join(foundStaticDir, 'index.html'));
+  });
+}
+
+// ====================
 // EXPORT POUR VERCEL
 // ====================
 module.exports = app;
@@ -214,8 +276,12 @@ if (require.main === module && !isVercel) {
     console.log('\n' + '='.repeat(50));
     console.log(`🚀 SERVEUR DÉMARRÉ SUR LE PORT ${PORT}`);
     console.log('='.repeat(50));
-    console.log(`🌐 http://localhost:${PORT}`);
-    console.log(`📡 API: http://localhost:${PORT}/api/activites`);
+    
+    if (foundStaticDir) {
+      console.log(`🌐 Frontend: http://localhost:${PORT}`);
+    }
+    console.log(`📡 API: http://localhost:${PORT}/api`);
+    console.log(`📡 Activités: http://localhost:${PORT}/api/activites`);
     console.log('='.repeat(50));
   });
 }
