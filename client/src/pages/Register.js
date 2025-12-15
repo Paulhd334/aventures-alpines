@@ -56,7 +56,7 @@ const Register = () => {
       
       // Redirection après 2 secondes
       setTimeout(() => {
-        navigate('/');
+       navigate('/profile');
         window.location.reload();
       }, 2000);
 
