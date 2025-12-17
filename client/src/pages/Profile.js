@@ -9,6 +9,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('infos');
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
   
   const navigate = useNavigate();
 
@@ -17,12 +18,14 @@ const Profile = () => {
     const storedUser = localStorage.getItem('user');
     
     if (!storedUser) {
+      console.log('❌ Aucun utilisateur en localStorage, redirection vers login');
       navigate('/login');
       return;
     }
 
     try {
       const parsedUser = JSON.parse(storedUser);
+      console.log('👤 Utilisateur chargé depuis localStorage:', parsedUser.nom_utilisateur);
       setUser(parsedUser);
       setEditData({
         nom_utilisateur: parsedUser.nom_utilisateur,
@@ -32,6 +35,7 @@ const Profile = () => {
       // Charger les publications de CET utilisateur spécifique
       axios.get(`https://aventures-alpines-production.up.railway.app/api/users/${parsedUser.nom_utilisateur}/articles`)
         .then(response => {
+          console.log(`📝 ${response.data.length} publications chargées pour ${parsedUser.nom_utilisateur}`);
           // FILTRE : N'afficher que les publications RÉELLES (pas les tests)
           const realPublications = response.data.filter(pub => 
             pub.titre && pub.titre !== 'test' && 
@@ -40,11 +44,11 @@ const Profile = () => {
           setPublications(realPublications);
         })
         .catch(error => {
-          console.error('Erreur chargement publications:', error);
+          console.error('❌ Erreur chargement publications:', error.message);
           setPublications([]);
         });
     } catch (error) {
-      console.error('Erreur parsing user:', error);
+      console.error('❌ Erreur parsing user:', error);
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       navigate('/login');
@@ -54,50 +58,123 @@ const Profile = () => {
   }, [navigate]);
 
   const handleLogout = () => {
+    console.log('🚪 Déconnexion...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };
 
   const handleEdit = () => {
+    console.log('✏️ Mode édition activé');
     setEditing(true);
   };
 
-const handleSave = async () => {
-  try {
-    const response = await axios.put(
-      'https://aventures-alpines-production.up.railway.app/api/auth/profile', 
-      editData, 
-      {
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem('token')}` 
-        }
+  const handleSave = async () => {
+    console.log('💾 Sauvegarde du profil...');
+    
+    // Vérifier les données
+    if (!editData.nom_utilisateur || !editData.email) {
+      alert('Le nom d\'utilisateur et l\'email sont obligatoires');
+      return;
+    }
+    
+    setSaving(true);
+    
+    try {
+      // Récupérer le token
+      const token = localStorage.getItem('token');
+      console.log('🔑 Token récupéré:', token ? token.substring(0, 20) + '...' : 'NULL');
+      
+      if (!token) {
+        throw new Error('Token manquant. Veuillez vous reconnecter.');
       }
-    );
-    
-    // METTRE À JOUR le state
-    setUser(response.data.user);
-    
-    // METTRE À JOUR le localStorage
-    localStorage.setItem('user', JSON.stringify(response.data.user));
-    localStorage.setItem('token', response.data.token);
-    
-    // METTRE À JOUR le header globalement
-  window.postMessage({
-  type: 'USER_UPDATED',
-  user: response.data.user
-}, '*');
-console.log('📢 Message USER_UPDATED envoyé', response.data.user);
-    
-    setEditing(false);
-    
-  } catch (error) {
-    console.error('Erreur mise à jour profil:', error);
-    alert('Erreur lors de la mise à jour du profil');
-  }
-};
+      
+      console.log('📤 Données envoyées:', editData);
+      console.log('📡 Envoi requête PUT...');
+      
+      const response = await axios.put(
+        'https://aventures-alpines-production.up.railway.app/api/auth/profile', 
+        editData, 
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      console.log('✅ Réponse serveur:', response.data);
+      
+      if (response.data.message && response.data.user && response.data.token) {
+        // METTRE À JOUR le state
+        setUser(response.data.user);
+        
+        // METTRE À JOUR le localStorage
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        localStorage.setItem('token', response.data.token);
+        
+        console.log('🔄 Token et user mis à jour dans localStorage');
+        
+        // METTRE À JOUR le header globalement
+        window.postMessage({
+          type: 'USER_UPDATED',
+          user: response.data.user
+        }, '*');
+        
+        console.log('📢 Message USER_UPDATED envoyé', response.data.user);
+        
+        setEditing(false);
+        alert('✅ Profil mis à jour avec succès !');
+      } else {
+        throw new Error('Réponse serveur invalide');
+      }
+      
+    } catch (error) {
+      console.error('❌ Erreur détaillée mise à jour profil:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        headers: error.response?.headers
+      });
+      
+      let errorMessage = 'Erreur lors de la mise à jour du profil';
+      
+      if (error.response) {
+        // Le serveur a répondu avec un code d'erreur
+        switch (error.response.status) {
+          case 401:
+            errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            navigate('/login');
+            break;
+          case 400:
+            errorMessage = error.response.data?.error || 'Données invalides';
+            break;
+          case 500:
+            errorMessage = 'Erreur serveur. Veuillez réessayer plus tard.';
+            break;
+          default:
+            errorMessage = `Erreur ${error.response.status}: ${error.response.data?.error || 'Erreur inconnue'}`;
+        }
+      } else if (error.request) {
+        // La requête a été faite mais pas de réponse
+        errorMessage = 'Pas de réponse du serveur. Vérifiez votre connexion.';
+      } else {
+        // Erreur de configuration
+        errorMessage = error.message;
+      }
+      
+      alert(`❌ ${errorMessage}`);
+      
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const handleCancel = () => {
+    console.log('❌ Annulation des modifications');
     setEditData({
       nom_utilisateur: user.nom_utilisateur,
       email: user.email
@@ -396,30 +473,34 @@ console.log('📢 Message USER_UPDATED envoyé', response.data.user);
                   <>
                     <button
                       onClick={handleSave}
+                      disabled={saving}
                       style={{
                         padding: '0.75rem 1.5rem',
-                        backgroundColor: '#000',
+                        backgroundColor: saving ? '#666' : '#000',
                         color: 'white',
                         border: 'none',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: saving ? 'not-allowed' : 'pointer',
                         fontWeight: '500',
-                        fontSize: '1rem'
+                        fontSize: '1rem',
+                        opacity: saving ? 0.7 : 1
                       }}
                     >
-                      💾 Enregistrer
+                      {saving ? '💾 Enregistrement...' : '💾 Enregistrer'}
                     </button>
                     <button
                       onClick={handleCancel}
+                      disabled={saving}
                       style={{
                         padding: '0.75rem 1.5rem',
                         backgroundColor: 'transparent',
                         border: '1px solid #666',
                         color: '#666',
                         borderRadius: '4px',
-                        cursor: 'pointer',
+                        cursor: saving ? 'not-allowed' : 'pointer',
                         fontWeight: '500',
-                        fontSize: '1rem'
+                        fontSize: '1rem',
+                        opacity: saving ? 0.7 : 1
                       }}
                     >
                       Annuler
