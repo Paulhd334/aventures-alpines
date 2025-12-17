@@ -522,11 +522,13 @@ app.get('/api/users/:username/profile', async (req, res) => {
   }
 });
 
-// Récupérer le profil utilisateur (connexion)
+// Récupérer le profil utilisateur (connexion) - GET
 app.get('/api/auth/profile', async (req, res) => {
+  console.log('🔍 GET /api/auth/profile appelé');
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
+    console.log('⚠️  Pas de token, retour démo');
     return res.json({
       user: {
         id: 1,
@@ -541,19 +543,23 @@ app.get('/api/auth/profile', async (req, res) => {
   try {
     const jwt = require('jsonwebtoken');
     const token = authHeader.split(' ')[1];
+    console.log('🔑 Token reçu:', token.substring(0, 20) + '...');
+    
     const decoded = jwt.verify(token, process.env.SECRET_KEY || 'dev-key');
+    console.log('🔓 Token décodé:', decoded);
     
     const user = {
-      id: decoded.userId || 1,
+      id: decoded.userId || decoded.id || 1,
       nom_utilisateur: decoded.nom_utilisateur || 'Utilisateur Demo',
       email: decoded.email || 'demo@example.com',
       date_inscription: decoded.date_inscription || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       role: decoded.role || 'user'
     };
     
+    console.log('✅ Profil retourné:', user.nom_utilisateur);
     res.json({ user });
   } catch (error) {
-    console.error('Erreur vérification token:', error.message);
+    console.error('❌ Erreur vérification token:', error.message);
     res.json({
       user: {
         id: 1,
@@ -568,6 +574,9 @@ app.get('/api/auth/profile', async (req, res) => {
 
 // Inscription
 app.post('/api/auth/register', async (req, res) => {
+  console.log('📝 POST /api/auth/register appelé');
+  console.log('📦 Données:', req.body);
+  
   const { nom_utilisateur, email, mot_de_passe } = req.body;
   
   if (!nom_utilisateur || !email || !mot_de_passe) {
@@ -578,31 +587,37 @@ app.post('/api/auth/register', async (req, res) => {
     const jwt = require('jsonwebtoken');
     const bcrypt = require('bcryptjs');
     
+    const userId = Date.now();
+    const dateInscription = new Date().toISOString();
+    
     const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
     const token = jwt.sign(
       { 
-        userId: Date.now(), 
+        userId: userId, 
         nom_utilisateur, 
         email, 
         role: 'user',
-        date_inscription: new Date().toISOString()
+        date_inscription: dateInscription
       },
       process.env.SECRET_KEY || 'dev-key',
       { expiresIn: '24h' }
     );
     
+    console.log('✅ Utilisateur créé:', nom_utilisateur);
+    
     res.json({
       message: 'Inscription réussie',
       token,
       user: { 
-        id: Date.now(), 
+        id: userId, 
         nom_utilisateur, 
         email, 
         role: 'user',
-        date_inscription: new Date().toISOString()
+        date_inscription: dateInscription
       }
     });
   } catch (error) {
+    console.error('❌ Erreur inscription:', error);
     res.json({
       message: 'Inscription simulée',
       token: 'demo-token-' + Date.now(),
@@ -619,6 +634,9 @@ app.post('/api/auth/register', async (req, res) => {
 
 // Connexion
 app.post('/api/auth/login', async (req, res) => {
+  console.log('📝 POST /api/auth/login appelé');
+  console.log('📦 Données:', req.body);
+  
   const { email, mot_de_passe } = req.body;
   
   if (!email || !mot_de_passe) {
@@ -628,30 +646,37 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const jwt = require('jsonwebtoken');
     
+    const userId = 1;
+    const nom_utilisateur = email.split('@')[0] || 'Utilisateur';
+    const dateInscription = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    
     const token = jwt.sign(
       { 
-        userId: 1, 
-        nom_utilisateur: email.split('@')[0] || 'Utilisateur',
+        userId: userId, 
+        nom_utilisateur: nom_utilisateur,
         email, 
         role: 'user',
-        date_inscription: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        date_inscription: dateInscription
       },
       process.env.SECRET_KEY || 'dev-key',
       { expiresIn: '24h' }
     );
     
+    console.log('✅ Connexion réussie pour:', nom_utilisateur);
+    
     res.json({
       message: 'Connexion réussie',
       token,
       user: { 
-        id: 1, 
-        nom_utilisateur: email.split('@')[0] || 'Utilisateur',
+        id: userId, 
+        nom_utilisateur: nom_utilisateur,
         email, 
         role: 'user',
-        date_inscription: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        date_inscription: dateInscription
       }
     });
   } catch (error) {
+    console.error('❌ Erreur connexion:', error);
     res.json({
       message: 'Connexion simulée',
       token: 'demo-token-' + Date.now(),
@@ -667,32 +692,45 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ====================
-// METTRE À JOUR LE PROFIL (NOUVELLE ROUTE AJOUTÉE)
+// METTRE À JOUR LE PROFIL (CORRIGÉ)
 // ====================
 app.put('/api/auth/profile', async (req, res) => {
   console.log('📝 PUT /api/auth/profile appelé');
+  console.log('📦 Headers:', req.headers);
+  console.log('📦 Body:', req.body);
   
   const authHeader = req.headers.authorization;
   
   if (!authHeader) {
+    console.error('❌ Token manquant');
     return res.status(401).json({ error: 'Non autorisé. Token manquant.' });
   }
 
   try {
     const jwt = require('jsonwebtoken');
     const token = authHeader.split(' ')[1];
+    
+    console.log('🔑 Token reçu:', token.substring(0, 20) + '...');
+    
     const decoded = jwt.verify(token, process.env.SECRET_KEY || 'dev-key');
+    console.log('🔓 Token décodé:', decoded);
     
     const { nom_utilisateur, email } = req.body;
-    console.log('📦 Données reçues:', { nom_utilisateur, email });
     
     if (!nom_utilisateur || !email) {
-      return res.status(400).json({ error: 'Nom d\'utilisateur et email requis' });
+      console.error('❌ Données manquantes:', { nom_utilisateur, email });
+      return res.status(400).json({ 
+        error: 'Nom d\'utilisateur et email requis',
+        received: req.body 
+      });
     }
+    
+    // RÉCUPÉRER L'ID CORRECTEMENT
+    const userId = decoded.userId || decoded.id || 1;
     
     // Mettre à jour l'objet utilisateur
     const updatedUser = {
-      id: decoded.userId || decoded.id || 1,
+      id: userId,
       nom_utilisateur: nom_utilisateur,
       email: email,
       date_inscription: decoded.date_inscription || new Date().toISOString(),
@@ -701,12 +739,19 @@ app.put('/api/auth/profile', async (req, res) => {
     
     // Générer un NOUVEAU token avec les infos mises à jour
     const newToken = jwt.sign(
-      updatedUser,
+      {
+        userId: updatedUser.id,
+        nom_utilisateur: updatedUser.nom_utilisateur,
+        email: updatedUser.email,
+        date_inscription: updatedUser.date_inscription,
+        role: updatedUser.role
+      },
       process.env.SECRET_KEY || 'dev-key',
       { expiresIn: '24h' }
     );
     
     console.log('✅ Profil mis à jour pour:', updatedUser.nom_utilisateur);
+    console.log('🔄 Nouveau token généré');
     
     res.json({
       message: '✅ Profil mis à jour avec succès',
@@ -715,11 +760,65 @@ app.put('/api/auth/profile', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Erreur mise à jour profil backend:', error.message);
+    console.error('❌ Erreur détaillée:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        error: 'Token invalide', 
+        details: error.message 
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        error: 'Token expiré', 
+        details: error.message 
+      });
+    }
+    
     res.status(500).json({ 
       error: 'Erreur serveur', 
       details: error.message 
     });
+  }
+});
+
+// ====================
+// CRÉER LA TABLE UTILISATEURS POUR LES VRAIS PROFILS
+// ====================
+app.get('/api/auth/init-users-table', async (req, res) => {
+  try {
+    const mysql = require('mysql2/promise');
+    
+    const connection = await mysql.createConnection({
+      host: process.env.MYSQL_HOST || 'centerbeam.proxy.rlwy.net',
+      user: process.env.MYSQL_USER || 'root',
+      password: process.env.MYSQL_PASSWORD || 'NnpQXlvkNUHHyOaawaikRbzkPTwTBzqL',
+      database: process.env.MYSQL_DATABASE || 'railway',
+      port: process.env.MYSQL_PORT || 11303,
+      ssl: { rejectUnauthorized: false }
+    });
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS utilisateurs (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        nom_utilisateur VARCHAR(100) UNIQUE NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        mot_de_passe VARCHAR(255) NOT NULL,
+        date_inscription TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        role VARCHAR(50) DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await connection.end();
+    
+    res.json({ message: '✅ Table utilisateurs créée/initialisée' });
+  } catch (error) {
+    console.error('❌ Erreur création table utilisateurs:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -738,7 +837,7 @@ let foundStaticDir = null;
 
 for (const dir of staticDirs) {
   if (fs.existsSync(dir)) {
-    console.log(`Dossier frontend trouvé: ${dir}`);
+    console.log(`📁 Dossier frontend trouvé: ${dir}`);
     app.use(express.static(dir, {
       maxAge: 0
     }));
@@ -763,9 +862,10 @@ app.get('/', (req, res) => {
         user_articles: '/api/users/:username/articles',
         user_profile: '/api/users/:username/profile',
         profile: 'GET /api/auth/profile',
+        update_profile: 'PUT /api/auth/profile',
         register: 'POST /api/auth/register',
         login: 'POST /api/auth/login',
-        update_profile: 'PUT /api/auth/profile'
+        init_db: '/api/auth/init-users-table'
       }
     });
   }
@@ -788,16 +888,28 @@ const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log('\n' + '='.repeat(50));
-  console.log(`SERVEUR DÉMARRÉ SUR LE PORT ${PORT}`);
+  console.log(`🚀 SERVEUR DÉMARRÉ SUR LE PORT ${PORT}`);
   console.log('='.repeat(50));
   
   if (foundStaticDir) {
-    console.log(`Frontend: http://localhost:${PORT}`);
+    console.log(`🌐 Frontend: http://localhost:${PORT}`);
   }
-  console.log(`API: http://localhost:${PORT}/api`);
-  console.log(`Activités: http://localhost:${PORT}/api/activites`);
-  console.log(`Articles: http://localhost:${PORT}/api/articles`);
-  console.log(`Créer article: POST http://localhost:${PORT}/api/articles`);
-  console.log(`Mettre à jour profil: PUT http://localhost:${PORT}/api/auth/profile`);
+  console.log(`🔧 API: http://localhost:${PORT}/api`);
+  console.log(`🎿 Activités: http://localhost:${PORT}/api/activites`);
+  console.log(`📝 Articles: http://localhost:${PORT}/api/articles`);
+  console.log(`✍️  Créer article: POST http://localhost:${PORT}/api/articles`);
+  console.log(`👤 Profil: GET http://localhost:${PORT}/api/auth/profile`);
+  console.log(`🔄 Mettre à jour profil: PUT http://localhost:${PORT}/api/auth/profile`);
+  console.log(`🔐 Connexion: POST http://localhost:${Port}/api/auth/login`);
+  console.log(`📋 Inscription: POST http://localhost:${PORT}/api/auth/register`);
   console.log('='.repeat(50));
+});
+
+// Gestion d'erreurs globale
+process.on('uncaughtException', (error) => {
+  console.error('💥 Exception non gérée:', error);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error('💥 Rejet de promesse non géré:', error);
 });
