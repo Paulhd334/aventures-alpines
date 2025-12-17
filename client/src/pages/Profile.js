@@ -124,7 +124,7 @@ const Profile = () => {
         console.log('📢 Message USER_UPDATED envoyé', response.data.user);
         
         setEditing(false);
-        alert('✅ Profil mis à jour avec succès !');
+        alert(' Profil mis à jour avec succès !');
       } else {
         throw new Error('Réponse serveur invalide');
       }
