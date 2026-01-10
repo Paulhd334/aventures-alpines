@@ -1,27 +1,8 @@
-[phases.setup] 
-nixPkgs = ['nodejs_18'] 
- 
-[phases.install] 
+[phases.setup]
+nixPkgs = ['nodejs_20']  # Utilise Node 20 comme dans ton package.json
 
-added 1308 packages, and audited 1309 packages in 25s
+[phases.install]
+cmds = ['cd server && npm ci --only=production']
 
-265 packages are looking for funding
-  run `npm fund` for details
-
-9 vulnerabilities (3 moderate, 6 high)
-
-To address all issues (including breaking changes), run:
-  npm audit fix --force
-
-Run `npm audit` for details.
- 
-[start] 
-Unknown command: "start'"
-
-
-Did you mean one of these?
-  npm star # Mark your favorite packages
-  npm stars # View packages marked as favorites
-  npm start # Start a package
-To see a list of supported npm commands, run:
-  npm help
+[start]
+cmd = 'cd server && npm start'  # Utilise cmd au singulier, pas cmds
