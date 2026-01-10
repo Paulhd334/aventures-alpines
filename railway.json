@@ -1,10 +1,13 @@
-echo { > railway.json
-echo   "build": { >> railway.json
-echo     "builder": "nixpacks", >> railway.json
-echo     "buildCommand": "cd server && npm install" >> railway.json
-echo   }, >> railway.json
-echo   "deploy": { >> railway.json
-echo     "startCommand": "cd server && npm start", >> railway.json
-echo     "restartPolicyType": "ON_FAILURE" >> railway.json
-echo   } >> railway.json
-echo } >> railway.json
+{ 
+  "$schema": "https://railway.app/railway.schema.json", 
+  "build": { 
+    "builder": "nixpacks", 
+    "buildCommand": "cd server && npm install" 
+  }, 
+  "deploy": { 
+    "numReplicas": 1, 
+    "startCommand": "cd server && npm start", 
+    "restartPolicyType": "ON_FAILURE", 
+    "restartPolicyMaxRetries": 3 
+  } 
+} 
