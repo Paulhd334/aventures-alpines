@@ -1,0 +1,27 @@
+[phases.setup] 
+nixPkgs = ['nodejs_18'] 
+ 
+[phases.install] 
+
+added 1308 packages, and audited 1309 packages in 25s
+
+265 packages are looking for funding
+  run `npm fund` for details
+
+9 vulnerabilities (3 moderate, 6 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+ 
+[start] 
+Unknown command: "start'"
+
+
+Did you mean one of these?
+  npm star # Mark your favorite packages
+  npm stars # View packages marked as favorites
+  npm start # Start a package
+To see a list of supported npm commands, run:
+  npm help
