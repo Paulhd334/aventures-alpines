@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs-20_x"]  # Correction du nom du package
+nixPkgs = ["nodejs-20_x"]
 
 [phases.install]
-cmds = ["cd server && npm ci"]  # Supprime --only=production si tu veux aussi les devDependencies
+cmds = ["cd server && npm ci"]
 
 [start]
-cmd = "cd server && npm start"  # Utilise bien cmd au singulier
+cmd = "cd server && npm start"
