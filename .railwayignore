@@ -1,1 +1,6 @@
-client/ 
+echo client/ > .railwayignore
+echo package-lock.json >> .railwayignore
+echo package.json >> .railwayignore
+
+git add .
+git commit -
