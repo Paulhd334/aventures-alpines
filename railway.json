@@ -1,0 +1,10 @@
+echo { > railway.json
+echo   "build": { >> railway.json
+echo     "builder": "nixpacks", >> railway.json
+echo     "buildCommand": "cd server && npm install" >> railway.json
+echo   }, >> railway.json
+echo   "deploy": { >> railway.json
+echo     "startCommand": "cd server && npm start", >> railway.json
+echo     "restartPolicyType": "ON_FAILURE" >> railway.json
+echo   } >> railway.json
+echo } >> railway.json
