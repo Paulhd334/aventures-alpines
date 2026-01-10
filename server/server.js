@@ -916,3 +916,4 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (error) => {
   console.error('💥 Rejet de promesse non géré:', error);
 });
+// Railway deployment $(date) 
