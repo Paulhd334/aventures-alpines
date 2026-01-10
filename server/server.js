@@ -903,7 +903,7 @@ app.listen(PORT, () => {
   console.log(`✍️  Créer article: POST http://localhost:${PORT}/api/articles`);
   console.log(`👤 Profil: GET http://localhost:${PORT}/api/auth/profile`);
   console.log(`🔄 Mettre à jour profil: PUT http://localhost:${PORT}/api/auth/profile`);
-  console.log(`🔐 Connexion: POST http://localhost:${Port}/api/auth/login`);
+  console.log(`🔐 Connexion: POST http://localhost:${PORT}/api/auth/login`);
   console.log(`📋 Inscription: POST http://localhost:${PORT}/api/auth/register`);
   console.log('='.repeat(50));
 });
