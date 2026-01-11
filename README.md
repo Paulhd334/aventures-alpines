@@ -1,6 +1,4 @@
-# 🏔️ Aventures Alpines
-
-Projet web full‑stack développé dans le cadre d'un projet pédagogique.
+#  Aventures Alpines
 
 ---
 
