@@ -13,7 +13,7 @@ Le projet est structuré selon une architecture claire séparant les responsabil
 
 ## 🧰 Prérequis
 
-**Avant**de lancer le projet, assurez‑vous d’avoir installé :
+**Avant** de lancer le projet, assurez‑vous d’avoir installé :
 
 Git
 
