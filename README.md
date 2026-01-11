@@ -1,4 +1,4 @@
-git clone https://github.com/Paulhd334/aventures-alpines.git
+1) git clone https://github.com/Paulhd334/aventures-alpines.git
 cd aventures-alpines
 
  2) Installer les dépendances
@@ -13,7 +13,7 @@ npm start
 
 📌 Pour le client
 
-Ouvre un nouveau terminal ou après être revenu à la racine avec cd .. :
+Ouvre un nouveau terminal  :
 
 cd client
 npm install
