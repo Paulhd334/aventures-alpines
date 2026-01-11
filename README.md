@@ -11,7 +11,17 @@
 
 Le projet est structuré selon une architecture claire séparant les responsabilités entre le client et le serveur.
 
+🧰 Prérequis
 
+Avant de lancer le projet, assurez‑vous d’avoir installé :
+
+Git
+
+Node.js (version 18 ou supérieure recommandée)
+
+npm
+
+Un terminal (PowerShell, Invite de commandes, Terminal Linux/Mac)
 
 ## 📥 Installation du projet
 
