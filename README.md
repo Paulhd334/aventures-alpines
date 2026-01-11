@@ -21,6 +21,7 @@ Ouvre un nouveau terminal  :
 cd aventures-alpines
 
 cd client
+
 npm install
 
 npm run dev
