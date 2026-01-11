@@ -1,29 +1,89 @@
-1)
+# 🏔️ Aventures Alpines
 
+Projet web full‑stack développé dans le cadre d'un projet pédagogique.
+
+---
+
+## 📌 Présentation du projet
+
+**Aventures Alpines** est une application web composée :
+
+* d’un **backend (server)** chargé de la logique métier et de l’API,
+* d’un **frontend (client)** qui constitue l’interface utilisateur.
+
+Le projet est structuré selon une architecture claire séparant les responsabilités entre le client et le serveur.
+
+
+
+## 📥 Installation du projet
+
+### 1️⃣ Cloner le dépôt
+
+```bash
 git clone https://github.com/Paulhd334/aventures-alpines.git
-
 cd aventures-alpines
+```
 
- 4) Installer les dépendances
+---
 
-Le projet est séparé en deux parties : client et server. 
+## ⚙️ Lancement du serveur (Backend)
 
-📌 Pour le serveur
+Le serveur gère l’API et les traitements côté serveur.
+
+```bash
 cd server
 npm install
-
 npm start
+```
 
-📌 Pour le client
+➡️ Le serveur démarre sur le port configuré (par défaut : `http://localhost:3000`).
 
-Ouvre un nouveau terminal  :
+---
 
+## 💻 Lancement du client (Frontend)
+
+Le client correspond à l’interface utilisateur de l’application.
+
+> ⚠️ Ouvrez **un nouveau terminal** avant de lancer le client.
+
+```bash
 cd aventures-alpines
-
 cd client
-
 npm install
-
 npm run dev
+```
 
+➡️ L’application est accessible via le navigateur à l’adresse indiquée dans le terminal (ex : `http://localhost:5173`).
 
+---
+
+## 📁 Structure du projet
+
+```text
+aventures-alpines/
+│
+├── client/        # Frontend (interface utilisateur)
+├── server/        # Backend (API, logique métier)
+└── README.md      # Documentation du projet
+```
+
+---
+
+## 🧪 Développement
+
+* Le backend est développé avec **Node.js**
+* Le frontend utilise un framework  REACT et JavaScript
+* Les dépendances sont gérées avec **npm**
+
+---
+
+## 👤 Auteur
+
+**Paul**
+Projet réalisé dans le cadre du **BTS SIO – option SLAM**.
+
+---
+
+## 📄 Licence
+
+Projet à usage pédagogique.
