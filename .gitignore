@@ -1,0 +1,11 @@
+"*.log" 
+"*.tmp" 
+"*.lnk" 
+"*.url" 
+"*.pdf" 
+"*.docx" 
+"*.ova" 
+"*.ppk" 
+"node_modules/" 
+"*/"   # Important: ignore tous les dossiers parent
+node_modules
