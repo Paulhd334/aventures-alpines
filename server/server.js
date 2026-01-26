@@ -1,5 +1,5 @@
 // ============================================
-// server.js - VERSION COMPLÈTE AVEC GALERIE
+// server.js - VERSION COMPLÈTE AVEC GALERIE ET SKI
 // ============================================
 
 const express = require('express');
@@ -43,6 +43,7 @@ app.get('/api', (req, res) => {
       itineraires: '/api/Itineraires',
       activites: '/api/activites',
       galerie: '/api/galerie-randonnee',
+      ski: '/api/ski/stations, /api/ski/temoignages, /api/ski/offres',
       contact: '/api/contact (POST)',
       auth: '/api/auth/register, /api/auth/login'
     }
@@ -381,7 +382,146 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // ============================================
-// 6. AUTHENTIFICATION
+// 6. SKI
+// ============================================
+
+// GET toutes les stations
+app.get('/api/ski/stations', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT * FROM stations_ski 
+      ORDER BY region, nom
+    `);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur stations ski:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET une station spécifique
+app.get('/api/ski/stations/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT * FROM stations_ski WHERE id = ?',
+      [id]
+    );
+    await connection.end();
+    
+    if (rows.length === 0) return res.status(404).json({ error: 'Station non trouvée' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Erreur station:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET témoignages
+app.get('/api/ski/temoignages', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT t.*, s.nom as station_nom 
+      FROM temoignages_ski t
+      LEFT JOIN stations_ski s ON t.station_id = s.id
+      WHERE t.approuve = TRUE
+      ORDER BY t.created_at DESC
+      LIMIT 10
+    `);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur témoignages ski:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST nouveau témoignage
+app.post('/api/ski/temoignages', async (req, res) => {
+  const { nom, email, type_ski, station_id, message, note } = req.body;
+  
+  if (!nom || !message) {
+    return res.status(400).json({ error: 'Nom et message requis' });
+  }
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      'INSERT INTO temoignages_ski (nom, email, type_ski, station_id, message, note) VALUES (?, ?, ?, ?, ?, ?)',
+      [nom, email || null, type_ski || null, station_id || null, message, note || null]
+    );
+    await connection.end();
+    
+    res.status(201).json({
+      message: 'Témoignage envoyé avec succès',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error('Erreur création témoignage:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET offres spéciales
+app.get('/api/ski/offres', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT o.*, s.nom as station_nom, s.photo_url as station_photo
+      FROM offres_ski o
+      JOIN stations_ski s ON o.station_id = s.id
+      WHERE o.actif = TRUE AND (o.date_fin IS NULL OR o.date_fin >= CURDATE())
+      ORDER BY o.prix
+      LIMIT 8
+    `);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur offres ski:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET stations filtrées par région
+app.get('/api/ski/filtre/region', async (req, res) => {
+  const { region } = req.query;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(
+      'SELECT * FROM stations_ski WHERE region = ? ORDER BY nom',
+      [region]
+    );
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur filtre région:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET stations avec bon enneigement (> 80cm)
+app.get('/api/ski/enneigement', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT * FROM stations_ski 
+      WHERE enneigement_actuel >= 80
+      ORDER BY enneigement_actuel DESC
+    `);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur enneigement:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// 7. AUTHENTIFICATION
 // ============================================
 
 app.post('/api/auth/register', async (req, res) => {
@@ -505,6 +645,9 @@ app.listen(PORT, () => {
   console.log(`📍 Itinéraires: http://localhost:${PORT}/api/Itineraires`);
   console.log(`📍 Galerie: http://localhost:${PORT}/api/galerie-randonnee`);
   console.log(`📍 Activités: http://localhost:${PORT}/api/activites`);
+  console.log(`📍 Stations ski: http://localhost:${PORT}/api/ski/stations`);
+  console.log(`📍 Témoignages ski: http://localhost:${PORT}/api/ski/temoignages`);
+  console.log(`📍 Offres ski: http://localhost:${PORT}/api/ski/offres`);
   console.log(`📍 Filtre difficulté: http://localhost:${PORT}/api/galerie-randonnee/filtre/difficulte?difficulte=facile`);
   console.log(`📍 Filtre saison: http://localhost:${PORT}/api/galerie-randonnee/filtre/saison?saison=ete`);
   console.log('='.repeat(60));

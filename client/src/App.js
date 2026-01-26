@@ -14,7 +14,8 @@ import Articles from './pages/Articles';
 import ProfilePublic from './pages/ProfilePublic';
 import Itineraires from './pages/Itineraires';
 import Randonnee from './pages/Randonnee';
-import Escalade from './pages/Escalade'; // ← AJOUT ICI
+import Escalade from './pages/Escalade';
+import Ski from './pages/Ski'; // ← AJOUT ICI
 
 function App() {
   return (
@@ -33,7 +34,8 @@ function App() {
             
             {/* Pages d'activités */}
             <Route path="/randonnee" element={<Randonnee />} />
-            <Route path="/escalade" element={<Escalade />} /> {/* ← AJOUT ICI */}
+            <Route path="/escalade" element={<Escalade />} />
+            <Route path="/ski" element={<Ski />} /> {/* ← AJOUT ICI */}
             <Route path="/itineraires" element={<Itineraires />} />
             
             {/* Articles et publications */}
