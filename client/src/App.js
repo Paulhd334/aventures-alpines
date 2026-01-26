@@ -10,9 +10,11 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import CreatePublication from './pages/CreatePublication';
-import Articles from './pages/Articles'; // ← ON GARDE Articles.js
-import ProfilePublic from './pages/ProfilePublic'; // ← AJOUT
-import Itineraires from './pages/Itineraires'; // IMPORT CORRIGÉ
+import Articles from './pages/Articles';
+import ProfilePublic from './pages/ProfilePublic';
+import Itineraires from './pages/Itineraires';
+import Randonnee from './pages/Randonnee';
+import Escalade from './pages/Escalade'; // ← AJOUT ICI
 
 function App() {
   return (
@@ -27,11 +29,17 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/profile/:username" element={<ProfilePublic />} /> {/* ← NOUVELLE ROUTE */}
-            <Route path="/itineraires" element={<Itineraires />} /> {/*PAGE NOUVELLE ITINERAIRE */}
+            <Route path="/profile/:username" element={<ProfilePublic />} />
+            
+            {/* Pages d'activités */}
+            <Route path="/randonnee" element={<Randonnee />} />
+            <Route path="/escalade" element={<Escalade />} /> {/* ← AJOUT ICI */}
+            <Route path="/itineraires" element={<Itineraires />} />
+            
+            {/* Articles et publications */}
             <Route path="/blog/new" element={<CreatePublication />} />
-            <Route path="/blog" element={<Articles />} /> {/* ← UTILISE Articles.js */}
-            <Route path="/articles" element={<Articles />} /> {/* ← ALIAS */}
+            <Route path="/blog" element={<Articles />} />
+            <Route path="/articles" element={<Articles />} />
             
             {/* Route 404 */}
             <Route path="*" element={<Home />} />

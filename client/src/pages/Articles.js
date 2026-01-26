@@ -30,7 +30,9 @@ const ArticlesList = () => {
 
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', padding: '3rem 1rem' }}>
+      
       <h1 style={{ marginBottom: '2rem' }}>Tous les articles</h1>
+      
       <div style={{ display: 'grid', gap: '1.5rem' }}>
         {articles.map((article) => (
           <div key={article.id} style={{ border: '1px solid #ddd', borderRadius: '6px', padding: '1rem' }}>
@@ -41,6 +43,7 @@ const ArticlesList = () => {
             <p style={{ marginBottom: '0.5rem' }}>{article.contenu}</p>
             <small style={{ color: '#999' }}>Publié le: {new Date(article.created_at).toLocaleString()}</small>
           </div>
+          
         ))}
       </div>
     </div>

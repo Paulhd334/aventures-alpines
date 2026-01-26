@@ -1,5 +1,5 @@
 // ============================================
-// server.js - VERSION AVEC ROUTES EN MAJUSCULES
+// server.js - VERSION COMPLÈTE AVEC GALERIE
 // ============================================
 
 const express = require('express');
@@ -42,6 +42,7 @@ app.get('/api', (req, res) => {
       articles: '/api/articles',
       itineraires: '/api/Itineraires',
       activites: '/api/activites',
+      galerie: '/api/galerie-randonnee',
       contact: '/api/contact (POST)',
       auth: '/api/auth/register, /api/auth/login'
     }
@@ -120,7 +121,6 @@ app.post('/api/articles', async (req, res) => {
 // 2. ITINÉRAIRES (EN MAJUSCULE)
 // ============================================
 
-// Récupérer tous les itinéraires
 app.get('/api/Itineraires', async (req, res) => {
   try {
     const connection = await mysql.createConnection(dbConfig);
@@ -136,7 +136,6 @@ app.get('/api/Itineraires', async (req, res) => {
   }
 });
 
-// Récupérer un itinéraire spécifique
 app.get('/api/Itineraires/:id', async (req, res) => {
   const id = req.params.id;
   try {
@@ -156,7 +155,180 @@ app.get('/api/Itineraires/:id', async (req, res) => {
 });
 
 // ============================================
-// 3. ACTIVITÉS
+// 3. GALERIE RANDONNÉE
+// ============================================
+
+// GET toutes les photos de la galerie
+app.get('/api/galerie-randonnee', async (req, res) => {
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT g.*, u.username 
+      FROM galerie_randonnee g
+      LEFT JOIN users u ON g.utilisateur_id = u.id
+      ORDER BY g.date_publication DESC
+    `);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur galerie:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET une photo spécifique
+app.get('/api/galerie-randonnee/:id', async (req, res) => {
+  const id = req.params.id;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT g.*, u.username 
+      FROM galerie_randonnee g
+      LEFT JOIN users u ON g.utilisateur_id = u.id
+      WHERE g.id = ?
+    `, [id]);
+    await connection.end();
+    
+    if (rows.length === 0) return res.status(404).json({ error: 'Photo non trouvée' });
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Erreur photo:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// POST ajouter une nouvelle photo
+app.post('/api/galerie-randonnee', async (req, res) => {
+  const { 
+    utilisateur_id, 
+    titre, 
+    description, 
+    image_url, 
+    localisation, 
+    altitude, 
+    difficulte, 
+    saison, 
+    date_prise 
+  } = req.body;
+  
+  if (!utilisateur_id || !titre || !image_url) {
+    return res.status(400).json({ error: 'Utilisateur, titre et image sont requis' });
+  }
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [result] = await connection.execute(
+      `INSERT INTO galerie_randonnee 
+       (utilisateur_id, titre, description, image_url, localisation, altitude, difficulte, saison, date_prise, date_publication) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        utilisateur_id, 
+        titre, 
+        description || null, 
+        image_url, 
+        localisation || null, 
+        altitude || null, 
+        difficulte || null, 
+        saison || null, 
+        date_prise || null
+      ]
+    );
+    
+    const [newPhoto] = await connection.execute(`
+      SELECT g.*, u.username 
+      FROM galerie_randonnee g
+      LEFT JOIN users u ON g.utilisateur_id = u.id
+      WHERE g.id = ?
+    `, [result.insertId]);
+    await connection.end();
+    
+    res.status(201).json({
+      message: 'Photo ajoutée avec succès',
+      photo: newPhoto[0]
+    });
+  } catch (error) {
+    console.error('Erreur ajout photo:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// PUT mettre à jour les likes d'une photo
+app.put('/api/galerie-randonnee/:id/like', async (req, res) => {
+  const id = req.params.id;
+  const { action } = req.body; // 'increment' ou 'decrement'
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    if (action === 'increment') {
+      await connection.execute(
+        'UPDATE galerie_randonnee SET likes = likes + 1 WHERE id = ?',
+        [id]
+      );
+    } else if (action === 'decrement') {
+      await connection.execute(
+        'UPDATE galerie_randonnee SET likes = GREATEST(likes - 1, 0) WHERE id = ?',
+        [id]
+      );
+    }
+    
+    const [updated] = await connection.execute(
+      'SELECT likes FROM galerie_randonnee WHERE id = ?',
+      [id]
+    );
+    await connection.end();
+    
+    res.json({
+      message: 'Like mis à jour',
+      likes: updated[0]?.likes || 0
+    });
+  } catch (error) {
+    console.error('Erreur like:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET photos filtrées par difficulté
+app.get('/api/galerie-randonnee/filtre/difficulte', async (req, res) => {
+  const { difficulte } = req.query;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT g.*, u.username 
+      FROM galerie_randonnee g
+      LEFT JOIN users u ON g.utilisateur_id = u.id
+      WHERE g.difficulte = ?
+      ORDER BY g.date_publication DESC
+    `, [difficulte]);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur filtre:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// GET photos filtrées par saison
+app.get('/api/galerie-randonnee/filtre/saison', async (req, res) => {
+  const { saison } = req.query;
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    const [rows] = await connection.execute(`
+      SELECT g.*, u.username 
+      FROM galerie_randonnee g
+      LEFT JOIN users u ON g.utilisateur_id = u.id
+      WHERE g.saison = ?
+      ORDER BY g.date_publication DESC
+    `, [saison]);
+    await connection.end();
+    res.json(rows);
+  } catch (error) {
+    console.error('Erreur filtre saison:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// 4. ACTIVITÉS
 // ============================================
 
 app.get('/api/activites', async (req, res) => {
@@ -186,7 +358,7 @@ app.get('/api/activites/:id', async (req, res) => {
 });
 
 // ============================================
-// 4. CONTACT
+// 5. CONTACT
 // ============================================
 
 app.post('/api/contact', async (req, res) => {
@@ -209,7 +381,7 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // ============================================
-// 5. AUTHENTIFICATION
+// 6. AUTHENTIFICATION
 // ============================================
 
 app.post('/api/auth/register', async (req, res) => {
@@ -327,10 +499,13 @@ app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log(`🚀 SERVEUR DÉMARRÉ SUR http://localhost:${PORT}`);
   console.log('='.repeat(60));
-  console.log('\n🔗 ENDPOINTS EN MAJUSCULES:');
+  console.log('\n🔗 ENDPOINTS DISPONIBLES:');
   console.log(`📍 Test: http://localhost:${PORT}/api`);
   console.log(`📍 Articles: http://localhost:${PORT}/api/articles`);
   console.log(`📍 Itinéraires: http://localhost:${PORT}/api/Itineraires`);
+  console.log(`📍 Galerie: http://localhost:${PORT}/api/galerie-randonnee`);
   console.log(`📍 Activités: http://localhost:${PORT}/api/activites`);
+  console.log(`📍 Filtre difficulté: http://localhost:${PORT}/api/galerie-randonnee/filtre/difficulte?difficulte=facile`);
+  console.log(`📍 Filtre saison: http://localhost:${PORT}/api/galerie-randonnee/filtre/saison?saison=ete`);
   console.log('='.repeat(60));
 });
