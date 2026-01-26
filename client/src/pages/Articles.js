@@ -12,7 +12,7 @@ const ArticlesList = () => {
     const fetchArticles = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/articles');
-        setArticles(response.data); // Assurez-vous que l'API renvoie un tableau d'articles
+        setArticles(response.data);
       } catch (err) {
         console.error('Erreur fetch articles:', err);
         setError('Impossible de récupérer les articles. Vérifiez le serveur.');
@@ -36,7 +36,7 @@ const ArticlesList = () => {
           <div key={article.id} style={{ border: '1px solid #ddd', borderRadius: '6px', padding: '1rem' }}>
             <h2 style={{ marginBottom: '0.5rem' }}>{article.titre}</h2>
             <p style={{ color: '#666', marginBottom: '0.5rem' }}>
-              <strong>Auteur ID:</strong> {article.auteur_id} | <strong>Lieu:</strong> {article.lieu || 'Non renseigné'}
+              <strong>Auteur:</strong> {article.auteur_nom} | <strong>Lieu:</strong> {article.lieu || 'Non renseigné'}
             </p>
             <p style={{ marginBottom: '0.5rem' }}>{article.contenu}</p>
             <small style={{ color: '#999' }}>Publié le: {new Date(article.created_at).toLocaleString()}</small>

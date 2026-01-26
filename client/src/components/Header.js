@@ -66,6 +66,7 @@ const Header = () => {
     { path: '/', label: 'Accueil' },
     { path: '/activities', label: 'Activités' },
     { path: '/articles', label: 'Articles' },
+    { path: '/Itineraires', label: 'Itinéraires' },
     { path: '/contact', label: 'Contact' },
   ];
 
