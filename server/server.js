@@ -466,23 +466,34 @@ app.post('/api/ski/temoignages', async (req, res) => {
   }
 });
 
-// GET offres spéciales
+// GET offres spéciales - VERSION SIMPLIFIÉE POUR DÉBOGAGE
 app.get('/api/ski/offres', async (req, res) => {
   try {
+    console.log('🔍 Route /api/ski/offres appelée');
     const connection = await mysql.createConnection(dbConfig);
+    
+    // D'abord, vérifier si la table existe et compter les offres
+    const [count] = await connection.execute('SELECT COUNT(*) as count FROM offres_ski');
+    console.log(`📊 Nombre total d'offres dans la table: ${count[0].count}`);
+    
+    // Requête simplifiée SANS filtre de date pour le débogage
     const [rows] = await connection.execute(`
       SELECT o.*, s.nom as station_nom, s.photo_url as station_photo
       FROM offres_ski o
-      JOIN stations_ski s ON o.station_id = s.id
-      WHERE o.actif = TRUE AND (o.date_fin IS NULL OR o.date_fin >= CURDATE())
+      LEFT JOIN stations_ski s ON o.station_id = s.id
+      WHERE o.actif = TRUE
       ORDER BY o.prix
-      LIMIT 8
+      LIMIT 10
     `);
+    
+    console.log(`✅ ${rows.length} offres trouvées après requête`);
+    
     await connection.end();
     res.json(rows);
   } catch (error) {
-    console.error('Erreur offres ski:', error.message);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur offres ski:', error.message);
+    console.error('Détails:', error);
+    res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });
 
@@ -641,14 +652,5 @@ app.listen(PORT, () => {
   console.log('='.repeat(60));
   console.log('\n🔗 ENDPOINTS DISPONIBLES:');
   console.log(`📍 Test: http://localhost:${PORT}/api`);
-  console.log(`📍 Articles: http://localhost:${PORT}/api/articles`);
-  console.log(`📍 Itinéraires: http://localhost:${PORT}/api/Itineraires`);
-  console.log(`📍 Galerie: http://localhost:${PORT}/api/galerie-randonnee`);
-  console.log(`📍 Activités: http://localhost:${PORT}/api/activites`);
-  console.log(`📍 Stations ski: http://localhost:${PORT}/api/ski/stations`);
-  console.log(`📍 Témoignages ski: http://localhost:${PORT}/api/ski/temoignages`);
-  console.log(`📍 Offres ski: http://localhost:${PORT}/api/ski/offres`);
-  console.log(`📍 Filtre difficulté: http://localhost:${PORT}/api/galerie-randonnee/filtre/difficulte?difficulte=facile`);
-  console.log(`📍 Filtre saison: http://localhost:${PORT}/api/galerie-randonnee/filtre/saison?saison=ete`);
   console.log('='.repeat(60));
 });
