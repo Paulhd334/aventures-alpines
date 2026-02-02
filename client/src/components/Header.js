@@ -74,7 +74,7 @@ const Header = () => {
         { path: '/randonnee', label: 'Randonnée' },
         { path: '/escalade', label: 'Escalade' },
         { path: '/ski', label: 'Ski' },
-        { path: '/Itineraires', label: 'Itinéraires' }
+        { path: '/Routes', label: 'Itinéraires' }
       ]
     },
   ];
