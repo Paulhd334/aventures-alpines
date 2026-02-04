@@ -7,7 +7,7 @@ const ActivityCard = ({ activity }) => {
   const [error, setError] = useState('');
   
   // Compatibilité avec les deux formats de données
-  const name = activity?.name || activity?.nom || 'Activité';
+  const activityName = activity?.name || activity?.nom || 'Activité';
   const difficulty = activity?.difficulty || activity?.difficulte || 'Niveau non spécifié';
   const description = activity?.description || '';
   const image = activity?.image || activity?.image_url || '/default-mountain.jpg';
@@ -27,52 +27,127 @@ const ActivityCard = ({ activity }) => {
     }
     
     try {
-      return JSON.parse(userStr);
-    } catch {
+      const userData = JSON.parse(userStr);
+      console.log('👤 Utilisateur connecté:', userData);
+      return userData;
+    } catch (err) {
+      console.error('❌ Erreur parsing user:', err);
       setError('Session invalide');
       return null;
     }
   };
 
-  // Gérer la réservation
+  // Gérer la réservation - VERSION AVEC API
   const handleReservation = async () => {
+    console.log('🟡 Début de la réservation pour activité:', activity);
+    
     const user = checkLogin();
-    if (!user) return;
+    if (!user) {
+      console.log('❌ Aucun utilisateur connecté');
+      return;
+    }
     
     setLoading(true);
     setError('');
     
     try {
+      // Demander les informations de réservation
       const date = prompt('Entrez la date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
       if (!date) {
+        console.log('❌ Date non fournie');
         setLoading(false);
         return;
       }
       
-      const personnes = prompt('Nombre de personnes:', '1');
-      if (!personnes) {
+      const personnesInput = prompt('Nombre de personnes:', '1');
+      if (!personnesInput) {
+        console.log('❌ Nombre de personnes non fourni');
         setLoading(false);
         return;
       }
       
-      // Ici, tu feras l'appel API vers ton serveur
-      console.log('Réservation:', {
-        userId: user.id,
-        activityId: activity?.id,
-        activityName: name,
-        date: date,
-        nbPersonnes: parseInt(personnes)
+      const nbPersonnes = parseInt(personnesInput);
+      if (isNaN(nbPersonnes) || nbPersonnes < 1) {
+        setError('Nombre de personnes invalide');
+        setLoading(false);
+        return;
+      }
+      
+      const notes = prompt('Notes ou remarques (optionnel):', '');
+      
+      // Construction des données
+      const reservationData = {
+        userId: user.id,                    // ID de l'utilisateur
+        activityId: activity?.id,           // ID de l'activité
+        activityName: activityName,         // Nom de l'activité
+        date: date,                         // Date de réservation
+        nbPersonnes: nbPersonnes,           // Nombre de personnes
+        notes: notes || null                // Notes optionnelles
+      };
+      
+      console.log('📤 Données envoyées au serveur:', reservationData);
+      console.log('🔗 URL appelée:', 'http://localhost:5000/api/reservations');
+      
+      // APPEL API RÉEL vers votre serveur
+      const response = await fetch('http://localhost:5000/api/reservations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reservationData)
       });
       
-      // Simuler l'appel API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('📥 Réponse du serveur (status):', response.status);
       
-      alert('✅ Réservation effectuée avec succès !');
+      // Vérifier la réponse
+      if (!response.ok) {
+        let errorMessage = 'Erreur lors de la réservation (statut ' + response.status + ')';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('❌ Erreur détaillée:', errorData);
+        } catch (jsonError) {
+          // Si la réponse n'est pas du JSON
+          const text = await response.text();
+          console.error('❌ Réponse brute:', text);
+          errorMessage += ' - ' + text.substring(0, 100);
+        }
+        throw new Error(errorMessage);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Résultat:', result);
+      
+      // Afficher le message de succès et rediriger
+      alert(`✅ ${result.message}`);
+      
+      // Optionnel: Stocker l'ID de réservation dans le localStorage
+      if (result.reservation?.id) {
+        localStorage.setItem('lastReservation', JSON.stringify({
+          id: result.reservation.id,
+          activityName: activityName,
+          date: date
+        }));
+      }
+      
       // Rediriger vers le profil
-      navigate('/profile');
+      navigate('/profile', { 
+        state: { 
+          reservationSuccess: true,
+          reservation: result.reservation 
+        } 
+      });
       
     } catch (err) {
-      setError('Erreur lors de la réservation');
+      console.error('❌ Erreur réservation complète:', err);
+      setError(err.message || 'Erreur lors de la réservation');
+      
+      // Option: Recharger la page en cas d'erreur spécifique
+      setTimeout(() => {
+        if (err.message.includes('session') || err.message.includes('authentification') || err.message.includes('401')) {
+          navigate('/login');
+        }
+      }, 2000);
     } finally {
       setLoading(false);
     }
@@ -153,7 +228,7 @@ const ActivityCard = ({ activity }) => {
       <div style={imageContainerStyle}>
         <img 
           src={image}
-          alt={name}
+          alt={activityName}
           className="card-image"
           style={imageStyle}
           onError={(e) => {
@@ -203,7 +278,7 @@ const ActivityCard = ({ activity }) => {
           color: 'var(--black-soft)',
           marginBottom: '0.75rem'
         }}>
-          {name}
+          {activityName}
         </h3>
 
         {/* Description */}
