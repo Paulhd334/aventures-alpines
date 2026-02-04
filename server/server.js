@@ -32,7 +32,7 @@ app.use(express.json());
 // ROUTES DU SITE
 // ============================================
 
-// Route de test
+// Route pour test
 app.get('/api', (req, res) => {
   res.json({
     message: 'API Aventures Alpines',
@@ -648,9 +648,8 @@ app.get('/api/auth/me', async (req, res) => {
 const PORT = 5000;
 app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
-  console.log(`🚀 SERVEUR DÉMARRÉ SUR http://localhost:${PORT}`);
+  console.log(` SERVEUR DÉMARRÉ SUR http://localhost:${PORT}`);
   console.log('='.repeat(60));
-  console.log('\n🔗 ENDPOINTS DISPONIBLES:');
-  console.log(`📍 Test: http://localhost:${PORT}/api`);
+  console.log(`Test: http://localhost:${PORT}/api`);
   console.log('='.repeat(60));
 });
