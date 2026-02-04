@@ -1,0 +1,24 @@
+ Aventures Alpines
+
+
+┌─────────────────┐     HTTP/JSON     ┌─────────────────┐
+│   FRONTEND      │◄────────────────►│    BACKEND       │
+│   React 18      │     Port: 5000    │   Node.js 18    │
+│   Port: 3000    │                   │   Express 4.x   │
+└────────┬────────┘                   └────────┬────────┘
+         │                                     │
+         │                                     │
+         ▼                                     ▼
+┌─────────────────┐                   ┌─────────────────┐
+│    Navigateur   │                   │   PHP MY ADMIN  │
+│    Chrome       │                   │      MAMP       │
+└─────────────────┘                   └─────────────────┘
+
+
+8.3 Accès
+Frontend : http://localhost:3000
+
+Backend API : http://localhost:5000/api
+
+phpMyAdmin : http://localhost/phpmyadmin (MAMP)
+
