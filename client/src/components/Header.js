@@ -61,6 +61,23 @@ const Header = () => {
   const isLoggedIn = !!user;
   const userName = user?.username || user?.nom_utilisateur;
 
+  // Fonction pour remonter en haut de la page
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant' // Défilement instantané
+    });
+  };
+
+  // Fonction pour gérer la navigation
+  const handleNavigation = (path) => {
+    // Remonter en haut seulement si on change de page
+    if (location.pathname !== path) {
+      scrollToTop();
+    }
+  };
+
   // Tous les liens en UNE ligne
   const navItems = [
     { path: '/', label: 'Accueil' },
@@ -82,6 +99,7 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     setUser(null);
+    scrollToTop(); // Remonter en haut
     navigate('/');
     window.location.reload();
   };
@@ -108,7 +126,11 @@ const Header = () => {
         }}>
           
           {/* Logo */}
-          <Link to="/" style={{ textDecoration: 'none' }}>
+          <Link 
+            to="/" 
+            style={{ textDecoration: 'none' }}
+            onClick={() => handleNavigation('/')}
+          >
             <div style={{ fontSize: '1.25rem', fontWeight: 300, letterSpacing: '-0.01em' }}>
               AVENTURES
             </div>
@@ -175,6 +197,10 @@ const Header = () => {
                           <Link
                             key={idx}
                             to={page.path}
+                            onClick={() => {
+                              handleNavigation(page.path);
+                              setIsMontagneOpen(false);
+                            }}
                             style={{
                               display: 'block',
                               padding: '1rem',
@@ -184,7 +210,6 @@ const Header = () => {
                               fontSize: '0.875rem',
                               transition: 'background-color 0.2s'
                             }}
-                            onClick={() => setIsMontagneOpen(false)}
                             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F8F8'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
                           >
@@ -201,6 +226,7 @@ const Header = () => {
                 <div key={index} style={{ position: 'relative' }}>
                   <Link
                     to={item.path}
+                    onClick={() => handleNavigation(item.path)}
                     style={{ 
                       padding: '0 2rem',
                       textDecoration: 'none',
@@ -255,6 +281,7 @@ const Header = () => {
               <div style={{ position: 'relative', marginLeft: '2rem' }}>
                 <Link
                   to="/profile"
+                  onClick={() => handleNavigation('/profile')}
                   style={{ 
                     padding: '0 2rem',
                     textDecoration: 'none',
@@ -319,6 +346,7 @@ const Header = () => {
               <>
                 <Link 
                   to="/login"
+                  onClick={() => handleNavigation('/login')}
                   style={{
                     fontSize: '0.75rem',
                     textTransform: 'uppercase',
@@ -342,6 +370,7 @@ const Header = () => {
                 </Link>
                 <Link 
                   to="/register"
+                  onClick={() => handleNavigation('/register')}
                   style={{
                     fontSize: '0.75rem',
                     textTransform: 'uppercase',

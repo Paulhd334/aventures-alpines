@@ -1,5 +1,5 @@
 // ============================================
-// server.js - VERSION COMPLÈTE AVEC GALERIE ET SKI
+// server.js - VERSION COMPLÈTE AVEC RÉSERVATIONS
 // ============================================
 
 const express = require('express');
@@ -45,7 +45,8 @@ app.get('/api', (req, res) => {
       galerie: '/api/galerie-randonnee',
       ski: '/api/ski/stations, /api/ski/temoignages, /api/ski/offres',
       contact: '/api/contact (POST)',
-      auth: '/api/auth/register, /api/auth/login'
+      auth: '/api/auth/register, /api/auth/login',
+      reservations: '/api/reservations, /api/reservations/user/:id'
     }
   });
 });
@@ -466,17 +467,11 @@ app.post('/api/ski/temoignages', async (req, res) => {
   }
 });
 
-// GET offres spéciales - VERSION SIMPLIFIÉE POUR DÉBOGAGE
+// GET offres spéciales
 app.get('/api/ski/offres', async (req, res) => {
   try {
-    console.log('🔍 Route /api/ski/offres appelée');
     const connection = await mysql.createConnection(dbConfig);
     
-    // D'abord, vérifier si la table existe et compter les offres
-    const [count] = await connection.execute('SELECT COUNT(*) as count FROM offres_ski');
-    console.log(`📊 Nombre total d'offres dans la table: ${count[0].count}`);
-    
-    // Requête simplifiée SANS filtre de date pour le débogage
     const [rows] = await connection.execute(`
       SELECT o.*, s.nom as station_nom, s.photo_url as station_photo
       FROM offres_ski o
@@ -486,13 +481,10 @@ app.get('/api/ski/offres', async (req, res) => {
       LIMIT 10
     `);
     
-    console.log(`✅ ${rows.length} offres trouvées après requête`);
-    
     await connection.end();
     res.json(rows);
   } catch (error) {
     console.error('❌ Erreur offres ski:', error.message);
-    console.error('Détails:', error);
     res.status(500).json({ error: 'Erreur serveur', details: error.message });
   }
 });
@@ -531,8 +523,226 @@ app.get('/api/ski/enneigement', async (req, res) => {
   }
 });
 
+
 // ============================================
-// 7. AUTHENTIFICATION
+// 7. RÉSERVATIONS (GRATUIT) - VERSION CORRIGÉE
+// ============================================
+
+// POST - Créer une nouvelle réservation (gratuit)
+app.post('/api/reservations', async (req, res) => {
+  const { 
+    userId,           // ID de l'utilisateur connecté
+    activityId,       // ID de l'activité
+    activityName,     // Nom de l'activité
+    date,            // Date de la réservation
+    nbPersonnes,     // Nombre de personnes
+    notes            // Notes optionnelles
+  } = req.body;
+  
+  // Validation basique
+  if (!userId || !activityId || !date) {
+    return res.status(400).json({ 
+      error: 'ID utilisateur, ID activité et date sont requis' 
+    });
+  }
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // 1. Vérifier si l'utilisateur existe
+    const [users] = await connection.execute(
+      'SELECT id, username FROM users WHERE id = ?',
+      [userId]
+    );
+    
+    if (users.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    
+    // 2. Vérifier si l'activité existe
+    const [activities] = await connection.execute(
+      'SELECT id, nom FROM activites WHERE id = ?',
+      [activityId]
+    );
+    
+    if (activities.length === 0) {
+      await connection.end();
+      return res.status(404).json({ error: 'Activité non trouvée' });
+    }
+    
+    // 3. Créer la réservation (gratuit donc pas de prix)
+    // Note: heure_debut et heure_fin peuvent être NULL
+    const [result] = await connection.execute(`
+      INSERT INTO reservations 
+      (membre_id, activite_id, date_reservation, nb_personnes, notes, statut)
+      VALUES (?, ?, ?, ?, ?, 'confirmée')
+    `, [
+      userId,          // membre_id
+      activityId,      // activite_id
+      date,            // date_reservation
+      nbPersonnes || 1, // nb_personnes
+      notes || null     // notes
+    ]);
+    
+    // 4. Récupérer la réservation créée
+    const [newReservation] = await connection.execute(`
+      SELECT r.*, 
+             a.nom as activite_nom,
+             a.type as activite_type,
+             a.image_url,
+             u.username as client_nom
+      FROM reservations r
+      LEFT JOIN activites a ON r.activite_id = a.id
+      LEFT JOIN users u ON r.membre_id = u.id
+      WHERE r.id = ?
+    `, [result.insertId]);
+    
+    await connection.end();
+    
+    res.status(201).json({
+      message: '✅ Réservation effectuée avec succès',
+      success: true,
+      reservation: newReservation[0]
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur réservation:', error.message);
+    res.status(500).json({ 
+      error: 'Erreur lors de la réservation',
+      details: error.message 
+    });
+  }
+});
+
+// GET - Réservations d'un utilisateur (sans prix)
+app.get('/api/reservations/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  console.log(`🔍 Chargement réservations pour l'utilisateur (membre_id): ${userId}`);
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Requête CORRIGÉE avec membre_id au lieu de utilisateur_id
+    const [reservations] = await connection.execute(`
+      SELECT r.*, 
+             a.nom as activite_nom,
+             a.type as activite_type,
+             a.description,
+             a.image_url,
+             a.duree,
+             a.difficulte,
+             a.saison,
+             a.lieu,
+             u.username as membre_nom
+      FROM reservations r
+      LEFT JOIN activites a ON r.activite_id = a.id
+      LEFT JOIN users u ON r.membre_id = u.id
+      WHERE r.membre_id = ?
+      ORDER BY r.date_reservation DESC
+    `, [userId]);
+    
+    await connection.end();
+    
+    console.log(`✅ ${reservations.length} réservations trouvées pour le membre ${userId}`);
+    res.json(reservations);
+    
+  } catch (error) {
+    console.error('❌ Erreur liste réservations:', error.message);
+    res.status(500).json({ 
+      error: 'Erreur serveur lors du chargement des réservations',
+      details: error.message 
+    });
+  }
+});
+
+// DELETE - Supprimer une réservation
+app.delete('/api/reservations/:id', async (req, res) => {
+  const reservationId = req.params.id;
+  const { userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'ID utilisateur requis' });
+  }
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Vérifier que la réservation appartient à l'utilisateur (avec membre_id)
+    const [reservation] = await connection.execute(
+      'SELECT * FROM reservations WHERE id = ? AND membre_id = ?',
+      [reservationId, userId]
+    );
+    
+    if (reservation.length === 0) {
+      await connection.end();
+      return res.status(404).json({ 
+        error: 'Réservation non trouvée ou non autorisée' 
+      });
+    }
+    
+    // Supprimer la réservation
+    await connection.execute(
+      'DELETE FROM reservations WHERE id = ?',
+      [reservationId]
+    );
+    
+    await connection.end();
+    
+    res.json({
+      message: '✅ Réservation supprimée avec succès',
+      success: true
+    });
+    
+  } catch (error) {
+    console.error('❌ Erreur suppression:', error.message);
+    res.status(500).json({ 
+      error: 'Erreur serveur lors de la suppression',
+      details: error.message 
+    });
+  }
+});
+
+// GET - Vérifier disponibilité d'une activité
+app.get('/api/activites/:id/disponibilite', async (req, res) => {
+  const activityId = req.params.id;
+  const { date } = req.query;
+  
+  try {
+    const connection = await mysql.createConnection(dbConfig);
+    
+    // Compter les réservations pour cette activité à cette date
+    const [reservations] = await connection.execute(
+      'SELECT COUNT(*) as count FROM reservations WHERE activite_id = ? AND date_reservation = ?',
+      [activityId, date]
+    );
+    
+    // Récupérer la capacité max de l'activité
+    const [activity] = await connection.execute(
+      'SELECT capacite_max FROM activites WHERE id = ?',
+      [activityId]
+    );
+    
+    await connection.end();
+    
+    const reservationsCount = reservations[0].count;
+    const capaciteMax = activity[0]?.capacite_max || 10; // Default 10
+    
+    res.json({
+      disponible: reservationsCount < capaciteMax,
+      places_restantes: capaciteMax - reservationsCount,
+      reservations_count: reservationsCount,
+      capacite_max: capaciteMax
+    });
+    
+  } catch (error) {
+    console.error('Erreur disponibilité:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ============================================
+// 8. AUTHENTIFICATION
 // ============================================
 
 app.post('/api/auth/register', async (req, res) => {
@@ -650,6 +860,13 @@ app.listen(PORT, () => {
   console.log('\n' + '='.repeat(60));
   console.log(` SERVEUR DÉMARRÉ SUR http://localhost:${PORT}`);
   console.log('='.repeat(60));
-  console.log(`Test: http://localhost:${PORT}/api`);
+  console.log('Routes disponibles:');
+  console.log('  • GET  /api                    - Test API');
+  console.log('  • GET  /api/articles           - Liste articles');
+  console.log('  • GET  /api/activites          - Liste activités');
+  console.log('  • GET  /api/reservations/user/:id - Réservations utilisateur');
+  console.log('  • POST /api/reservations       - Créer réservation');
+  console.log('  • POST /api/auth/login         - Connexion');
+  console.log('  • POST /api/auth/register      - Inscription');
   console.log('='.repeat(60));
 });
