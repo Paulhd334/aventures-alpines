@@ -110,7 +110,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" style={{ textDecoration: 'none' }}>
             <div style={{ fontSize: '1.25rem', fontWeight: 300, letterSpacing: '-0.01em' }}>
-              AVENTURE
+              AVENTURES
             </div>
             <div style={{ 
               fontSize: '0.75rem', 

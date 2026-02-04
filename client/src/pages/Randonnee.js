@@ -143,7 +143,7 @@ const Randonnee = () => {
                           objectFit: 'cover' 
                         }}
                         onError={(e) => {
-                          e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop';
+                          e.target.src = 'https://www.montagnes-magazine.com/media/Pedago/conseil/pe%CC%81dago%20tout%20savoir%20rando.jpg';
                         }}
                       />
                     </div>
