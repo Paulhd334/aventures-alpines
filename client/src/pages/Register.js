@@ -20,8 +20,8 @@ const Register = () => {
   const recaptchaRef = useRef(null);
   const navigate = useNavigate();
 
-  // Votre clé reCAPTCHA (remplacez par votre vraie clé)
-  const RECAPTCHA_SITE_KEY = "6LerRmEsAAAAAG3gS4jlukF-6cV9tNue1Sy_33tz"; // Clé de test
+  // clé reCAPTCHA
+  const RECAPTCHA_SITE_KEY = "6LerRmEsAAAAAG3gS4jlukF-6cV9tNue1Sy_33tz"; // Clé Google reCAPTCHA v2
 
   const handleChange = (e) => {
     const { name, value } = e.target;
