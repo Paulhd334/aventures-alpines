@@ -750,7 +750,7 @@ app.post('/api/auth/register', async (req, res) => {
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[a-zA-Z][^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: 'Format email invalide' });
   }
@@ -850,6 +850,44 @@ app.get('/api/auth/me', async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
+
+
+const axios = require('axios');
+
+// Route d'inscription  pour google captcha
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { username, email, password, recaptchaToken } = req.body;
+
+    // Vérification reCAPTCHA
+    const recaptchaSecretKey = "6LerRmEsAAAAAG3gS4jlukF-6cV9tNue1Sy_33tz"; //  Google ConsoleReCAPTCHA v2 - Clé secrète 
+    const recaptchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify`;
+
+    const recaptchaResponse = await axios.post(recaptchaVerifyUrl, null, {
+      params: {
+        secret: recaptchaSecretKey,
+        response: recaptchaToken
+      }
+    });
+
+    const { success: recaptchaSuccess } = recaptchaResponse.data;
+
+    if (!recaptchaSuccess) {
+      return res.status(400).json({ 
+        error: "Échec de la vérification reCAPTCHA" 
+      });
+    }
+
+    // Continuer avec l'inscription...
+    // Votre logique d'inscription existante
+
+  } catch (error) {
+    console.error('Erreur reCAPTCHA:', error);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 
 // ============================================
 // DÉMARRAGE DU SERVEUR
