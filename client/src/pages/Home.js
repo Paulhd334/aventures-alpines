@@ -93,7 +93,7 @@ const Home = () => {
             
             {error && (
               <div className="home-hero-error">
-                <h4>⚠️ Mode démo activé</h4>
+                <h4>⚠️ MAMP NON activé</h4>
                 <p>{error}</p>
                 <p>Pour utiliser le serveur MAMP: démarrez Node.js sur le port 5000</p>
               </div>
