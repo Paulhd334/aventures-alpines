@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : lun. 26 jan. 2026 à 14:46
+-- Généré le : mer. 11 fév. 2026 à 09:21
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -31,24 +31,31 @@ CREATE TABLE `activites` (
   `id` int(11) NOT NULL,
   `nom` varchar(100) NOT NULL,
   `description` text,
-  `capacite` int(11) DEFAULT '30',
-  `image` varchar(255) DEFAULT NULL,
+  `type` varchar(50) NOT NULL,
+  `date_debut` datetime NOT NULL,
+  `date_fin` datetime NOT NULL,
+  `lieu` varchar(150) DEFAULT NULL,
+  `capacite_max` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `image_url` varchar(255) DEFAULT 'https://picsum.photos/800/600',
+  `duree` varchar(50) DEFAULT NULL,
   `difficulte` varchar(50) DEFAULT NULL,
-  `niveau` enum('facile','moyen','difficile') DEFAULT NULL,
-  `type` varchar(50) DEFAULT NULL
+  `saison` varchar(50) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Déchargement des données de la table `activites`
 --
 
-INSERT INTO `activites` (`id`, `nom`, `description`, `capacite`, `image`, `difficulte`, `niveau`, `type`) VALUES
-(51, 'Ski Alpin', 'Descente sur pistes enneigées.', 15, 'https://pierrelonchampt.com/wp-content/uploads/2025/11/PL250916-0299-ecrins.jpg', 'moyen', NULL, 'ski'),
-(52, 'Snowboard', 'Descente freeride sur neige fraîche.', 12, 'https://pierrelonchampt.com/wp-content/uploads/2025/11/PL241220-1433-belledonne-768x512.jpg', 'moyen', NULL, 'ski'),
-(53, 'Randonnée', 'Balade guidée dans les sentiers de montagne.', 20, 'https://pierrelonchampt.com/wp-content/uploads/2024/11/PL240910-0887-taillante-queyras.jpg', 'facile', NULL, 'randonnee'),
-(54, 'Escalade', 'Parois rocheuses pour grimpeurs.', 8, 'https://pierrelonchampt.com/wp-content/uploads/2025/11/PL250915-0282-arves-768x1151.jpg', 'difficile', NULL, 'escalade'),
-(55, 'Raquettes', 'Randonnée en raquettes à neige.', 18, 'https://pierrelonchampt.com/wp-content/uploads/2022/08/PL220814-00071-aiguilles-arves-coucher-soleil-768x512.jpg', 'facile', NULL, 'randonnee'),
-(56, 'Parapente', 'Vol panoramique au‑dessus des sommets.', 6, 'https://pierrelonchampt.com/wp-content/uploads/2018/07/photo-lever-du-jour-sur-le-lac-guichard-et-les-aiguilles-darves.jpg', 'difficile', NULL, 'autre');
+INSERT INTO `activites` (`id`, `nom`, `description`, `type`, `date_debut`, `date_fin`, `lieu`, `capacite_max`, `created_at`, `image_url`, `duree`, `difficulte`, `saison`) VALUES
+(1, 'Ski alpin à Chamonix', 'Des pistes mythiques pour tous les niveaux. Expérience unique dans la vallée de Chamonix avec moniteurs qualifiés.', 'ski', '2026-01-20 09:00:00', '2026-01-20 17:00:00', 'Chamonix', 20, '2026-01-19 20:54:13', 'https://picsum.photos/id/1015/800/600', '1 journée', 'Intermédiaire', 'Hiver'),
+(2, 'Randonnée du Lac Blanc', 'Randonnée familiale avec vue magnifique sur les Alpes. Accessible à tous les âges.', 'randonnee', '2026-06-15 08:30:00', '2026-06-15 12:00:00', 'Argentière', 15, '2026-01-19 20:54:13', 'https://picsum.photos/id/1018/800/600', '3h30', 'Facile', 'Été'),
+(3, 'Escalade aux Drus', 'Voies d\'escalade technique pour grimpeurs expérimentés. Équipement fourni.', 'escalade', '2026-07-10 08:00:00', '2026-07-10 18:00:00', 'Les Drus', 8, '2026-01-19 20:54:13', 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&h=600&fit=crop', '1 journée', 'Difficile', 'Été'),
+(4, 'VTT descente à Morzine', 'Descentes techniques dans les Alpes avec équipement fourni. Pour les amateurs de sensations fortes.', 'vtt', '2026-07-20 14:00:00', '2026-07-20 16:30:00', 'Morzine', 12, '2026-01-19 20:54:13', 'https://pierrelonchampt.com/wp-content/uploads/2020/11/photo-mont-margeriaz-hiver-bauges-020219.jpg', '2h30', 'Intermédiaire', 'Été'),
+(5, 'Randonnée glaciaire sur la Mer de Glace', 'Découverte des glaciers avec guide professionnel. Équipement de sécurité fourni.', 'randonnee', '2026-05-10 07:00:00', '2026-05-10 11:00:00', 'Mer de Glace', 10, '2026-01-19 20:54:13', 'https://pierrelonchampt.com/wp-content/uploads/2023/12/PL231111-01382-vallon-ecrins-768x1151.jpg', '4 heures', 'Moyen', 'Printemps-Été'),
+(6, 'Ski freeride à Val Thorens', 'Hors-piste encadré par des guides experts. Pour les skieurs confirmés.', 'ski', '2026-02-15 09:00:00', '2026-02-15 16:00:00', 'Val Thorens', 6, '2026-01-19 20:54:13', 'https://picsum.photos/id/1019/800/600', '1 journée', 'Expert', 'Hiver'),
+(7, 'Via ferrata des Aravis', 'Parcours sécurisé pour découvrir l\'escalade en montagne. Parfait pour les débutants.', 'escalade', '2026-08-05 10:00:00', '2026-08-05 13:00:00', 'Les Aravis', 12, '2026-01-19 20:54:13', 'https://picsum.photos/id/1057/800/600', '3 heures', 'Intermédiaire', 'Été'),
+(8, 'Raquettes au Col de la Croix', 'Balade en raquettes avec vue panoramique. Accessible sans expérience.', 'randonnee', '2026-01-25 13:30:00', '2026-01-25 16:00:00', 'Col de la Croix', 15, '2026-01-19 20:54:13', 'https://pierrelonchampt.com/wp-content/uploads/2020/11/photo-vallee-ga-meije-ecrins-080720.jpg', '2h30', 'Facile', 'Hiver');
 
 -- --------------------------------------------------------
 
@@ -58,55 +65,13 @@ INSERT INTO `activites` (`id`, `nom`, `description`, `capacite`, `image`, `diffi
 
 CREATE TABLE `articles` (
   `id` int(11) NOT NULL,
-  `titre` varchar(255) NOT NULL,
-  `contenu` text NOT NULL,
+  `titre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `contenu` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `auteur_id` int(11) NOT NULL,
-  `lieu` varchar(255) DEFAULT '',
-  `type` varchar(50) DEFAULT 'récit',
+  `lieu` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'récit',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Déchargement des données de la table `articles`
---
-
-INSERT INTO `articles` (`id`, `titre`, `contenu`, `auteur_id`, `lieu`, `type`, `created_at`) VALUES
-(1, 'test', 'test parfait ou pas', 1, 'test ok ou non ?', 'récit', '2026-01-22 10:39:36');
-
--- --------------------------------------------------------
-
---
--- Structure de la table `commentaires`
---
-
-CREATE TABLE `commentaires` (
-  `id` int(11) NOT NULL,
-  `membre_id` int(11) NOT NULL,
-  `contenu` text NOT NULL,
-  `date_post` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
--- Structure de la table `contact`
---
-
-CREATE TABLE `contact` (
-  `id` int(11) NOT NULL,
-  `nom_complet` varchar(100) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `sujet` varchar(100) NOT NULL,
-  `message` text NOT NULL,
-  `date_envoi` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---
--- Déchargement des données de la table `contact`
---
-
-INSERT INTO `contact` (`id`, `nom_complet`, `email`, `sujet`, `message`, `date_envoi`) VALUES
-(1, 'test', 'test@gmail.com', 'guide', 'TEST\ntest \ntg', '2026-01-22 13:44:08');
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -116,36 +81,28 @@ INSERT INTO `contact` (`id`, `nom_complet`, `email`, `sujet`, `message`, `date_e
 
 CREATE TABLE `galerie_randonnee` (
   `id` int(11) NOT NULL,
-  `utilisateur_id` int(11) NOT NULL,
-  `titre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `localisation` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `altitude` decimal(8,2) DEFAULT NULL,
-  `difficulte` enum('facile','moyen','difficile','expert') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `saison` enum('printemps','été','automne','hiver') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `utilisateur_id` int(11) DEFAULT NULL,
+  `titre` varchar(200) NOT NULL,
+  `description` text,
+  `image_url` varchar(500) NOT NULL,
+  `localisation` varchar(200) DEFAULT NULL,
+  `altitude` int(11) DEFAULT NULL,
+  `difficulte` enum('facile','moyen','difficile','tres_difficile') DEFAULT NULL,
+  `saison` enum('printemps','ete','automne','hiver') DEFAULT NULL,
   `date_prise` date DEFAULT NULL,
-  `date_publication` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `likes` int(11) DEFAULT '0'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `likes` int(11) DEFAULT '0',
+  `date_publication` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Déchargement des données de la table `galerie_randonnee`
 --
 
-INSERT INTO `galerie_randonnee` (`id`, `utilisateur_id`, `titre`, `description`, `image_url`, `localisation`, `altitude`, `difficulte`, `saison`, `date_prise`, `date_publication`, `likes`) VALUES
-(11, 1, 'Sommet du Mont Blanc', 'Vue imprenable depuis le toit de l\'Europe', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Chamonix, France', '4808.73', 'expert', 'été', '2024-07-15', '2026-01-26 14:15:53', 42),
-(12, 2, 'Lac d\'Annecy', 'Randonnée autour du lac le plus pur d\'Europe', 'https://images.unsplash.com/photo-1564507004663-b6dfb3e2ede5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Annecy, France', '446.97', 'facile', 'printemps', '2024-05-20', '2026-01-26 14:15:53', 28),
-(13, 3, 'Aiguille du Midi', 'Téléphérique et vue à couper le souffle', 'https://images.unsplash.com/photo-1508169351866-777fc0047ac5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Chamonix, France', '3842.00', 'difficile', 'hiver', '2024-02-10', '2026-01-26 14:15:53', 35),
-(14, 4, 'Vanoise en hiver', 'Randonnée en raquettes dans le parc national', 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Vanoise, France', '2500.00', 'moyen', 'hiver', '2024-01-25', '2026-01-26 14:15:53', 19),
-(15, 1, 'Gorges du Verdon', 'Les plus belles gorges d\'Europe', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Verdon, France', '700.00', 'moyen', 'été', '2024-08-05', '2026-01-26 14:15:53', 31),
-(16, 2, 'Circuit des lacs', 'Tour des 5 lacs d\'altitude', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Vanoise, France', '2300.00', 'moyen', 'été', '2024-07-30', '2026-01-26 14:15:53', 24),
-(17, 3, 'Refuge du Plan de l\'Aiguille', 'Bivouac avec vue sur les Drus', 'https://images.unsplash.com/photo-1536152471326-642d7465f66b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Chamonix, France', '2207.00', 'facile', 'automne', '2024-09-15', '2026-01-26 14:15:53', 17),
-(18, 4, 'Traversée de la Meije', 'Grande classique des Alpes', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'La Grave, France', '3983.00', 'expert', 'été', '2024-07-22', '2026-01-26 14:15:53', 39),
-(19, 1, 'Col du Galibier', 'Passage mythique du Tour de France', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Hautes-Alpes, France', '2642.00', 'difficile', 'été', '2024-08-12', '2026-01-26 14:15:53', 22),
-(20, 2, 'Balcon du Léman', 'Vue sur le lac Léman depuis les hauteurs', 'https://images.unsplash.com/photo-1512273222628-4daea6e55abb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Évian-les-Bains, France', '1200.00', 'facile', 'printemps', '2024-04-18', '2026-01-26 14:15:53', 15),
-(21, 3, 'Massif des Écrins', 'Randonnée glaciaire', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Écrins, France', '4102.00', 'expert', 'été', '2024-08-20', '2026-01-26 14:15:53', 47),
-(22, 4, 'Forêt de Fontainebleau', 'Escalade en bloc', 'https://images.unsplash.com/photo-1508169351866-777fc0047ac5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'Fontainebleau, France', '150.00', 'moyen', 'automne', '2024-10-05', '2026-01-26 14:15:53', 12);
+INSERT INTO `galerie_randonnee` (`id`, `utilisateur_id`, `titre`, `description`, `image_url`, `localisation`, `altitude`, `difficulte`, `saison`, `date_prise`, `likes`, `date_publication`) VALUES
+(1, NULL, 'Sommet du Mont Blanc', 'Vue depuis le sommet à 4809m', 'https://www.montagnes-magazine.com/media/Pedago/conseil/pe%CC%81dago%20rando%20conseils.jpg', 'Mont Blanc', 4809, 'tres_difficile', 'ete', '2024-07-15', 42, '2026-01-26 10:22:28'),
+(2, 4, 'Lac d\'altitude', 'Lac bleu turquoise', 'https://www.montagnes-magazine.com/media/Pedago/conseil/rando%20glaciaire.jpg', 'Alpes', 2350, 'moyen', 'ete', '2024-08-20', 28, '2026-01-26 10:22:28'),
+(3, NULL, 'Randonnée automnale', 'Couleurs d\'automne', 'https://magazine.sportihome.com/wp-content/uploads/2019/04/randonnee-alpes-1068x712.jpg', 'Vosges', 1247, 'facile', 'automne', '2024-10-12', 35, '2026-01-26 10:22:28'),
+(4, NULL, 'Coucher de soleil', 'Derniers rayons', 'https://www.france-montagnes.com/wp-content/uploads/2025/01/randonnee-c-anastasia-600x500.jpg', 'Alpes du Nord', 2100, 'moyen', 'hiver', '2024-02-28', 19, '2026-01-26 10:22:28');
 
 -- --------------------------------------------------------
 
@@ -168,38 +125,30 @@ CREATE TABLE `inscriptions` (
 
 CREATE TABLE `itineraires` (
   `id` int(11) NOT NULL,
-  `nom` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `difficulte` enum('facile','moyen','difficile','expert') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `duree` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `distance` decimal(6,2) NOT NULL,
-  `denivele_positif` int(11) NOT NULL,
-  `denivele_negatif` int(11) NOT NULL,
-  `point_depart` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `point_arrivee` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `region` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `saison_recommandee` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `equipement` text COLLATE utf8mb4_unicode_ci,
-  `points_interet` text COLLATE utf8mb4_unicode_ci,
-  `photo_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nom` varchar(100) NOT NULL,
+  `description` text NOT NULL,
+  `difficulte` varchar(20) NOT NULL,
+  `duree` varchar(50) NOT NULL,
+  `distance` varchar(50) NOT NULL,
+  `denivele` varchar(50) NOT NULL,
+  `meilleure_saison` varchar(100) NOT NULL,
+  `points_interet` text NOT NULL,
+  `region` varchar(100) NOT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Déchargement des données de la table `itineraires`
 --
 
-INSERT INTO `itineraires` (`id`, `nom`, `description`, `difficulte`, `duree`, `distance`, `denivele_positif`, `denivele_negatif`, `point_depart`, `point_arrivee`, `region`, `saison_recommandee`, `equipement`, `points_interet`, `photo_url`, `created_at`) VALUES
-(1, 'Tour du Mont Blanc', 'L\'un des plus beaux treks d\'Europe qui fait le tour du massif du Mont Blanc', 'difficile', '7-10 jours', '170.00', 10000, 10000, 'Les Houches', 'Les Houches', 'Alpes', 'Juillet à Septembre', 'Sac de randonnée 50L, bâtons, chaussures de trek, vêtements techniques', 'Refuge du Lac Blanc, Col de la Seigne, Courmayeur', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(2, 'GR20 Corse', 'Le sentier de grande randonnée le plus difficile d\'Europe', 'expert', '15 jours', '180.00', 12000, 12000, 'Calenzana', 'Conca', 'Corse', 'Juin à Septembre', 'Sac ultra-léger, équipement bivouac, chaussures de trail', 'Lacs de montagne, Cirque de la Solitude, villages corses', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(3, 'Lac d\'Annecy - Tour du lac', 'Randonnée facile autour du célèbre lac d\'Annecy', 'facile', '3-4 jours', '42.00', 800, 800, 'Annecy', 'Annecy', 'Alpes', 'Avril à Octobre', 'Sac 30L, chaussures de randonnée, appareil photo', 'Châteaux, plages, villages médiévaux', 'https://images.unsplash.com/photo-1564507004663-b6dfb3e2ede5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(4, 'Traversée des Écrins', 'Itinéraire mythique à travers le parc national des Écrins', 'difficile', '8 jours', '110.00', 7500, 7500, 'La Chapelle-en-Valgaudemar', 'La Grave', 'Alpes', 'Juillet à Août', 'Crampons légers, piolet, équipement d\'alpinisme', 'Glacier Blanc, Barre des Écrins, lacs d\'altitude', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(5, 'Chemin de Stevenson', 'Sur les traces de l\'écrivain dans les Cévennes', 'moyen', '12 jours', '272.00', 5000, 5000, 'Le Puy-en-Velay', 'Alès', 'Massif Central', 'Mai à Octobre', 'Sac 40L, bâtons, vêtements de pluie', 'Villages médiévaux, paysages volcaniques, forêts', 'https://images.unsplash.com/photo-1508169351866-777fc0047ac5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(6, 'Sentier du littoral Basque', 'Entre mer et montagne sur la côte basque', 'moyen', '7 jours', '80.00', 4500, 4500, 'Hendaye', 'Biarritz', 'Pyrénées', 'Mars à Novembre', 'Chaussures de marche, maillot de bain, crème solaire', 'Falaises, plages, villages basques, surf spots', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(7, 'Balcon du Léman', 'Randonnée avec vue sur le lac Léman', 'facile', '2 jours', '25.00', 600, 600, 'Thonon-les-Bains', 'Évian-les-Bains', 'Alpes', 'Avril à Octobre', 'Sac jour, pique-nique, jumelles', 'Vignobles, villages lacustres, panorama lac', 'https://images.unsplash.com/photo-1512273222628-4daea6e55abb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(8, 'Haute Route Pyrénéenne', 'Traversée des Pyrénées d\'est en ouest', 'expert', '45 jours', '800.00', 45000, 45000, 'Banyuls-sur-Mer', 'Hendaye', 'Pyrénées', 'Juillet à Septembre', 'Équipement complet haute montagne, matériel de camping', 'Lacs, cols, refuges, sommets de 3000m', 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(9, 'Circuit des 5 lacs', 'Randonnée familiale autour de lacs d\'altitude', 'facile', '1 jour', '12.00', 300, 300, 'Station de ski', 'Station de ski', 'Alpes', 'Juin à Septembre', 'Sac à dos léger, pique-nique, eau', '5 lacs de montagne, marmottes, flore alpine', 'https://images.unsplash.com/photo-1536152471326-642d7465f66b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54'),
-(10, 'Ascension du Vignemale', 'Plus haut sommet des Pyrénées françaises', 'expert', '2 jours', '18.00', 1800, 1800, 'Gavarnie', 'Gavarnie', 'Pyrénées', 'Juillet à Août', 'Crampons, piolet, casque, baudrier', 'Glacier d\'Ossoue, refuge Bayssellance, vue panoramique', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', '2026-01-26 14:21:54');
+INSERT INTO `itineraires` (`id`, `nom`, `description`, `difficulte`, `duree`, `distance`, `denivele`, `meilleure_saison`, `points_interet`, `region`, `image_url`, `created_at`) VALUES
+(11, 'Tour du Mont Blanc', 'Le tour du Mont Blanc est une randonnée mythique qui fait le tour du plus haut sommet d\'Europe occidentale. L\'itinéraire traverse trois pays : la France, l\'Italie et la Suisse.', 'Difficile', '7-10 jours', '170 km', '+10000 m', 'Juillet à Septembre', 'Vue sur le Mont Blanc, glaciers, refuges typiques, villages alpins', 'Alpes', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
+(12, 'GR20 Corse', 'Considéré comme le sentier de grande randonnée le plus difficile d\'Europe, le GR20 traverse la Corse du Nord au Sud à travers les montagnes corses.', 'Très Difficile', '15 jours', '180 km', '+12000 m', 'Juin à Septembre', 'Lacs de montagne, aiguilles de Bavella, forêts, bergeries', 'Corse', 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
+(13, 'Chemin de Stevenson', 'Sur les traces de Robert Louis Stevenson et son âne à travers les Cévennes. Randonnée culturelle et historique.', 'Facile', '12 jours', '220 km', '+5000 m', 'Avril à Octobre', 'Villages cévenols, châtaigneraies, histoire, patrimoine', 'Cévennes', 'https://images.unsplash.com/photo-1464278533981-50106e6176b1?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
+(14, 'Tour des Écrins', 'Randonnée autour du massif des Écrins, parc national avec une biodiversité exceptionnelle. Itinéraire sauvage et préservé.', 'Difficile', '10-12 jours', '150 km', '+9000 m', 'Juillet à Septembre', 'Glaciers, chamois, villages authentiques, faune sauvage', 'Alpes', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
+(15, 'Tour du Queyras', 'Randonnée dans le Parc Naturel Régional du Queyras, région préservée aux paysages minéraux impressionnants.', 'Moyen', '6-8 jours', '110 km', '+6000 m', 'Juin à Septembre', 'Mélèzes, lacs, fortifications militaires, villages perchés', 'Alpes', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
+(18, 'Tour du Beaufortain', 'Randonnée dans le massif du Beaufortain, région réputée pour ses alpages et son fromage.', 'Moyen', '4-6 jours', '70 km', '+3500 m', 'Juin à Septembre', 'Alpages, fromageries, vues sur le Mont Blanc', 'Alpes', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&auto=format&fit=crop', '2026-01-26 08:50:16');
 
 -- --------------------------------------------------------
 
@@ -215,7 +164,7 @@ CREATE TABLE `membres` (
   `email` varchar(150) NOT NULL,
   `telephone` varchar(20) DEFAULT NULL,
   `date_naissance` date DEFAULT NULL,
-  `date_adhesion` datetime DEFAULT CURRENT_TIMESTAMP
+  `date_adhesion` date DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -226,42 +175,33 @@ CREATE TABLE `membres` (
 
 CREATE TABLE `offres_ski` (
   `id` int(11) NOT NULL,
+  `titre` varchar(150) NOT NULL,
   `station_id` int(11) NOT NULL,
-  `titre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `type_offre` enum('forfait','hebergement','cours','pack') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `prix` decimal(8,2) NOT NULL,
-  `reduction` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `date_debut` date DEFAULT NULL,
+  `type_offre` enum('forfait','hébergement','pack','cours','matériel') NOT NULL,
+  `description` text NOT NULL,
+  `prix` decimal(7,2) NOT NULL,
+  `reduction` varchar(50) DEFAULT NULL,
+  `date_debut` date NOT NULL,
   `date_fin` date DEFAULT NULL,
-  `lien_resa` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lien_resa` varchar(255) DEFAULT NULL,
   `actif` tinyint(1) DEFAULT '1',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Déchargement des données de la table `offres_ski`
 --
 
-INSERT INTO `offres_ski` (`id`, `station_id`, `titre`, `description`, `type_offre`, `prix`, `reduction`, `date_debut`, `date_fin`, `lien_resa`, `actif`, `created_at`) VALUES
-(1, 1, 'Forfait 6 jours Early Bird', 'Réservez avant le 15 décembre et économisez 20% sur votre forfait 6 jours', 'forfait', '280.00', '-20%', '2024-12-01', '2024-12-15', 'https://www.chamonix.com/offre-early', 1, '2026-01-26 14:36:58'),
-(2, 2, 'Pack Famille 4 personnes', 'Forfaits + hébergement en appartement 4* pour une semaine', 'pack', '1899.00', '-15%', '2025-01-05', '2025-03-15', 'https://www.courchevel.com/pack-famille', 1, '2026-01-26 14:36:58'),
-(3, 3, 'Cours particuliers débutants', '5 sessions de 2h avec moniteur ESF pour débuter en confiance', 'cours', '450.00', 'Premier cours offert', '2024-12-14', '2025-01-31', 'https://www.avoriaz.com/cours-debutants', 1, '2026-01-26 14:36:58'),
-(4, 5, 'Week-end Freeride', '2 jours avec guide + matériel sécurité inclus', 'pack', '350.00', '-25%', '2025-01-10', '2025-04-20', 'https://www.valdisere.com/freeride', 1, '2026-01-26 14:36:58');
-
--- --------------------------------------------------------
-
---
--- Structure de la table `photos`
---
-
-CREATE TABLE `photos` (
-  `id` int(11) NOT NULL,
-  `membre_id` int(11) NOT NULL,
-  `chemin` varchar(255) NOT NULL,
-  `nom_fichier_original` varchar(255) DEFAULT NULL,
-  `date_upload` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `offres_ski` (`id`, `titre`, `station_id`, `type_offre`, `description`, `prix`, `reduction`, `date_debut`, `date_fin`, `lien_resa`, `actif`, `created_at`, `updated_at`) VALUES
+(9, 'Forfait Famille 4 jours', 1, 'forfait', 'Forfait ski 4 jours pour 2 adultes + 2 enfants. Accès illimité à toutes les remontées mécaniques.', '320.00', '-25%', '2024-12-15', '2025-01-31', 'https://www.chamonix.com/reservation', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(10, 'Chalet Montagne Vue Panoramique', 2, 'hébergement', 'Chalet 8 personnes avec sauna, cheminée et vue imprenable sur les montagnes. Wifi inclus.', '1800.00', '-15%', '2025-01-10', '2025-02-28', 'https://www.courchevel.com/chalets', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(11, 'Pack Débutant Complet', 3, 'pack', 'Forfait 3 jours + location matériel moderne + 6h de cours avec moniteur diplômé.', '195.00', '-30%', '2024-12-01', '2025-03-15', 'https://www.valthorens.com/debutant', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(12, 'Forfait Early Bird', 4, 'forfait', 'Forfait 6 jours ski alpin. Réservation avant le 15 décembre pour économiser 20%.', '285.00', '-20%', '2025-01-05', '2025-01-31', 'https://www.tignes.net/earlybird', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(13, 'Location Matériel Haute Gamme', 5, 'matériel', 'Location skis carving professionnels + chaussures dernière génération pour 7 jours.', '89.00', '-35%', '2025-03-01', '2025-04-15', 'https://www.les2alpes.com/location', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(14, 'Cours Privé Expert', 6, 'cours', '3h de cours privé avec moniteur champion de France. Personnalisation totale.', '120.00', '-10%', '2024-12-01', '2025-04-01', 'https://www.la-plagne.com/cours', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(15, 'Pack Luxe Tout Compris', 1, 'pack', 'Hébergement 5* + forfait illimité + spa + demi-pension pour 2 personnes.', '950.00', '-12%', '2025-02-01', '2025-03-15', 'https://www.chamonix.com/luxe', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26'),
+(16, 'Offre Dernière Minute', 2, 'forfait', 'Forfait 5 jours réservé moins de 7 jours avant arrivée. Sous réserve de disponibilité.', '220.00', '-40%', '2025-01-15', '2025-03-20', 'https://www.courchevel.com/lastminute', 1, '2026-01-28 14:06:26', '2026-01-28 14:06:26');
 
 -- --------------------------------------------------------
 
@@ -274,9 +214,21 @@ CREATE TABLE `reservations` (
   `membre_id` int(11) NOT NULL,
   `activite_id` int(11) NOT NULL,
   `date_reservation` date NOT NULL,
-  `heure_debut` time NOT NULL,
-  `heure_fin` time NOT NULL
+  `heure_debut` time DEFAULT '09:00:00',
+  `heure_fin` time DEFAULT '17:00:00',
+  `nb_personnes` int(11) DEFAULT '1',
+  `notes` text,
+  `statut` varchar(50) DEFAULT 'confirmée'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Déchargement des données de la table `reservations`
+--
+
+INSERT INTO `reservations` (`id`, `membre_id`, `activite_id`, `date_reservation`, `heure_debut`, `heure_fin`, `nb_personnes`, `notes`, `statut`) VALUES
+(4, 10, 1, '2024-12-25', '09:00:00', '17:00:00', 2, NULL, 'confirmée'),
+(5, 10, 2, '2026-02-04', '09:00:00', '17:00:00', 1, NULL, 'confirmée'),
+(6, 16, 1, '2026-02-06', '09:00:00', '17:00:00', 1, NULL, 'confirmée');
 
 -- --------------------------------------------------------
 
@@ -301,36 +253,36 @@ CREATE TABLE `resultats` (
 
 CREATE TABLE `stations_ski` (
   `id` int(11) NOT NULL,
-  `nom` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `region` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nom` varchar(100) NOT NULL,
+  `region` varchar(50) NOT NULL,
+  `description` text,
+  `type_station` enum('petite','moyenne','grande','très grande') NOT NULL,
   `altitude_min` int(11) NOT NULL,
   `altitude_max` int(11) NOT NULL,
   `nb_pistes` int(11) NOT NULL,
+  `km_pistes` decimal(5,1) NOT NULL,
   `nb_remontees` int(11) NOT NULL,
-  `km_pistes` decimal(6,2) NOT NULL,
-  `type_station` enum('petite','moyenne','grande','très grande') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `prix_journee` decimal(6,2) DEFAULT NULL,
-  `ouverture` date DEFAULT NULL,
-  `fermeture` date DEFAULT NULL,
-  `photo_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `site_web` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `enneigement_actuel` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `enneigement_actuel` int(11) DEFAULT '0',
+  `prix_journee` decimal(5,2) NOT NULL,
+  `photo_url` varchar(255) DEFAULT NULL,
+  `site_web` varchar(255) DEFAULT NULL,
+  `ouverture` date NOT NULL,
+  `fermeture` date NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Déchargement des données de la table `stations_ski`
 --
 
-INSERT INTO `stations_ski` (`id`, `nom`, `description`, `region`, `altitude_min`, `altitude_max`, `nb_pistes`, `nb_remontees`, `km_pistes`, `type_station`, `prix_journee`, `ouverture`, `fermeture`, `photo_url`, `site_web`, `enneigement_actuel`, `created_at`) VALUES
-(1, 'Chamonix Mont-Blanc', 'Station mythique au pied du Mont-Blanc, paradis du ski alpin et du freeride', 'Alpes du Nord', 1035, 3842, 150, 49, '155.00', 'très grande', '62.50', '2024-12-14', '2025-04-27', 'https://images.unsplash.com/photo-1508169351866-777fc0047ac5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.chamonix.com', 120, '2026-01-26 14:36:58'),
-(2, 'Courchevel', 'Partie des Trois Vallées, domaine skiable immense et luxueux', 'Savoie', 1100, 2738, 150, 58, '150.00', 'très grande', '65.00', '2024-12-07', '2025-04-20', 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.courchevel.com', 110, '2026-01-26 14:36:58'),
-(3, 'Avoriaz', 'Station piétonne intégrée au domaine des Portes du Soleil', 'Haute-Savoie', 1100, 2466, 49, 37, '75.00', 'grande', '58.00', '2024-12-14', '2025-04-13', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.avoriaz.com', 90, '2026-01-26 14:36:58'),
-(4, 'Les Arcs', 'Station moderne avec vaste domaine skiable pour tous niveaux', 'Savoie', 1200, 3226, 106, 54, '200.00', 'très grande', '56.50', '2024-12-14', '2025-04-27', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.lesarcs.com', 100, '2026-01-26 14:36:58'),
-(5, 'Val d\'Isère', 'Légendaire station reliée à Tignes, terrain de jeu exceptionnel', 'Savoie', 1550, 3456, 150, 78, '300.00', 'très grande', '67.00', '2024-11-30', '2025-05-04', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.valdisere.com', 130, '2026-01-26 14:36:58'),
-(6, 'Font-Romeu', 'Station ensoleillée des Pyrénées, idéale ski de fond et alpin', 'Pyrénées', 1550, 2212, 29, 16, '58.00', 'moyenne', '45.00', '2024-12-21', '2025-03-30', 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.font-romeu.fr', 60, '2026-01-26 14:36:58'),
-(7, 'Le Grand-Bornand', 'Station authentique avec domaine skiable varié', 'Haute-Savoie', 1000, 2100, 84, 42, '90.00', 'grande', '48.50', '2024-12-14', '2025-04-06', 'https://images.unsplash.com/photo-1512273222628-4daea6e55abb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80', 'https://www.legrandbornand.com', 85, '2026-01-26 14:36:58');
+INSERT INTO `stations_ski` (`id`, `nom`, `region`, `description`, `type_station`, `altitude_min`, `altitude_max`, `nb_pistes`, `km_pistes`, `nb_remontees`, `enneigement_actuel`, `prix_journee`, `photo_url`, `site_web`, `ouverture`, `fermeture`, `created_at`, `updated_at`) VALUES
+(1, 'Chamonix-Mont-Blanc', 'Alpes du Nord', 'Capitale mondiale du ski et de l\'alpinisme au pied du Mont-Blanc', 'grande', 1035, 3842, 150, '170.0', 49, 145, '62.50', 'https://www.ski-republic.com/sites/default/files/inline-images/val%20thorens_1.jpg', 'ski-republic.com', '2024-12-14', '2025-04-20', '2026-01-28 13:48:19', '2026-01-28 13:49:52'),
+(2, 'Courchevel', 'Alpes du Nord', 'Station prestigieuse des 3 Vallées', 'très grande', 1300, 3230, 150, '150.0', 60, 120, '68.00', 'https://www.ski-republic.com/sites/default/files/inline-images/Tignes_0.jpg', 'ski-republic.com', '2024-12-07', '2025-04-13', '2026-01-28 13:48:19', '2026-01-28 13:50:27'),
+(3, 'Val Thorens', 'Alpes du Nord', 'Plus haute station d\'Europe', 'très grande', 2300, 3230, 150, '140.0', 29, 180, '59.50', 'https://www.mmv.fr/images/cms/stations-ski-les-plus-connues/courchevel.jpg?frz-v=628', 'www.mmv.fr', '2024-11-16', '2025-05-04', '2026-01-28 13:48:19', '2026-01-28 13:52:34'),
+(4, 'Tignes', 'Alpes du Nord', 'Station avec glacier accessible toute l\'année', 'très grande', 1550, 3456, 150, '300.0', 78, 155, '64.00', 'https://www.mmv.fr/images/cms/stations-ski-les-plus-connues/zermatt.jpg?frz-v=628', 'mmv.fr', '2024-11-23', '2025-05-04', '2026-01-28 13:48:19', '2026-01-28 13:53:50'),
+(5, 'Les 2 Alpes', 'Alpes du Nord', 'Deuxième plus grand domaine skiable de France', 'grande', 1300, 3600, 96, '220.0', 44, 130, '53.00', 'https://petit-montagnard.fr/wp-content/uploads/2024/02/Top-5-stations-ski-Suisse-Verbier.jpeg', 'petit-montagnard.fr', '2024-11-30', '2025-04-20', '2026-01-28 13:48:19', '2026-01-28 13:55:36'),
+(6, 'La Plagne', 'Alpes du Nord', 'Station familiale avec vaste domaine', 'très grande', 1250, 3250, 225, '225.0', 110, 95, '56.00', 'https://www.mmv.fr/images/cms/stations-ski-les-plus-connues/zermatt.jpg?frz-v=628', 'mmv.fr', '2024-12-14', '2025-04-20', '2026-01-28 13:48:19', '2026-01-28 13:54:41');
 
 -- --------------------------------------------------------
 
@@ -340,26 +292,23 @@ INSERT INTO `stations_ski` (`id`, `nom`, `description`, `region`, `altitude_min`
 
 CREATE TABLE `temoignages_ski` (
   `id` int(11) NOT NULL,
-  `nom` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `type_ski` enum('alpin','fond','rando','freeride','freestyle') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nom` varchar(100) NOT NULL,
+  `email` varchar(100) DEFAULT NULL,
+  `type_ski` enum('alpin','fond','rando','freeride','freestyle','autre') DEFAULT 'alpin',
   `station_id` int(11) DEFAULT NULL,
-  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `note` int(11) DEFAULT NULL,
-  `approuve` tinyint(1) DEFAULT '0',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  `message` text NOT NULL,
+  `note` int(11) DEFAULT '5',
+  `approuve` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Déchargement des données de la table `temoignages_ski`
 --
 
-INSERT INTO `temoignages_ski` (`id`, `nom`, `email`, `type_ski`, `station_id`, `message`, `note`, `approuve`, `created_at`) VALUES
-(1, 'Thomas L.', 'thomas@email.com', 'freeride', 1, 'Incroyable ! Les couloirs du Mont-Blanc sont exceptionnels. Guide indispensable pour la sécurité.', 5, 1, '2026-01-26 14:36:58'),
-(2, 'Marie D.', 'marie@email.com', 'alpin', 2, 'Domaine immense, pistes parfaitement damées. Service impeccable dans les restaurants d\'altitude.', 4, 1, '2026-01-26 14:36:58'),
-(3, 'Jean P.', 'jean@email.com', 'fond', 6, 'Magnifiques pistes de ski de fond à travers la forêt. Cadre féerique après la neige.', 5, 1, '2026-01-26 14:36:58'),
-(4, 'Sophie M.', 'sophie@email.com', 'rando', 5, 'Ski de randonnée inoubliable. Montée tôt le matin pour profiter de la neige vierge.', 5, 1, '2026-01-26 14:36:58'),
-(5, 'Luc R.', 'luc@email.com', 'freestyle', 4, 'Snowpark bien aménagé avec modules pour tous niveaux. Ambiance sympa.', 4, 1, '2026-01-26 14:36:58');
+INSERT INTO `temoignages_ski` (`id`, `nom`, `email`, `type_ski`, `station_id`, `message`, `note`, `approuve`, `created_at`, `updated_at`) VALUES
+(1, 'Test', 'test@gmail.cim', 'rando', NULL, 'tesr', 4, 1, '2026-01-28 14:02:11', '2026-01-28 14:02:11');
 
 -- --------------------------------------------------------
 
@@ -370,22 +319,26 @@ INSERT INTO `temoignages_ski` (`id`, `nom`, `email`, `type_ski`, `station_id`, `
 CREATE TABLE `users` (
   `id` int(11) NOT NULL,
   `username` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
   `password_hash` varchar(255) NOT NULL,
-  `role` varchar(20) NOT NULL DEFAULT 'user',
-  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `email` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Déchargement des données de la table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `role`, `created_at`) VALUES
-(1, 'Test', 'test@gmail.com', '$2b$10$S7i.JR8Htz2Icy5N9PICQ.AysAR.VaPafHJseNIQ1IKN.XqWcbwfe', 'user', '2026-01-22 11:37:44'),
-(2, 'alpiniste123', 'jean.dupont@email.com', '$2b$10$abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'user', '2026-01-26 15:15:06'),
-(3, 'randonneur56', 'marie.martin@email.com', '$2b$10$zyxwvutsrqponmlkjihgfedcba9876543210ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'user', '2026-01-26 15:15:06'),
-(4, 'aventurier42', 'pierre.durand@email.com', '$2b$10$1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', 'user', '2026-01-26 15:15:06'),
-(5, 'grimpeuse88', 'sophie.leroy@email.com', '$2b$10$ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 'user', '2026-01-26 15:15:06');
+INSERT INTO `users` (`id`, `username`, `password_hash`, `created_at`, `email`) VALUES
+(4, 'Sophie', '$2b$10$...', '2026-01-26 09:10:56', 'sophie@aventure-alpine.com'),
+(8, 'paul65', '$2b$10$VtwirTzPx0hMtfxGvcCvbu5aur0FDkQaC2Z0RWudnn3C2Yuqmxg6i', '2026-02-04 12:02:38', 'paul3@gmail.com'),
+(9, 'TEST', '$2b$10$zaNmwsSKKsGykzkGNGFCcubsvg0qeql34gGJ.CQItpJtrvCpxOG8y', '2026-02-04 15:59:14', 'TEST@GMAIL.COM'),
+(10, 'test23', '$2b$10$V445kCGU73FLcJ69WdVipOFm4tWhyZwM4x5YkEwZI3YME9VcsiR3q', '2026-02-04 16:22:37', 'test2@gmail.com'),
+(11, 'Paul8', '$2b$10$PborY5fZpHVDQUFRgUVqRunpnWbkCFzPKtJdwN1.VIM3lg/MHgqRW', '2026-02-05 08:20:47', 'paul8@gmail.com'),
+(12, 'po', '$2b$10$Pzw2DMUASsF5zqUcWSSiq.sZuDLjON04fSEQ6Qe0dCcfxHAKQHV1C', '2026-02-05 08:23:18', '1@g.fr'),
+(13, 'fff', '$2b$10$0rbSYbSd/gVJ1zZg3Bax3ewNrNzTSPmG6mDy1nXYtwXHiqnDtnuMq', '2026-02-05 08:25:11', 'a.toto@gouv.fr'),
+(14, 'Paul_', '$2b$10$PQc7U1D1ZbrQvLe9LrpnG.zfBourHK/zIGbx6nCXveQq1oMps63qi', '2026-02-05 09:02:44', 'paik@gmail.com'),
+(15, 'PAULLLL', '$2b$10$5NJjileLDT3VfltL8qEn1OfgJaClO5WyvlsyUvE9O.W8IFXNvfocK', '2026-02-05 09:30:15', 'PPZZ@gmail.com'),
+(16, 'Paul9999', '$2b$10$sfo2timtCJiETX8Tg6a93OfREmhrGroiVanZp32YoaM3KQrZXjyNi', '2026-02-05 09:34:26', 'oz@gmail.com');
 
 --
 -- Index pour les tables déchargées
@@ -405,27 +358,11 @@ ALTER TABLE `articles`
   ADD KEY `auteur_id` (`auteur_id`);
 
 --
--- Index pour la table `commentaires`
---
-ALTER TABLE `commentaires`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `membre_id` (`membre_id`);
-
---
--- Index pour la table `contact`
---
-ALTER TABLE `contact`
-  ADD PRIMARY KEY (`id`);
-
---
 -- Index pour la table `galerie_randonnee`
 --
 ALTER TABLE `galerie_randonnee`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `utilisateur_id` (`utilisateur_id`),
-  ADD KEY `idx_difficulte` (`difficulte`),
-  ADD KEY `idx_saison` (`saison`),
-  ADD KEY `idx_date_publication` (`date_publication`);
+  ADD KEY `utilisateur_id` (`utilisateur_id`);
 
 --
 -- Index pour la table `inscriptions`
@@ -454,14 +391,8 @@ ALTER TABLE `membres`
 --
 ALTER TABLE `offres_ski`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `station_id` (`station_id`);
-
---
--- Index pour la table `photos`
---
-ALTER TABLE `photos`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `membre_id` (`membre_id`);
+  ADD KEY `idx_station` (`station_id`),
+  ADD KEY `idx_dates` (`date_debut`,`date_fin`);
 
 --
 -- Index pour la table `reservations`
@@ -483,14 +414,17 @@ ALTER TABLE `resultats`
 -- Index pour la table `stations_ski`
 --
 ALTER TABLE `stations_ski`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_region` (`region`),
+  ADD KEY `idx_type` (`type_station`);
 
 --
 -- Index pour la table `temoignages_ski`
 --
 ALTER TABLE `temoignages_ski`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `station_id` (`station_id`);
+  ADD KEY `idx_station` (`station_id`),
+  ADD KEY `idx_created` (`created_at`);
 
 --
 -- Index pour la table `users`
@@ -508,31 +442,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT pour la table `activites`
 --
 ALTER TABLE `activites`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT pour la table `articles`
 --
 ALTER TABLE `articles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT pour la table `commentaires`
---
-ALTER TABLE `commentaires`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT pour la table `contact`
---
-ALTER TABLE `contact`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `galerie_randonnee`
 --
 ALTER TABLE `galerie_randonnee`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT pour la table `inscriptions`
@@ -544,7 +466,7 @@ ALTER TABLE `inscriptions`
 -- AUTO_INCREMENT pour la table `itineraires`
 --
 ALTER TABLE `itineraires`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT pour la table `membres`
@@ -556,19 +478,13 @@ ALTER TABLE `membres`
 -- AUTO_INCREMENT pour la table `offres_ski`
 --
 ALTER TABLE `offres_ski`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
-
---
--- AUTO_INCREMENT pour la table `photos`
---
-ALTER TABLE `photos`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT pour la table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT pour la table `resultats`
@@ -580,19 +496,19 @@ ALTER TABLE `resultats`
 -- AUTO_INCREMENT pour la table `stations_ski`
 --
 ALTER TABLE `stations_ski`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT pour la table `temoignages_ski`
 --
 ALTER TABLE `temoignages_ski`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- Contraintes pour les tables déchargées
@@ -605,16 +521,10 @@ ALTER TABLE `articles`
   ADD CONSTRAINT `articles_ibfk_1` FOREIGN KEY (`auteur_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Contraintes pour la table `commentaires`
---
-ALTER TABLE `commentaires`
-  ADD CONSTRAINT `commentaires_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `membres` (`id`) ON DELETE CASCADE;
-
---
 -- Contraintes pour la table `galerie_randonnee`
 --
 ALTER TABLE `galerie_randonnee`
-  ADD CONSTRAINT `galerie_randonnee_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `galerie_randonnee_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
 -- Contraintes pour la table `inscriptions`
@@ -636,16 +546,9 @@ ALTER TABLE `offres_ski`
   ADD CONSTRAINT `offres_ski_ibfk_1` FOREIGN KEY (`station_id`) REFERENCES `stations_ski` (`id`) ON DELETE CASCADE;
 
 --
--- Contraintes pour la table `photos`
---
-ALTER TABLE `photos`
-  ADD CONSTRAINT `photos_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `membres` (`id`) ON DELETE CASCADE;
-
---
 -- Contraintes pour la table `reservations`
 --
 ALTER TABLE `reservations`
-  ADD CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `membres` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`activite_id`) REFERENCES `activites` (`id`) ON DELETE CASCADE;
 
 --
