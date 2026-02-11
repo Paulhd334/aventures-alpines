@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    identifier: '',    // Peut être email OU username
+    identifier: '',    // Peut être email ou username
     password: ''
   });
   const [error, setError] = useState('');
@@ -41,34 +41,43 @@ const Login = () => {
         requestData.username = identifier;
       }
 
-      console.log('Données envoyées:', requestData);
+      console.log('📤 Données envoyées:', requestData);
 
       const response = await axios.post('http://localhost:5000/api/auth/login', requestData);
 
       console.log('✅ Connexion réussie:', response.data);
       
-      // Stocker l'utilisateur avec TOUTES ses données
+      // ✅ 1. Stocker l'utilisateur avec TOUTES ses données
       if (response.data.user) {
         const userData = {
-          id: response.data.user.id,           // ← TRÈS IMPORTANT
+          id: response.data.user.id,
           username: response.data.user.username,
           email: response.data.user.email,
           created_at: response.data.user.created_at
         };
         
-        console.log('Stockage dans localStorage:', userData);
+        console.log('💾 Stockage dans localStorage:', userData);
         localStorage.setItem('user', JSON.stringify(userData));
+        
+        // ✅ 2. ÉMETTRE L'ÉVÉNEMENT POUR METTRE À JOUR LE HEADER !!!
+        window.dispatchEvent(new CustomEvent('user-login', { 
+          detail: userData 
+        }));
+        
+        console.log('📢 Événement user-login émis avec:', userData);
         
         // Vérifier que c'est bien stocké
         const storedUser = JSON.parse(localStorage.getItem('user'));
-        console.log('Vérification storage - ID:', storedUser?.id);
+        console.log('✅ Vérification storage - ID:', storedUser?.id);
       } else {
         console.error('⚠️ Pas de user dans la réponse:', response.data);
       }
       
-      // Redirection
+      // ✅ 3. Message de succès
+      setError(''); // Efface les erreurs
+      
+      // ✅ 4. Redirection SANS rechargement ! (supprimer window.location.reload)
       navigate('/');
-      window.location.reload();
       
     } catch (err) {
       console.error('❌ Erreur login:', err.response?.data || err.message);
@@ -79,16 +88,6 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fonction de test - à supprimer après
-  const testLocalStorage = () => {
-    const user = JSON.parse(localStorage.getItem('user'));
-    console.log('=== DEBUG LOCALSTORAGE ===');
-    console.log('User object:', user);
-    console.log('User ID:', user?.id);
-    console.log('User ID type:', typeof user?.id);
-    console.log('==========================');
   };
 
   return (
@@ -116,21 +115,6 @@ const Login = () => {
           Connexion
         </h1>
         <br />
-        
-        {/* Bouton de debug - à supprimer */}
-        <button 
-          onClick={testLocalStorage}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#f0f0f0',
-            border: '1px solid #ccc',
-            marginBottom: '1rem',
-            fontSize: '0.75rem',
-            cursor: 'pointer'
-          }}
-        >
-          Debug localStorage
-        </button>
         
         <p style={{
           fontSize: '0.875rem',
@@ -165,7 +149,7 @@ const Login = () => {
               marginBottom: '0.5rem',
               color: '#666'
             }}>
-              Email ou nom d'utilisateur *
+              Email ou Nom d'utilisateur *
             </label>
             <input
               type="text"
@@ -182,11 +166,8 @@ const Login = () => {
                 borderRadius: '4px',
                 outline: 'none'
               }}
-              placeholder="paul@gmail.com ou 'Paul'"
+              placeholder="paul@gmail.com ou Paul"
             />
-            <small style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>
-              Test avec: Paul (username) ou paul@gmail.com (email)
-            </small>
           </div>
 
           {/* Mot de passe */}
@@ -218,9 +199,6 @@ const Login = () => {
               }}
               placeholder="Votre mot de passe"
             />
-            <small style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.25rem' }}>
-              Mot de passe que vous avez utilisé lors de l'inscription
-            </small>
           </div>
 
           {/* Bouton de connexion */}
@@ -245,13 +223,6 @@ const Login = () => {
           </button>
         </form>
 
-        {/* Test manuel - à supprimer */}
-        <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f9f9f9' }}>
-          <p style={{ fontSize: '0.75rem', color: '#666' }}>
-            <strong>Debug:</strong> Après connexion, cliquez sur "Debug localStorage" pour vérifier que l'ID est bien stocké.
-          </p>
-        </div>
-
         {/* Lien vers inscription */}
         <div style={{
           textAlign: 'center',
@@ -275,7 +246,7 @@ const Login = () => {
               fontWeight: '500'
             }}
           >
-            Créer un compte
+            Créer un compte →
           </Link>
         </div>
       </div>
