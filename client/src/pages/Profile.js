@@ -13,6 +13,16 @@ const Profile = () => {
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(Date.now());
+  
+  // États pour la publication d'articles
+  const [showPublicationForm, setShowPublicationForm] = useState(false);
+  const [newPublication, setNewPublication] = useState({
+    titre: '',
+    contenu: '',
+    lieu: '',
+    type: 'récit'
+  });
+  const [publishing, setPublishing] = useState(false);
 
   const navigate = useNavigate();
   const API_BASE_URL = 'http://localhost:5000';
@@ -62,6 +72,71 @@ const Profile = () => {
     }
   }, []);
 
+  // Fonction pour charger les publications de l'utilisateur
+  const loadUserPublications = useCallback(async () => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/articles`);
+      if (Array.isArray(response.data)) {
+        const userPubs = response.data.filter(pub => {
+          const auteurUsername = pub.auteur?.nom_utilisateur || pub.auteur?.username || pub.username;
+          const auteurId = pub.auteur_id || pub.userId || pub.auteur?.id;
+          return auteurUsername === currentUser.nom_utilisateur || auteurId === currentUser.id;
+        });
+        setPublications(userPubs);
+      }
+    } catch (err) {
+      console.error('Erreur chargement articles:', err.message);
+    }
+  }, []);
+
+  // Fonction pour publier un nouvel article
+  const handlePublishArticle = async (e) => {
+    e.preventDefault();
+    
+    if (!newPublication.titre || !newPublication.contenu) {
+      alert('Le titre et le contenu sont requis');
+      return;
+    }
+
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.id) {
+      alert('Vous devez être connecté');
+      return;
+    }
+
+    setPublishing(true);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/articles`, {
+        titre: newPublication.titre,
+        contenu: newPublication.contenu,
+        auteur_id: currentUser.id,
+        lieu: newPublication.lieu || '',
+        type: newPublication.type || 'récit'
+      });
+
+      if (response.status === 201) {
+        alert('✅ Article publié avec succès !');
+        setShowPublicationForm(false);
+        setNewPublication({
+          titre: '',
+          contenu: '',
+          lieu: '',
+          type: 'récit'
+        });
+        // Recharger les publications
+        await loadUserPublications();
+      }
+    } catch (error) {
+      console.error('Erreur publication:', error);
+      alert('❌ Erreur lors de la publication: ' + (error.response?.data?.error || error.message));
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   // Charger l'utilisateur, ses publications ET ses réservations au montage
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -90,24 +165,8 @@ const Profile = () => {
         email: currentUser.email || '' 
       });
 
-      // Charger toutes les publications
-      axios.get(`${API_BASE_URL}/api/articles`)
-        .then(response => {
-          if (Array.isArray(response.data)) {
-            const userPubs = response.data.filter(pub => {
-              const auteurUsername = pub.auteur?.nom_utilisateur || pub.auteur?.username || pub.username;
-              const auteurId = pub.auteur_id || pub.userId || pub.auteur?.id;
-              return auteurUsername === username || auteurId === currentUser.id;
-            });
-            setPublications(userPubs);
-          } else {
-            setPublications([]);
-          }
-        })
-        .catch(err => {
-          console.error('Erreur chargement articles:', err.message);
-          setPublications([]);
-        });
+      // Charger les publications
+      loadUserPublications();
 
       // Charger les réservations dès le départ
       loadReservations(false);
@@ -119,7 +178,7 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate, loadReservations]);
+  }, [navigate, loadReservations, loadUserPublications]);
 
   // Effet pour recharger quand lastUpdate change (après annulation)
   useEffect(() => {
@@ -183,7 +242,11 @@ const Profile = () => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-  // ⭐ VERSION CORRIGÉE SANS TOKEN ⭐
+  const handlePublicationChange = (e) => {
+    setNewPublication({ ...newPublication, [e.target.name]: e.target.value });
+  };
+
+  // Mise à jour du profil
   const handleSave = async () => {
     if (!editData.nom_utilisateur || !editData.email) {
       alert("Nom utilisateur et email obligatoires");
@@ -192,15 +255,13 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      // ⭐ ON N'UTILISE PLUS DE TOKEN - ON ENVOIE JUSTE L'ID UTILISATEUR ⭐
       const currentUser = getCurrentUser();
       if (!currentUser || !currentUser.id) {
         throw new Error('Utilisateur non connecté');
       }
 
-      // Appel API sans token, avec l'ID dans l'URL ou le body
       const response = await axios.put(
-        `${API_BASE_URL}/api/users/${currentUser.id}`, // Route avec ID dans l'URL
+        `${API_BASE_URL}/api/users/${currentUser.id}`,
         {
           nom_utilisateur: editData.nom_utilisateur,
           email: editData.email
@@ -210,7 +271,6 @@ const Profile = () => {
       const updatedUser = response.data.user || response.data;
       setUser(updatedUser);
       
-      // Mettre à jour le localStorage
       const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
       localStorage.setItem('user', JSON.stringify({
         ...storedUser,
@@ -296,7 +356,7 @@ const Profile = () => {
             Membre depuis {formatDate(user.date_inscription)}
           </p>
           <p style={{ color: '#666', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-            ID: {user.id} • {reservations.length} réservation{reservations.length !== 1 ? 's' : ''}
+            ID: {user.id} • {reservations.length} réservation{reservations.length !== 1 ? 's' : ''} • {publications.length} publication{publications.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
@@ -400,17 +460,182 @@ const Profile = () => {
 
         {activeTab === 'publications' && (
           <div>
-            <h2 style={{ fontSize:'1.5rem', fontWeight:'600', marginBottom:'1.5rem' }}>Mes publications</h2>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
+              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes publications</h2>
+              <button 
+                onClick={() => setShowPublicationForm(!showPublicationForm)}
+                style={{ 
+                  padding:'0.75rem 1.5rem', 
+                  backgroundColor: showPublicationForm ? '#666' : '#000', 
+                  color:'white', 
+                  border:'none', 
+                  borderRadius:'6px', 
+                  cursor:'pointer' 
+                }}
+              >
+                {showPublicationForm ? '✖ Annuler' : '➕ Nouvelle publication'}
+              </button>
+            </div>
+
+            {/* Formulaire de publication */}
+            {showPublicationForm && (
+              <div style={{ 
+                backgroundColor: '#f9f9f9', 
+                padding: '2rem', 
+                borderRadius: '8px',
+                marginBottom: '2rem',
+                border: '1px solid #e0e0e0'
+              }}>
+                <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Publier un article</h3>
+                <form onSubmit={handlePublishArticle}>
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Titre *
+                    </label>
+                    <input
+                      type="text"
+                      name="titre"
+                      value={newPublication.titre}
+                      onChange={handlePublicationChange}
+                      style={{ width:'100%', padding:'0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                      placeholder="Titre de votre article"
+                      required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Contenu *
+                    </label>
+                    <textarea
+                      name="contenu"
+                      value={newPublication.contenu}
+                      onChange={handlePublicationChange}
+                      style={{ width:'100%', padding:'0.75rem', border: '1px solid #ccc', borderRadius: '4px', minHeight: '150px' }}
+                      placeholder="Partagez votre expérience..."
+                      required
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Lieu
+                    </label>
+                    <input
+                      type="text"
+                      name="lieu"
+                      value={newPublication.lieu}
+                      onChange={handlePublicationChange}
+                      style={{ width:'100%', padding:'0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                      placeholder="Où s'est déroulée cette aventure ?"
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                      Type d'article
+                    </label>
+                    <select
+                      name="type"
+                      value={newPublication.type}
+                      onChange={handlePublicationChange}
+                      style={{ width:'100%', padding:'0.75rem', border: '1px solid #ccc', borderRadius: '4px' }}
+                    >
+                      <option value="récit">Récit d'aventure</option>
+                      <option value="guide">Guide / Conseils</option>
+                      <option value="article">Article général</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button
+                      type="submit"
+                      disabled={publishing}
+                      style={{ 
+                        padding:'0.75rem 2rem', 
+                        backgroundColor: '#000', 
+                        color:'white', 
+                        border:'none', 
+                        borderRadius:'4px', 
+                        cursor: publishing ? 'not-allowed' : 'pointer',
+                        opacity: publishing ? 0.7 : 1
+                      }}
+                    >
+                      {publishing ? 'Publication...' : 'Publier'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPublicationForm(false)}
+                      style={{ 
+                        padding:'0.75rem 2rem', 
+                        backgroundColor: 'transparent', 
+                        color:'#666', 
+                        border:'1px solid #666', 
+                        borderRadius:'4px', 
+                        cursor:'pointer' 
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Liste des publications */}
             {publications.length === 0 ? (
               <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
-                <p>Vous n'avez pas encore publié d'article</p>
+                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore publié d'article</p>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Partagez vos aventures avec la communauté !</p>
+                <button 
+                  onClick={() => setShowPublicationForm(true)}
+                  style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}
+                >
+                  ✍️ Créer mon premier article
+                </button>
               </div>
             ) : (
-              <div style={{ display:'grid', gap:'1rem' }}>
+              <div style={{ display:'grid', gap:'1.5rem' }}>
                 {publications.map(pub => (
-                  <div key={pub.id} style={{ padding:'1rem', border:'1px solid #e0e0e0', borderRadius:'4px' }}>
-                    <h3>{pub.titre}</h3>
-                    <p>{pub.contenu?.substring(0, 150)}...</p>
+                  <div key={pub.id} style={{ padding:'1.5rem', border:'1px solid #e0e0e0', borderRadius:'8px', backgroundColor:'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>{pub.titre}</h3>
+                        <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                          <span>📍 {pub.lieu || 'Lieu non spécifié'}</span>
+                          <span>📝 {pub.type || 'récit'}</span>
+                          <span>📅 {formatDate(pub.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <p style={{ color: '#333', lineHeight: '1.6', marginBottom: '1rem' }}>
+                      {pub.contenu?.substring(0, 200)}...
+                    </p>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Link to={`/article/${pub.id}`}>
+                        <button
+                          style={{ 
+                            padding: '0.5rem 1.5rem',
+                            border: '1px solid #000',
+                            color: '#000',
+                            backgroundColor: 'transparent',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.target.style.backgroundColor = '#000';
+                            e.target.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                            e.target.style.color = '#000';
+                          }}
+                        >
+                          Lire la suite →
+                        </button>
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

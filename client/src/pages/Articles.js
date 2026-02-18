@@ -140,9 +140,11 @@ const ArticlesList = () => {
               gap: '1rem',
               marginBottom: '1rem',
               fontSize: '0.75rem',
-              color: 'var(--charcoal-light)'
+              color: 'var(--charcoal-light)',
+              flexWrap: 'wrap'
             }}>
-              <span>👤 {article.auteur_nom}</span>
+              <span>👤 {article.auteur_nom || 'Auteur inconnu'}</span>
+              <span>📝 {article.type || 'récit'}</span>
               {article.lieu && (
                 <>
                   <span>•</span>
@@ -162,9 +164,7 @@ const ArticlesList = () => {
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden'
             }}>
-              {article.contenu.length > 200 
-                ? `${article.contenu.substring(0, 200)}...`
-                : article.contenu}
+              {article.contenu}
             </p>
 
             <div style={{
@@ -172,10 +172,10 @@ const ArticlesList = () => {
               justifyContent: 'space-between',
               alignItems: 'center',
               fontSize: '0.75rem',
-              color: 'var(--gray-dark)'
+              color: 'var(--charcoal)'
             }}>
               <span>
-                {new Date(article.created_at).toLocaleDateString('fr-FR', {
+                📅 {new Date(article.created_at).toLocaleDateString('fr-FR', {
                   day: 'numeric',
                   month: 'short',
                   year: 'numeric'
@@ -184,7 +184,9 @@ const ArticlesList = () => {
               <span style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.25rem'
+                gap: '0.25rem',
+                color: 'var(--ink)',
+                fontWeight: 400
               }}>
                 Lire l'article →
               </span>
