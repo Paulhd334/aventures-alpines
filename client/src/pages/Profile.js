@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -12,6 +12,7 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
 
   const navigate = useNavigate();
   const API_BASE_URL = 'http://localhost:5000';
@@ -29,7 +30,39 @@ const Profile = () => {
     }
   };
 
-  // Charger l'utilisateur et ses publications
+  // Fonction pour charger les réservations
+  const loadReservations = useCallback(async (showLoading = false) => {
+    const currentUser = getCurrentUser();
+    
+    if (!currentUser || !currentUser.id) {
+      console.error('❌ Impossible de charger les réservations: utilisateur non connecté');
+      setReservations([]);
+      return;
+    }
+
+    const userId = currentUser.id;
+    console.log(`🔍 Chargement réservations pour utilisateur ID: ${userId}`);
+    
+    if (showLoading) setLoadingReservations(true);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/reservations/user/${userId}`);
+      console.log('📊 Réservations reçues:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setReservations(response.data);
+      } else {
+        setReservations([]);
+      }
+    } catch (err) {
+      console.error('❌ Erreur chargement réservations:', err.message);
+      setReservations([]);
+    } finally {
+      if (showLoading) setLoadingReservations(false);
+    }
+  }, []);
+
+  // Charger l'utilisateur, ses publications ET ses réservations au montage
   useEffect(() => {
     const currentUser = getCurrentUser();
     
@@ -76,6 +109,9 @@ const Profile = () => {
           setPublications([]);
         });
 
+      // Charger les réservations dès le départ
+      loadReservations(false);
+
     } catch (error) {
       console.error('Erreur chargement profil:', error);
       localStorage.removeItem('user');
@@ -83,50 +119,15 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, loadReservations]);
 
-  // Charger les réservations quand l'onglet change
+  // Effet pour recharger quand lastUpdate change (après annulation)
   useEffect(() => {
-    if (activeTab === 'reservations') {
-      loadReservations();
+    if (lastUpdate) {
+      console.log('🔄 Mise à jour des réservations après modification');
+      loadReservations(false);
     }
-  }, [activeTab]);
-
-  // Charger les réservations de l'utilisateur connecté
-  const loadReservations = () => {
-    const currentUser = getCurrentUser();
-    
-    if (!currentUser || !currentUser.id) {
-      console.error('❌ Impossible de charger les réservations: utilisateur non connecté');
-      setReservations([]);
-      return;
-    }
-
-    const userId = currentUser.id;
-    console.log(`🔍 Chargement réservations pour utilisateur ID: ${userId} (${currentUser.username || currentUser.nom_utilisateur})`);
-    
-    setLoadingReservations(true);
-    
-    axios.get(`${API_BASE_URL}/api/reservations/user/${userId}`)
-      .then(response => {
-        console.log('📊 Réservations reçues:', response.data);
-        if (Array.isArray(response.data)) {
-          setReservations(response.data);
-        } else {
-          setReservations([]);
-        }
-      })
-      .catch(err => {
-        console.error('❌ Erreur chargement réservations:', err.message);
-        if (err.response?.status === 404) {
-          console.log('ℹ️ Aucune réservation trouvée (404)');
-        }
-        setReservations([]);
-      })
-      .finally(() => {
-        setLoadingReservations(false);
-      });
-  };
+  }, [lastUpdate, loadReservations]);
 
   // Annuler une réservation
   const cancelReservation = async (reservationId) => {
@@ -147,13 +148,22 @@ const Profile = () => {
 
       if (response.data.success) {
         alert('✅ Réservation annulée avec succès');
-        // Recharger les réservations
-        loadReservations();
+        
+        // Mettre à jour l'état local immédiatement
+        setReservations(prev => prev.filter(r => r.id !== reservationId));
+        
+        // Forcer un rechargement
+        setLastUpdate(Date.now());
       }
     } catch (error) {
       console.error('Erreur annulation:', error);
       alert(error.response?.data?.error || 'Erreur lors de l\'annulation');
     }
+  };
+
+  // Rafraîchir manuellement
+  const refreshReservations = () => {
+    loadReservations(true);
   };
 
   const handleLogout = () => {
@@ -173,6 +183,7 @@ const Profile = () => {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
+  // ⭐ VERSION CORRIGÉE SANS TOKEN ⭐
   const handleSave = async () => {
     if (!editData.nom_utilisateur || !editData.email) {
       alert("Nom utilisateur et email obligatoires");
@@ -181,36 +192,48 @@ const Profile = () => {
 
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      if (!token) throw new Error('Token manquant');
+      // ⭐ ON N'UTILISE PLUS DE TOKEN - ON ENVOIE JUSTE L'ID UTILISATEUR ⭐
+      const currentUser = getCurrentUser();
+      if (!currentUser || !currentUser.id) {
+        throw new Error('Utilisateur non connecté');
+      }
 
+      // Appel API sans token, avec l'ID dans l'URL ou le body
       const response = await axios.put(
-        `${API_BASE_URL}/api/users/profile`, 
-        editData,
-        { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
+        `${API_BASE_URL}/api/users/${currentUser.id}`, // Route avec ID dans l'URL
+        {
+          nom_utilisateur: editData.nom_utilisateur,
+          email: editData.email
+        }
       );
 
       const updatedUser = response.data.user || response.data;
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      // Mettre à jour le localStorage
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({
+        ...storedUser,
+        ...updatedUser,
+        nom_utilisateur: updatedUser.nom_utilisateur,
+        email: updatedUser.email
+      }));
+      
       setEditing(false);
       alert('✅ Profil mis à jour !');
     } catch (error) {
       console.error('Erreur mise à jour profil:', error);
-      alert('❌ Erreur lors de la mise à jour du profil');
+      alert('❌ Erreur lors de la mise à jour du profil: ' + (error.response?.data?.error || error.message));
     } finally {
       setSaving(false);
     }
   };
 
-  // Fonction pour formater la date
   const formatDate = (dateString) => {
     if (!dateString) return 'Date non disponible';
-    
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'Date invalide';
-      
       return date.toLocaleDateString('fr-FR', {
         weekday: 'long',
         year: 'numeric',
@@ -218,8 +241,21 @@ const Profile = () => {
         day: 'numeric'
       });
     } catch (error) {
-      console.error('Erreur formatage date:', error);
       return 'Date non disponible';
+    }
+  };
+
+  const formatTime = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return '';
     }
   };
 
@@ -267,21 +303,53 @@ const Profile = () => {
 
       {/* Onglets */}
       <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', borderBottom: '1px solid #e0e0e0', flexWrap: 'wrap' }}>
-        <button onClick={() => setActiveTab('infos')} style={{ border: 'none', background: 'none', borderBottom: activeTab==='infos'?'2px solid #000':'2px solid transparent', cursor:'pointer', fontWeight: activeTab==='infos'?600:400, padding: '0.5rem 0' }}>
+        <button 
+          onClick={() => setActiveTab('infos')} 
+          style={{ 
+            border: 'none', 
+            background: 'none', 
+            borderBottom: activeTab === 'infos' ? '2px solid #000' : '2px solid transparent', 
+            cursor: 'pointer', 
+            fontWeight: activeTab === 'infos' ? 600 : 400, 
+            padding: '0.5rem 0' 
+          }}
+        >
           Mes informations
         </button>
-        <button onClick={() => setActiveTab('publications')} style={{ border: 'none', background: 'none', borderBottom: activeTab==='publications'?'2px solid #000':'2px solid transparent', cursor:'pointer', fontWeight: activeTab==='publications'?600:400, padding: '0.5rem 0' }}>
+        <button 
+          onClick={() => setActiveTab('publications')} 
+          style={{ 
+            border: 'none', 
+            background: 'none', 
+            borderBottom: activeTab === 'publications' ? '2px solid #000' : '2px solid transparent', 
+            cursor: 'pointer', 
+            fontWeight: activeTab === 'publications' ? 600 : 400, 
+            padding: '0.5rem 0' 
+          }}
+        >
           Mes publications ({publications.length})
         </button>
-        <button onClick={() => setActiveTab('reservations')} style={{ border: 'none', background: 'none', borderBottom: activeTab==='reservations'?'2px solid #000':'2px solid transparent', cursor:'pointer', fontWeight: activeTab==='reservations'?600:400, padding: '0.5rem 0' }}>
+        <button 
+          onClick={() => {
+            setActiveTab('reservations');
+            loadReservations(true);
+          }} 
+          style={{ 
+            border: 'none', 
+            background: 'none', 
+            borderBottom: activeTab === 'reservations' ? '2px solid #000' : '2px solid transparent', 
+            cursor: 'pointer', 
+            fontWeight: activeTab === 'reservations' ? 600 : 400, 
+            padding: '0.5rem 0' 
+          }}
+        >
           Mes réservations ({reservations.length})
         </button>
       </div>
 
-      {/* Contenu onglets */}
+      {/* Contenu des onglets */}
       <div>
-        {/* Infos personnelles */}
-        {activeTab==='infos' && (
+        {activeTab === 'infos' && (
           <div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
               <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Informations personnelles</h2>
@@ -330,8 +398,27 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Réservations */}
-        {activeTab==='reservations' && (
+        {activeTab === 'publications' && (
+          <div>
+            <h2 style={{ fontSize:'1.5rem', fontWeight:'600', marginBottom:'1.5rem' }}>Mes publications</h2>
+            {publications.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
+                <p>Vous n'avez pas encore publié d'article</p>
+              </div>
+            ) : (
+              <div style={{ display:'grid', gap:'1rem' }}>
+                {publications.map(pub => (
+                  <div key={pub.id} style={{ padding:'1rem', border:'1px solid #e0e0e0', borderRadius:'4px' }}>
+                    <h3>{pub.titre}</h3>
+                    <p>{pub.contenu?.substring(0, 150)}...</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'reservations' && (
           <div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
               <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes réservations</h2>

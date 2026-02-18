@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : mer. 11 fév. 2026 à 09:21
+-- Généré le : mer. 18 fév. 2026 à 16:38
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -73,6 +73,41 @@ CREATE TABLE `articles` (
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Déchargement des données de la table `articles`
+--
+
+INSERT INTO `articles` (`id`, `titre`, `contenu`, `auteur_id`, `lieu`, `type`, `created_at`) VALUES
+(1, 'Ascension du Mont Blanc', 'Une expérience incroyable pour gravir le plus haut sommet d’Europe. Prévoir équipement et guide.', 4, 'Mont Blanc', 'récit', '2026-02-18 09:00:00'),
+(2, 'Randonnée autour du Mont Blanc', 'Itinéraire panoramique traversant les vallées et glaciers autour du Mont Blanc.', 8, 'Mont Blanc', 'guide', '2026-02-18 09:30:00'),
+(3, 'Découverte des Alpes du Nord', 'Présentation des plus belles montagnes des Alpes du Nord et conseils pour les randonneurs.', 11, 'Alpes du Nord', 'article', '2026-02-18 10:00:00'),
+(4, 'Escalade aux Drus', 'Voies techniques pour grimpeurs expérimentés dans les Drus. Équipement fourni.', 14, 'Les Drus', 'récit', '2026-02-18 10:30:00'),
+(5, 'Tour du Beaufortain', 'Randonnée dans le massif du Beaufortain, alpages et vues sur le Mont Blanc.', 8, 'Beaufortain', 'guide', '2026-02-18 11:00:00'),
+(6, 'Sommets des Vosges', 'Randonnée facile pour découvrir les sommets des Vosges et profiter de paysages variés.', 4, 'Vosges', 'article', '2026-02-18 11:30:00'),
+(7, 'Raquettes au Col de la Croix', 'Balade hivernale en raquettes avec vue panoramique sur les montagnes.', 11, 'Col de la Croix', 'récit', '2026-02-18 12:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `contact_messages`
+--
+
+CREATE TABLE `contact_messages` (
+  `id` int(11) NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `sujet` varchar(100) NOT NULL,
+  `message` text NOT NULL,
+  `date_envoi` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `contact_messages`
+--
+
+INSERT INTO `contact_messages` (`id`, `nom`, `email`, `sujet`, `message`, `date_envoi`) VALUES
+(1, 'vuobhipnj', 'njio@gmail.com', 'guide', 'fezdfzraGFRZE', '2026-02-18 16:24:30');
+
 -- --------------------------------------------------------
 
 --
@@ -107,19 +142,6 @@ INSERT INTO `galerie_randonnee` (`id`, `utilisateur_id`, `titre`, `description`,
 -- --------------------------------------------------------
 
 --
--- Structure de la table `inscriptions`
---
-
-CREATE TABLE `inscriptions` (
-  `id` int(11) NOT NULL,
-  `membre_id` int(11) NOT NULL,
-  `activite_id` int(11) NOT NULL,
-  `date_inscription` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- --------------------------------------------------------
-
---
 -- Structure de la table `itineraires`
 --
 
@@ -149,23 +171,6 @@ INSERT INTO `itineraires` (`id`, `nom`, `description`, `difficulte`, `duree`, `d
 (14, 'Tour des Écrins', 'Randonnée autour du massif des Écrins, parc national avec une biodiversité exceptionnelle. Itinéraire sauvage et préservé.', 'Difficile', '10-12 jours', '150 km', '+9000 m', 'Juillet à Septembre', 'Glaciers, chamois, villages authentiques, faune sauvage', 'Alpes', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
 (15, 'Tour du Queyras', 'Randonnée dans le Parc Naturel Régional du Queyras, région préservée aux paysages minéraux impressionnants.', 'Moyen', '6-8 jours', '110 km', '+6000 m', 'Juin à Septembre', 'Mélèzes, lacs, fortifications militaires, villages perchés', 'Alpes', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
 (18, 'Tour du Beaufortain', 'Randonnée dans le massif du Beaufortain, région réputée pour ses alpages et son fromage.', 'Moyen', '4-6 jours', '70 km', '+3500 m', 'Juin à Septembre', 'Alpages, fromageries, vues sur le Mont Blanc', 'Alpes', 'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&auto=format&fit=crop', '2026-01-26 08:50:16');
-
--- --------------------------------------------------------
-
---
--- Structure de la table `membres`
---
-
-CREATE TABLE `membres` (
-  `id` int(11) NOT NULL,
-  `user_id` int(11) NOT NULL,
-  `nom` varchar(100) NOT NULL,
-  `prenom` varchar(100) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `telephone` varchar(20) DEFAULT NULL,
-  `date_naissance` date DEFAULT NULL,
-  `date_adhesion` date DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -213,37 +218,19 @@ CREATE TABLE `reservations` (
   `id` int(11) NOT NULL,
   `membre_id` int(11) NOT NULL,
   `activite_id` int(11) NOT NULL,
-  `date_reservation` date NOT NULL,
-  `heure_debut` time DEFAULT '09:00:00',
-  `heure_fin` time DEFAULT '17:00:00',
+  `date_reservation` datetime NOT NULL,
   `nb_personnes` int(11) DEFAULT '1',
   `notes` text,
-  `statut` varchar(50) DEFAULT 'confirmée'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `statut` varchar(50) DEFAULT 'confirmée',
+  `date_creation` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Déchargement des données de la table `reservations`
 --
 
-INSERT INTO `reservations` (`id`, `membre_id`, `activite_id`, `date_reservation`, `heure_debut`, `heure_fin`, `nb_personnes`, `notes`, `statut`) VALUES
-(4, 10, 1, '2024-12-25', '09:00:00', '17:00:00', 2, NULL, 'confirmée'),
-(5, 10, 2, '2026-02-04', '09:00:00', '17:00:00', 1, NULL, 'confirmée'),
-(6, 16, 1, '2026-02-06', '09:00:00', '17:00:00', 1, NULL, 'confirmée');
-
--- --------------------------------------------------------
-
---
--- Structure de la table `resultats`
---
-
-CREATE TABLE `resultats` (
-  `id` int(11) NOT NULL,
-  `membre_id` int(11) NOT NULL,
-  `activite_id` int(11) NOT NULL,
-  `date_evenement` date NOT NULL,
-  `performance` varchar(100) NOT NULL,
-  `commentaire` text
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+INSERT INTO `reservations` (`id`, `membre_id`, `activite_id`, `date_reservation`, `nb_personnes`, `notes`, `statut`, `date_creation`) VALUES
+(1, 21, 1, '2026-02-18 00:00:00', 1, NULL, 'confirmée', '2026-02-18 16:27:41');
 
 -- --------------------------------------------------------
 
@@ -338,7 +325,12 @@ INSERT INTO `users` (`id`, `username`, `password_hash`, `created_at`, `email`) V
 (13, 'fff', '$2b$10$0rbSYbSd/gVJ1zZg3Bax3ewNrNzTSPmG6mDy1nXYtwXHiqnDtnuMq', '2026-02-05 08:25:11', 'a.toto@gouv.fr'),
 (14, 'Paul_', '$2b$10$PQc7U1D1ZbrQvLe9LrpnG.zfBourHK/zIGbx6nCXveQq1oMps63qi', '2026-02-05 09:02:44', 'paik@gmail.com'),
 (15, 'PAULLLL', '$2b$10$5NJjileLDT3VfltL8qEn1OfgJaClO5WyvlsyUvE9O.W8IFXNvfocK', '2026-02-05 09:30:15', 'PPZZ@gmail.com'),
-(16, 'Paul9999', '$2b$10$sfo2timtCJiETX8Tg6a93OfREmhrGroiVanZp32YoaM3KQrZXjyNi', '2026-02-05 09:34:26', 'oz@gmail.com');
+(16, 'Paul9999', '$2b$10$sfo2timtCJiETX8Tg6a93OfREmhrGroiVanZp32YoaM3KQrZXjyNi', '2026-02-05 09:34:26', 'oz@gmail.com'),
+(17, 'PAUL', '$2b$10$M8LUn4oReAYxobnGeW01eecklfbRZIe5ikUyNYdx2Vfi4tZ60uy02', '2026-02-11 09:47:47', 'paul99@gmail.com'),
+(18, 'frjuizp', '$2b$10$9zhd1CTEUO9uTst/9IkJVek7sSZsxYGMaLcIzyG4uSY43/FWhc.O6', '2026-02-11 11:01:36', 'ioppsdj@gmail.com'),
+(19, 'AZERTY', '$2b$10$QaefnvEBeBLTvKiCWZMiBuRW3l9Q0vP3fMQJGCDefYvQkL3mtS2PS', '2026-02-11 11:15:12', 'AZERTY@GMAIL.COM'),
+(20, 'JKLHGF', '$2b$10$iKk7.tZ0G4vq0gDKmizHOuAdI41X.92OhEstBCzUeXO4NxK87.kHG', '2026-02-11 11:19:58', 'HJJ@gmail.coom'),
+(21, 'PAPO', '$2b$10$y47/7zzu.RY8mV3..i826ugCVEFkkSWBz5GL4Si4tZ7RkqJwNYT2G', '2026-02-18 16:25:14', 'PAPO@GMAIL.COM');
 
 --
 -- Index pour les tables déchargées
@@ -358,6 +350,12 @@ ALTER TABLE `articles`
   ADD KEY `auteur_id` (`auteur_id`);
 
 --
+-- Index pour la table `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `galerie_randonnee`
 --
 ALTER TABLE `galerie_randonnee`
@@ -365,26 +363,10 @@ ALTER TABLE `galerie_randonnee`
   ADD KEY `utilisateur_id` (`utilisateur_id`);
 
 --
--- Index pour la table `inscriptions`
---
-ALTER TABLE `inscriptions`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `membre_id` (`membre_id`),
-  ADD KEY `activite_id` (`activite_id`);
-
---
 -- Index pour la table `itineraires`
 --
 ALTER TABLE `itineraires`
   ADD PRIMARY KEY (`id`);
-
---
--- Index pour la table `membres`
---
-ALTER TABLE `membres`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`),
-  ADD KEY `user_id` (`user_id`);
 
 --
 -- Index pour la table `offres_ski`
@@ -398,14 +380,6 @@ ALTER TABLE `offres_ski`
 -- Index pour la table `reservations`
 --
 ALTER TABLE `reservations`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `membre_id` (`membre_id`),
-  ADD KEY `activite_id` (`activite_id`);
-
---
--- Index pour la table `resultats`
---
-ALTER TABLE `resultats`
   ADD PRIMARY KEY (`id`),
   ADD KEY `membre_id` (`membre_id`),
   ADD KEY `activite_id` (`activite_id`);
@@ -448,7 +422,13 @@ ALTER TABLE `activites`
 -- AUTO_INCREMENT pour la table `articles`
 --
 ALTER TABLE `articles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT pour la table `contact_messages`
+--
+ALTER TABLE `contact_messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `galerie_randonnee`
@@ -457,22 +437,10 @@ ALTER TABLE `galerie_randonnee`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
--- AUTO_INCREMENT pour la table `inscriptions`
---
-ALTER TABLE `inscriptions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT pour la table `itineraires`
 --
 ALTER TABLE `itineraires`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT pour la table `membres`
---
-ALTER TABLE `membres`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `offres_ski`
@@ -484,13 +452,7 @@ ALTER TABLE `offres_ski`
 -- AUTO_INCREMENT pour la table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT pour la table `resultats`
---
-ALTER TABLE `resultats`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT pour la table `stations_ski`
@@ -508,7 +470,7 @@ ALTER TABLE `temoignages_ski`
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- Contraintes pour les tables déchargées
@@ -527,19 +489,6 @@ ALTER TABLE `galerie_randonnee`
   ADD CONSTRAINT `galerie_randonnee_ibfk_1` FOREIGN KEY (`utilisateur_id`) REFERENCES `users` (`id`) ON DELETE SET NULL;
 
 --
--- Contraintes pour la table `inscriptions`
---
-ALTER TABLE `inscriptions`
-  ADD CONSTRAINT `inscriptions_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `membres` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `inscriptions_ibfk_2` FOREIGN KEY (`activite_id`) REFERENCES `activites` (`id`) ON DELETE CASCADE;
-
---
--- Contraintes pour la table `membres`
---
-ALTER TABLE `membres`
-  ADD CONSTRAINT `membres_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
 -- Contraintes pour la table `offres_ski`
 --
 ALTER TABLE `offres_ski`
@@ -549,14 +498,8 @@ ALTER TABLE `offres_ski`
 -- Contraintes pour la table `reservations`
 --
 ALTER TABLE `reservations`
+  ADD CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`activite_id`) REFERENCES `activites` (`id`) ON DELETE CASCADE;
-
---
--- Contraintes pour la table `resultats`
---
-ALTER TABLE `resultats`
-  ADD CONSTRAINT `resultats_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `membres` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `resultats_ibfk_2` FOREIGN KEY (`activite_id`) REFERENCES `activites` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `temoignages_ski`
