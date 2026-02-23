@@ -1,6 +1,7 @@
-// src/pages/Activities.js - VERSION API SEULEMENT
+// src/pages/Activities.js - VERSION AVEC RÉSERVATION
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import ActivityCard from '../components/ActivityCard';
 
 const Activities = () => {
@@ -9,17 +10,30 @@ const Activities = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showReservationModal, setShowReservationModal] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [reservationForm, setReservationForm] = useState({
+    date: '',
+    nbPersonnes: 1,
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    notes: ''
+  });
+  const [reservationLoading, setReservationLoading] = useState(false);
 
+  const navigate = useNavigate();
+  const API_BASE_URL = 'http://localhost:5000';
+
+  // Charger les activités
   useEffect(() => {
     const fetchActivities = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        const API_URL = 'http://localhost:5000/api/activites';
-        console.log('Chargement des activités depuis:', API_URL);
-        
-        const response = await axios.get(API_URL);
+        const response = await axios.get(`${API_BASE_URL}/api/activites`);
         const data = response.data;
         
         console.log('Activités reçues:', data);
@@ -32,7 +46,7 @@ const Activities = () => {
         setLoading(false);
       } catch (err) {
         console.error('Erreur de chargement:', err);
-        setError('Impossible de charger les activités. Veuillez vérifier que le serveur est en marche.');
+        setError('Impossible de charger les activités. Vérifiez que le serveur est en marche.');
         setLoading(false);
       }
     };
@@ -40,19 +54,141 @@ const Activities = () => {
     fetchActivities();
   }, []);
 
+  // Récupérer l'utilisateur connecté
+  const getCurrentUser = () => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) return null;
+    try {
+      return JSON.parse(storedUser);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  // Ouvrir le modal de réservation
+  const handleReserver = (activity) => {
+    const user = getCurrentUser();
+    
+    if (!user) {
+      // Rediriger vers login si non connecté
+      navigate('/login', { 
+        state: { 
+          from: '/activities',
+          activity: activity,
+          message: 'Connectez-vous pour réserver cette activité'
+        }
+      });
+      return;
+    }
+
+    // Pré-remplir avec les infos de l'utilisateur si disponibles
+    setSelectedActivity(activity);
+    setReservationForm({
+      date: '',
+      nbPersonnes: 1,
+      nom: user.nom_utilisateur || user.username || '',
+      prenom: '',
+      email: user.email || '',
+      telephone: '',
+      notes: ''
+    });
+    setShowReservationModal(true);
+  };
+
+  // Gérer les changements du formulaire
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setReservationForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Soumettre la réservation
+  const handleSubmitReservation = async (e) => {
+    e.preventDefault();
+    
+    const user = getCurrentUser();
+    if (!user) {
+      alert('Vous devez être connecté');
+      navigate('/login');
+      return;
+    }
+
+    if (!reservationForm.date) {
+      alert('Veuillez choisir une date');
+      return;
+    }
+
+    setReservationLoading(true);
+
+    try {
+      // Préparer les notes avec toutes les informations
+      const notesData = {
+        activite: selectedActivity.nom,
+        lieu: selectedActivity.lieu,
+        duree: selectedActivity.duree,
+        difficulte: selectedActivity.difficulte,
+        clientInfo: {
+          nom: reservationForm.nom,
+          prenom: reservationForm.prenom,
+          email: reservationForm.email,
+          telephone: reservationForm.telephone
+        },
+        notes: reservationForm.notes
+      };
+
+      const reservationData = {
+        userId: user.id,
+        activityId: selectedActivity.id,
+        date: reservationForm.date,
+        nbPersonnes: parseInt(reservationForm.nbPersonnes),
+        notes: JSON.stringify(notesData)
+      };
+
+      console.log('📤 Envoi réservation:', reservationData);
+
+      const response = await axios.post(`${API_BASE_URL}/api/reservations`, reservationData);
+
+      if (response.data.success || response.status === 201) {
+        alert('✅ Réservation confirmée !');
+        setShowReservationModal(false);
+        
+        // Option: rediriger vers le profil après 1 seconde
+        setTimeout(() => {
+          navigate('/profil?tab=reservations');
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('❌ Erreur réservation:', error);
+      if (error.response) {
+        alert(`❌ Erreur: ${error.response.data.error || 'Erreur serveur'}`);
+      } else {
+        alert('❌ Erreur de connexion au serveur');
+      }
+    } finally {
+      setReservationLoading(false);
+    }
+  };
+
+  // Fermer le modal
+  const closeModal = () => {
+    setShowReservationModal(false);
+    setSelectedActivity(null);
+  };
+
   // Catégories basées sur les types d'activités disponibles
   const getCategories = () => {
     const allCategories = [
       { id: 'all', name: 'Toutes les activités' }
     ];
     
-    // Extraire les catégories uniques des activités
     const uniqueTypes = [...new Set(activities.map(activity => activity.type))];
     
     uniqueTypes.forEach(type => {
       if (type) {
         const displayName = {
-          ski: 'Ski & Snowboard',
+          ski: 'Ski',
           randonnee: 'Randonnée',
           escalade: 'Escalade',
           vtt: 'VTT'
@@ -343,7 +479,7 @@ const Activities = () => {
               </p>
             </div>
 
-            {/* Affichage des activités */}
+            {/* Affichage des activités avec bouton Réserver */}
             {finalActivities.length === 0 ? (
               <div style={{ 
                 padding: '3rem 1.5rem', 
@@ -367,25 +503,387 @@ const Activities = () => {
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: '1.5rem'
+                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                gap: '2rem'
               }}>
                 {finalActivities.map(activity => (
-                  <ActivityCard key={activity.id} activity={activity} />
+                  <div key={activity.id} style={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    transition: 'transform 0.3s, box-shadow 0.3s',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-5px)';
+                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}>
+                    {/* Image */}
+                    <div style={{
+                      height: '200px',
+                      overflow: 'hidden',
+                      backgroundColor: '#f9fafb'
+                    }}>
+                      <img 
+                        src={activity.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&auto=format&fit=crop'} 
+                        alt={activity.nom}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.5s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=600&auto=format&fit=crop';
+                        }}
+                      />
+                    </div>
+
+                    {/* Contenu */}
+                    <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ marginBottom: '1rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#000' }}>
+                          {activity.nom}
+                        </h3>
+                        <p style={{ color: '#666', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                          {activity.description}
+                        </p>
+                      </div>
+
+                      {/* Détails */}
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '0.75rem',
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem'
+                      }}>
+                        <div style={{ color: '#666' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Lieu:</span> {activity.lieu}
+                        </div>
+                        <div style={{ color: '#666' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Difficulté:</span> {activity.difficulte}
+                        </div>
+                        <div style={{ color: '#666' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Durée:</span> {activity.duree}
+                        </div>
+                        <div style={{ color: '#666' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Saison:</span> {activity.saison}
+                        </div>
+                        <div style={{ color: '#666', gridColumn: 'span 2' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Capacité:</span> {activity.capacite_max} personnes max
+                        </div>
+                      </div>
+
+                      {/* Dates */}
+                      <div style={{
+                        padding: '0.75rem',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '4px',
+                        marginBottom: '1rem',
+                        fontSize: '0.875rem'
+                      }}>
+                        <div style={{ color: '#666' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Du:</span> {new Date(activity.date_debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div style={{ color: '#666', marginTop: '0.25rem' }}>
+                          <span style={{ fontWeight: '500', color: '#333' }}>Au:</span> {new Date(activity.date_fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+
+                      {/* Bouton Réserver */}
+                      <button
+                        onClick={() => handleReserver(activity)}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem',
+                          backgroundColor: '#000',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '1rem',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s',
+                          marginTop: 'auto'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#333'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#000'}
+                      >
+                        Réserver cette activité
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
           </div>
-
-          {/* Style pour l'animation de spin */}
-          <style>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
         </div>
       </section>
+
+      {/* Modal de réservation */}
+      {showReservationModal && selectedActivity && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(5px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }} onClick={closeModal}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            maxWidth: '500px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative'
+          }} onClick={(e) => e.stopPropagation()}>
+            {/* Bouton fermer */}
+            <button
+              onClick={closeModal}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                border: 'none',
+                background: '#f0f0f0',
+                cursor: 'pointer',
+                fontSize: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid #e5e7eb',
+              background: '#f9fafb'
+            }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.5rem' }}>
+                Réserver : {selectedActivity.nom}
+              </h2>
+              <p style={{ color: '#666' }}>
+                {selectedActivity.lieu} • {selectedActivity.duree} • {selectedActivity.difficulte}
+              </p>
+            </div>
+
+            {/* Formulaire */}
+            <form onSubmit={handleSubmitReservation} style={{ padding: '1.5rem' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Date de participation *
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={reservationForm.date}
+                  onChange={handleFormChange}
+                  required
+                  min={new Date().toISOString().split('T')[0]}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    fontSize: '1rem'
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Nombre de personnes *
+                </label>
+                <input
+                  type="number"
+                  name="nbPersonnes"
+                  value={reservationForm.nbPersonnes}
+                  onChange={handleFormChange}
+                  min="1"
+                  max={selectedActivity.capacite_max}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    fontSize: '1rem'
+                  }}
+                />
+                <small style={{ color: '#666', display: 'block', marginTop: '0.25rem' }}>
+                  Maximum {selectedActivity.capacite_max} personnes
+                </small>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Prénom
+                  </label>
+                  <input
+                    type="text"
+                    name="prenom"
+                    value={reservationForm.prenom}
+                    onChange={handleFormChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Nom
+                  </label>
+                  <input
+                    type="text"
+                    name="nom"
+                    value={reservationForm.nom}
+                    onChange={handleFormChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={reservationForm.email}
+                    onChange={handleFormChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                    Téléphone
+                  </label>
+                  <input
+                    type="tel"
+                    name="telephone"
+                    value={reservationForm.telephone}
+                    onChange={handleFormChange}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '4px',
+                      fontSize: '1rem'
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                  Notes / Demandes spéciales
+                </label>
+                <textarea
+                  name="notes"
+                  value={reservationForm.notes}
+                  onChange={handleFormChange}
+                  rows="3"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '4px',
+                    fontSize: '1rem',
+                    resize: 'vertical'
+                  }}
+                  placeholder="Régime alimentaire, besoins spécifiques..."
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '1px solid #e5e7eb',
+                    background: 'white',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '1rem'
+                  }}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={reservationLoading}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#000',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: reservationLoading ? 'not-allowed' : 'pointer',
+                    opacity: reservationLoading ? 0.7 : 1,
+                    fontSize: '1rem'
+                  }}
+                >
+                  {reservationLoading ? 'Réservation...' : 'Confirmer la réservation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Style pour l'animation de spin */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
