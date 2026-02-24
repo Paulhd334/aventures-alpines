@@ -1,5 +1,6 @@
 // ============================================
-// server.js - VERSION FINALE CORRIGÉE
+// server.js - VERSION FINALE AVEC TYPE_ACTIVITE
+// Gère les réservations ski ET activités
 // ============================================
 
 const express = require('express');
@@ -572,10 +573,10 @@ app.get('/api/ski/offres', async (req, res) => {
 });
 
 // ============================================
-// 7. RÉSERVATIONS - VERSION CORRIGÉE
+// 7. RÉSERVATIONS - AVEC TYPE_ACTIVITE
 // ============================================
 
-// ✅ POST - Créer une réservation
+// ✅ POST - Créer une réservation (ski OU activité)
 app.post('/api/reservations', async (req, res) => {
   console.log('\n' + '='.repeat(50));
   console.log('🔥 ROUTE POST /api/reservations APPELEE !');
@@ -599,7 +600,7 @@ app.post('/api/reservations', async (req, res) => {
     connection = await getConnection();
     console.log('✅ Connexion MySQL établie');
     
-    // Vérifier utilisateur
+    // Vérifier que l'utilisateur existe
     console.log(`🔍 Vérification utilisateur ID: ${userId}...`);
     const [users] = await connection.execute(
       'SELECT id, username FROM users WHERE id = ?',
@@ -612,46 +613,95 @@ app.post('/api/reservations', async (req, res) => {
     }
     console.log(`✅ Utilisateur trouvé: ${users[0].username}`);
     
-    // Vérifier l'offre de ski
-    console.log(`🔍 Vérification offre ski ID: ${activityId}...`);
+    // Déterminer le type d'activité (ski ou activite)
+    let typeReservation = '';
+    let activiteNom = '';
+    
+    // Chercher d'abord dans offres_ski
     const [offres] = await connection.execute(
       'SELECT id, titre FROM offres_ski WHERE id = ?',
       [activityId]
     );
     
-    if (offres.length === 0) {
-      console.log('❌ Offre de ski non trouvée');
-      return res.status(404).json({ error: 'Offre de ski non trouvée' });
+    if (offres.length > 0) {
+      typeReservation = 'ski';
+      activiteNom = offres[0].titre;
+      console.log(`✅ Offre de ski trouvée: ${activiteNom}`);
+    } else {
+      // Sinon chercher dans activites
+      const [activities] = await connection.execute(
+        'SELECT id, nom FROM activites WHERE id = ?',
+        [activityId]
+      );
+      
+      if (activities.length === 0) {
+        console.log('❌ Aucune offre ou activité trouvée');
+        return res.status(404).json({ error: 'Offre ou activité non trouvée' });
+      }
+      
+      typeReservation = 'activite';
+      activiteNom = activities[0].nom;
+      console.log(`✅ Activité trouvée: ${activiteNom}`);
     }
-    console.log(`✅ Offre trouvée: ${offres[0].titre}`);
     
-    // Formater la date
-    const dateTime = date + ' 12:00:00';
-    
-    // Créer réservation
+    // Créer la réservation
     console.log('💾 Insertion réservation...');
+    
+    // Formater les notes si nécessaire
+    let notesStr = notes;
+    if (typeof notes === 'object') {
+      notesStr = JSON.stringify(notes);
+    }
+    
+    // Ajouter le type dans les notes si pas déjà présent
+    if (notesStr) {
+      try {
+        const notesObj = JSON.parse(notesStr);
+        if (!notesObj.typeReservation) {
+          notesObj.typeReservation = typeReservation;
+          notesStr = JSON.stringify(notesObj);
+        }
+      } catch (e) {
+        // Si ce n'est pas du JSON valide, on crée un nouvel objet
+        notesStr = JSON.stringify({
+          typeReservation: typeReservation,
+          data: notesStr,
+          nom: activiteNom
+        });
+      }
+    } else {
+      notesStr = JSON.stringify({
+        typeReservation: typeReservation,
+        nom: activiteNom
+      });
+    }
+    
+    // Insérer avec type_activite
     const [result] = await connection.execute(`
       INSERT INTO reservations 
-      (membre_id, activite_id, date_reservation, nb_personnes, notes, statut, date_creation)
-      VALUES (?, ?, ?, ?, ?, 'confirmée', NOW())
+      (membre_id, activite_id, type_activite, date_reservation, nb_personnes, notes, statut, date_creation, heure_debut, heure_fin) 
+      VALUES (?, ?, ?, ?, ?, ?, 'confirmée', NOW(), '09:00:00', '17:00:00')
     `, [
-      userId,
-      activityId,
-      dateTime,
+      parseInt(userId),
+      parseInt(activityId),
+      typeReservation,
+      date,
       nbPersonnes || 1,
-      notes || null
+      notesStr
     ]);
     
-    console.log(`✅ RÉSERVATION CRÉÉE AVEC ID: ${result.insertId}`);
+    console.log(`✅ RÉSERVATION CRÉÉE AVEC ID: ${result.insertId} (type: ${typeReservation})`);
     
     res.status(201).json({
       message: '✅ Réservation effectuée avec succès',
       success: true,
-      reservationId: result.insertId
+      reservationId: result.insertId,
+      type: typeReservation
     });
     
   } catch (error) {
     console.error('❌ ERREUR:', error.message);
+    console.error('📝 Détail:', error);
     res.status(500).json({ 
       error: 'Erreur lors de la réservation',
       details: error.message
@@ -662,7 +712,7 @@ app.post('/api/reservations', async (req, res) => {
   }
 });
 
-// ✅ GET - Réservations d'un utilisateur (VERSION CORRIGÉE)
+// ✅ GET - Réservations d'un utilisateur (ski + activités)
 app.get('/api/reservations/user/:userId', async (req, res) => {
   const userId = req.params.userId;
   console.log(`🔍 Recherche des réservations pour l'utilisateur ID: ${userId}`);
@@ -671,86 +721,123 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
   try {
     connection = await getConnection();
     
-    // Récupérer TOUTES les réservations (activités + ski)
+    // Récupérer toutes les réservations avec leur type
     const [reservations] = await connection.execute(`
-      SELECT r.*, 
-             a.nom as activite_nom,
-             a.type as activite_type,
-             a.image_url,
-             a.lieu,
-             u.username as membre_nom
+      SELECT r.*, u.username as membre_nom
       FROM reservations r
-      LEFT JOIN activites a ON r.activite_id = a.id
       LEFT JOIN users u ON r.membre_id = u.id
       WHERE r.membre_id = ?
       ORDER BY r.date_reservation DESC
     `, [userId]);
     
-    console.log(`✅ ${reservations.length} réservations trouvées dans la table reservations`);
+    console.log(`✅ ${reservations.length} réservations trouvées`);
     
-    // Transformer les réservations pour l'affichage
-    const formattedReservations = reservations.map(res => {
+    // Enrichir chaque réservation avec les détails (ski ou activité)
+    const enrichedReservations = await Promise.all(reservations.map(async (res) => {
       try {
-        // Essayer de parser le champ notes (pour les réservations de ski)
-        if (res.notes && res.notes.startsWith('{')) {
-          const notes = JSON.parse(res.notes);
+        // Parser les notes
+        let notesData = {};
+        if (res.notes) {
+          try {
+            notesData = JSON.parse(res.notes);
+          } catch (e) {
+            console.log('⚠️ Notes non JSON pour réservation', res.id);
+          }
+        }
+        
+        // Utiliser type_activite de la table
+        const typeReservation = res.type_activite || notesData.typeReservation || 'activite';
+        
+        if (typeReservation === 'ski') {
+          // C'est une offre de ski
+          const [offres] = await connection.execute(`
+            SELECT o.*, s.nom as station_nom, s.photo_url as station_photo
+            FROM offres_ski o
+            LEFT JOIN stations_ski s ON o.station_id = s.id
+            WHERE o.id = ?
+          `, [res.activite_id]);
           
-          // Si c'est une réservation de ski (avec les champs spécifiques)
-          if (notes.offre || notes.station) {
+          if (offres.length > 0) {
+            const offre = offres[0];
             return {
               id: res.id,
               type: 'ski',
-              activite_nom: notes.offre || res.activite_nom || 'Séjour ski',
-              activite_type: 'ski',
-              lieu: notes.station || res.lieu || 'Station de ski',
+              activite_nom: offre.titre,
+              activite_type: offre.type_offre,
+              lieu: offre.station_nom || 'Station de ski',
               date_reservation: res.date_reservation,
-              nb_personnes: res.nb_personnes,
-              statut: res.statut,
-              image_url: notes.station_photo || res.image_url || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop',
-              details: {
-                dateFin: notes.dateFin,
-                options: notes.options,
-                clientInfo: notes.clientInfo,
-                prixTotal: notes.prixTotal
-              }
+              nb_personnes: res.nb_personnes || 1,
+              statut: res.statut || 'confirmée',
+              prix: offre.prix,
+              reduction: offre.reduction,
+              description: offre.description,
+              date_debut: offre.date_debut,
+              date_fin: offre.date_fin,
+              image_url: offre.station_photo || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop',
+              notes: res.notes,
+              details: notesData
             };
           }
         }
         
-        // Sinon, c'est une réservation d'activité normale
+        // Par défaut ou type = 'activite'
+        const [activities] = await connection.execute(
+          'SELECT * FROM activites WHERE id = ?',
+          [res.activite_id]
+        );
+        
+        if (activities.length > 0) {
+          const activity = activities[0];
+          return {
+            id: res.id,
+            type: 'activite',
+            activite_nom: activity.nom,
+            activite_type: activity.type || 'activite',
+            lieu: activity.lieu || 'Non spécifié',
+            date_reservation: res.date_reservation,
+            nb_personnes: res.nb_personnes || 1,
+            statut: res.statut || 'confirmée',
+            difficulte: activity.difficulte,
+            capacite: activity.capacite,
+            image_url: activity.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop',
+            notes: res.notes,
+            details: notesData
+          };
+        }
+        
+        // Si rien trouvé, retourner les données brutes
         return {
           id: res.id,
-          type: 'activite',
-          activite_nom: res.activite_nom || 'Activité',
-          activite_type: res.activite_type || 'activite',
-          lieu: res.lieu || 'Non spécifié',
+          type: typeReservation,
+          activite_nom: notesData.nom || 'Réservation',
           date_reservation: res.date_reservation,
-          nb_personnes: res.nb_personnes,
-          statut: res.statut,
-          image_url: res.image_url
+          nb_personnes: res.nb_personnes || 1,
+          statut: res.statut || 'confirmée',
+          image_url: typeReservation === 'ski' 
+            ? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop'
+            : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop'
         };
-      } catch (e) {
-        // En cas d'erreur de parsing, retourner la réservation brute
-        console.log('⚠️ Erreur parsing notes pour réservation', res.id);
+        
+      } catch (error) {
+        console.error('❌ Erreur enrichissement réservation', res.id, error.message);
         return {
           id: res.id,
-          type: 'activite',
-          activite_nom: res.activite_nom || 'Réservation',
-          activite_type: res.activite_type || 'activite',
-          lieu: res.lieu || 'Non spécifié',
+          type: 'erreur',
+          activite_nom: 'Réservation',
           date_reservation: res.date_reservation,
-          nb_personnes: res.nb_personnes,
-          statut: res.statut,
-          image_url: res.image_url
+          nb_personnes: res.nb_personnes || 1,
+          statut: res.statut || 'confirmée',
+          image_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop'
         };
       }
-    });
+    }));
     
-    console.log(`✅ ${formattedReservations.length} réservations formatées pour affichage`);
-    res.json(formattedReservations);
+    console.log(`✅ ${enrichedReservations.length} réservations enrichies`);
+    res.json(enrichedReservations);
     
   } catch (error) {
     console.error('❌ Erreur liste réservations:', error.message);
+    console.error('📝 Détail:', error);
     res.status(500).json({ 
       error: 'Erreur serveur lors du chargement des réservations'
     });
@@ -774,6 +861,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
   try {
     connection = await getConnection();
     
+    // Vérifier que la réservation appartient bien à l'utilisateur
     const [reservation] = await connection.execute(
       'SELECT * FROM reservations WHERE id = ? AND membre_id = ?',
       [reservationId, userId]
@@ -785,6 +873,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
       });
     }
     
+    // Supprimer la réservation
     await connection.execute('DELETE FROM reservations WHERE id = ?', [reservationId]);
     
     console.log(`✅ Réservation ${reservationId} supprimée`);
@@ -1021,8 +1110,8 @@ app.listen(PORT, () => {
   console.log('   ├─ Ski: stations, temoignages, offres');
   console.log('   ├─ Auth: register, login, me');
   console.log('   └─ Réservations:');
-  console.log('      ├─ POST   /api/reservations');
+  console.log('      ├─ POST   /api/reservations ✅ (ski + activités avec type_activite)');
   console.log('      ├─ GET    /api/reservations/user/:id ✅ (ski + activités)');
-  console.log('      └─ DELETE /api/reservations/:id');
+  console.log('      └─ DELETE /api/reservations/:id ✅');
   console.log('='.repeat(70));
 });
