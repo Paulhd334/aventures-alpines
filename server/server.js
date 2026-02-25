@@ -1,6 +1,6 @@
 // ============================================
-// server.js - VERSION FINALE AVEC TYPE_ACTIVITE
-// Gère les réservations ski ET activités
+// server.js - VERSION FINALE CORRIGÉE
+// Gère les réservations ski, randonnées ET activités
 // ============================================
 
 const express = require('express');
@@ -71,6 +71,7 @@ app.get('/api', (req, res) => {
       activites: '/api/activites',
       galerie: '/api/galerie-randonnee',
       ski: '/api/ski/stations, /api/ski/temoignages, /api/ski/offres',
+      randonnee: '/api/randonnee/offres',
       contact: '/api/contact (POST)',
       auth: '/api/auth/register, /api/auth/login, /api/auth/me',
       reservations: '/api/reservations (POST), /api/reservations/user/:id (GET), /api/reservations/:id (DELETE)'
@@ -573,26 +574,27 @@ app.get('/api/ski/offres', async (req, res) => {
 });
 
 // ============================================
-// 7. RÉSERVATIONS - AVEC TYPE_ACTIVITE
+// 7. RÉSERVATIONS - VERSION CORRIGÉE
 // ============================================
 
-// ✅ POST - Créer une réservation (ski OU activité)
+// ✅ POST - Créer une réservation (ski, randonnée, activité)
 app.post('/api/reservations', async (req, res) => {
   console.log('\n' + '='.repeat(50));
   console.log('🔥 ROUTE POST /api/reservations APPELEE !');
   console.log('📦 Corps de la requête reçu:', JSON.stringify(req.body, null, 2));
   console.log('='.repeat(50));
   
-  const { userId, activityId, date, nbPersonnes, notes } = req.body;
+  const { userId, activityId, type_activite, date, nbPersonnes, notes } = req.body;
   
-  if (!userId || !activityId || !date) {
+  // Validation avec type_activite requis
+  if (!userId || !activityId || !type_activite || !date) {
     console.log('❌ Erreur validation: champs manquants');
     return res.status(400).json({ 
-      error: 'ID utilisateur, ID activité et date sont requis' 
+      error: 'ID utilisateur, ID activité, type activité et date sont requis' 
     });
   }
 
-  console.log(`✅ Validation OK - userId: ${userId}, activityId: ${activityId}, date: ${date}`);
+  console.log(`✅ Validation OK - userId: ${userId}, activityId: ${activityId}, type: ${type_activite}, date: ${date}`);
   
   let connection;
   try {
@@ -613,90 +615,65 @@ app.post('/api/reservations', async (req, res) => {
     }
     console.log(`✅ Utilisateur trouvé: ${users[0].username}`);
     
-    // Déterminer le type d'activité (ski ou activite)
-    let typeReservation = '';
-    let activiteNom = '';
-    
-    // Chercher d'abord dans offres_ski
-    const [offres] = await connection.execute(
-      'SELECT id, titre FROM offres_ski WHERE id = ?',
-      [activityId]
-    );
-    
-    if (offres.length > 0) {
-      typeReservation = 'ski';
-      activiteNom = offres[0].titre;
-      console.log(`✅ Offre de ski trouvée: ${activiteNom}`);
-    } else {
-      // Sinon chercher dans activites
+    // Vérifier que l'offre/activité existe selon le type
+    if (type_activite === 'ski') {
+      const [offres] = await connection.execute(
+        'SELECT id, titre FROM offres_ski WHERE id = ?',
+        [activityId]
+      );
+      if (offres.length === 0) {
+        return res.status(404).json({ error: 'Offre de ski non trouvée' });
+      }
+      console.log(`✅ Offre de ski trouvée: ${offres[0].titre}`);
+    } 
+    else if (type_activite === 'randonnee') {
+      const [offres] = await connection.execute(
+        'SELECT id, titre FROM offres_randonnee WHERE id = ?',
+        [activityId]
+      );
+      if (offres.length === 0) {
+        return res.status(404).json({ error: 'Offre de randonnée non trouvée' });
+      }
+      console.log(`✅ Offre de randonnée trouvée: ${offres[0].titre}`);
+    }
+    else if (type_activite === 'activite') {
       const [activities] = await connection.execute(
         'SELECT id, nom FROM activites WHERE id = ?',
         [activityId]
       );
-      
       if (activities.length === 0) {
-        console.log('❌ Aucune offre ou activité trouvée');
-        return res.status(404).json({ error: 'Offre ou activité non trouvée' });
+        return res.status(404).json({ error: 'Activité non trouvée' });
       }
-      
-      typeReservation = 'activite';
-      activiteNom = activities[0].nom;
-      console.log(`✅ Activité trouvée: ${activiteNom}`);
+      console.log(`✅ Activité trouvée: ${activities[0].nom}`);
     }
     
-    // Créer la réservation
-    console.log('💾 Insertion réservation...');
-    
-    // Formater les notes si nécessaire
+    // Formater les notes
     let notesStr = notes;
     if (typeof notes === 'object') {
       notesStr = JSON.stringify(notes);
     }
     
-    // Ajouter le type dans les notes si pas déjà présent
-    if (notesStr) {
-      try {
-        const notesObj = JSON.parse(notesStr);
-        if (!notesObj.typeReservation) {
-          notesObj.typeReservation = typeReservation;
-          notesStr = JSON.stringify(notesObj);
-        }
-      } catch (e) {
-        // Si ce n'est pas du JSON valide, on crée un nouvel objet
-        notesStr = JSON.stringify({
-          typeReservation: typeReservation,
-          data: notesStr,
-          nom: activiteNom
-        });
-      }
-    } else {
-      notesStr = JSON.stringify({
-        typeReservation: typeReservation,
-        nom: activiteNom
-      });
-    }
-    
-    // Insérer avec type_activite
+    // ✅ INSERTION CORRECTE avec 7 paramètres
     const [result] = await connection.execute(`
       INSERT INTO reservations 
-      (membre_id, activite_id, type_activite, date_reservation, nb_personnes, notes, statut, date_creation, heure_debut, heure_fin) 
-      VALUES (?, ?, ?, ?, ?, ?, 'confirmée', NOW(), '09:00:00', '17:00:00')
+      (membre_id, activite_id, type_activite, date_reservation, nb_personnes, notes, statut, date_creation) 
+      VALUES (?, ?, ?, ?, ?, ?, 'confirmée', NOW())
     `, [
       parseInt(userId),
       parseInt(activityId),
-      typeReservation,
+      type_activite,
       date,
       nbPersonnes || 1,
       notesStr
     ]);
     
-    console.log(`✅ RÉSERVATION CRÉÉE AVEC ID: ${result.insertId} (type: ${typeReservation})`);
+    console.log(`✅ RÉSERVATION CRÉÉE AVEC ID: ${result.insertId} (type: ${type_activite})`);
     
     res.status(201).json({
       message: '✅ Réservation effectuée avec succès',
       success: true,
       reservationId: result.insertId,
-      type: typeReservation
+      type: type_activite
     });
     
   } catch (error) {
@@ -712,7 +689,7 @@ app.post('/api/reservations', async (req, res) => {
   }
 });
 
-// ✅ GET - Réservations d'un utilisateur (ski + activités)
+// ✅ GET - Réservations d'un utilisateur
 app.get('/api/reservations/user/:userId', async (req, res) => {
   const userId = req.params.userId;
   console.log(`🔍 Recherche des réservations pour l'utilisateur ID: ${userId}`);
@@ -721,7 +698,6 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
   try {
     connection = await getConnection();
     
-    // Récupérer toutes les réservations avec leur type
     const [reservations] = await connection.execute(`
       SELECT r.*, u.username as membre_nom
       FROM reservations r
@@ -732,10 +708,9 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
     
     console.log(`✅ ${reservations.length} réservations trouvées`);
     
-    // Enrichir chaque réservation avec les détails (ski ou activité)
+    // Enrichir chaque réservation avec les détails selon le type
     const enrichedReservations = await Promise.all(reservations.map(async (res) => {
       try {
-        // Parser les notes
         let notesData = {};
         if (res.notes) {
           try {
@@ -745,11 +720,9 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
           }
         }
         
-        // Utiliser type_activite de la table
-        const typeReservation = res.type_activite || notesData.typeReservation || 'activite';
+        const typeReservation = res.type_activite || 'activite';
         
         if (typeReservation === 'ski') {
-          // C'est une offre de ski
           const [offres] = await connection.execute(`
             SELECT o.*, s.nom as station_nom, s.photo_url as station_photo
             FROM offres_ski o
@@ -779,8 +752,35 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
             };
           }
         }
+        else if (typeReservation === 'randonnee') {
+          const [offres] = await connection.execute(
+            'SELECT * FROM offres_randonnee WHERE id = ?',
+            [res.activite_id]
+          );
+          
+          if (offres.length > 0) {
+            const offre = offres[0];
+            return {
+              id: res.id,
+              type: 'randonnee',
+              activite_nom: offre.titre,
+              activite_type: 'randonnee',
+              lieu: offre.lieu,
+              date_reservation: res.date_reservation,
+              nb_personnes: res.nb_personnes || 1,
+              statut: res.statut || 'confirmée',
+              difficulte: offre.difficulte,
+              duree: offre.duree,
+              prix: offre.prix,
+              guide_inclus: offre.guide_inclus,
+              image_url: offre.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop',
+              notes: res.notes,
+              details: notesData
+            };
+          }
+        }
         
-        // Par défaut ou type = 'activite'
+        // Par défaut (activités)
         const [activities] = await connection.execute(
           'SELECT * FROM activites WHERE id = ?',
           [res.activite_id]
@@ -798,14 +798,13 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
             nb_personnes: res.nb_personnes || 1,
             statut: res.statut || 'confirmée',
             difficulte: activity.difficulte,
-            capacite: activity.capacite,
-            image_url: activity.image || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop',
+            duree: activity.duree,
+            image_url: activity.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop',
             notes: res.notes,
             details: notesData
           };
         }
         
-        // Si rien trouvé, retourner les données brutes
         return {
           id: res.id,
           type: typeReservation,
@@ -813,9 +812,7 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
           date_reservation: res.date_reservation,
           nb_personnes: res.nb_personnes || 1,
           statut: res.statut || 'confirmée',
-          image_url: typeReservation === 'ski' 
-            ? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop'
-            : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop'
+          image_url: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop'
         };
         
       } catch (error) {
@@ -861,7 +858,6 @@ app.delete('/api/reservations/:id', async (req, res) => {
   try {
     connection = await getConnection();
     
-    // Vérifier que la réservation appartient bien à l'utilisateur
     const [reservation] = await connection.execute(
       'SELECT * FROM reservations WHERE id = ? AND membre_id = ?',
       [reservationId, userId]
@@ -873,7 +869,6 @@ app.delete('/api/reservations/:id', async (req, res) => {
       });
     }
     
-    // Supprimer la réservation
     await connection.execute('DELETE FROM reservations WHERE id = ?', [reservationId]);
     
     console.log(`✅ Réservation ${reservationId} supprimée`);
@@ -884,6 +879,50 @@ app.delete('/api/reservations/:id', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Erreur suppression:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// ============================================
+// 9. ROUTES POUR OFFRES RANDONNEE
+// ============================================
+
+// GET - Toutes les offres de randonnée
+app.get('/api/randonnee/offres', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [rows] = await connection.execute(`
+      SELECT * FROM offres_randonnee 
+      WHERE actif = TRUE 
+      ORDER BY prix
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Erreur chargement offres randonnée:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET - Une offre par ID
+app.get('/api/randonnee/offres/:id', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [rows] = await connection.execute(
+      'SELECT * FROM offres_randonnee WHERE id = ?',
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Offre non trouvée' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Erreur chargement offre:', error.message);
     res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     if (connection) await connection.end();
@@ -1102,16 +1141,11 @@ app.listen(PORT, () => {
   console.log('='.repeat(70));
   console.log('\n📡 ROUTES DISPONIBLES:');
   console.log('   ├─ GET  /api');
-  console.log('   ├─ Articles: GET, POST, DELETE');
-  console.log('   ├─ Itinéraires: GET');
-  console.log('   ├─ Galerie: GET, POST, PUT');
-  console.log('   ├─ Activités: GET');
-  console.log('   ├─ Contact: POST');
-  console.log('   ├─ Ski: stations, temoignages, offres');
-  console.log('   ├─ Auth: register, login, me');
-  console.log('   └─ Réservations:');
-  console.log('      ├─ POST   /api/reservations ✅ (ski + activités avec type_activite)');
-  console.log('      ├─ GET    /api/reservations/user/:id ✅ (ski + activités)');
-  console.log('      └─ DELETE /api/reservations/:id ✅');
+  console.log('   ├─ GET  /api/articles');
+  console.log('   ├─ GET  /api/activites');
+  console.log('   ├─ GET  /api/galerie-randonnee');
+  console.log('   ├─ GET  /api/ski/offres');
+  console.log('   ├─ GET  /api/randonnee/offres');
+  console.log('   └─ POST /api/reservations ✅ (ski, randonnée, activités)');
   console.log('='.repeat(70));
 });

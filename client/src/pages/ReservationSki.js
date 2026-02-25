@@ -271,13 +271,13 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
           ✕
         </button>
 
-        {/* Header avec image */}
+        {/* Header avec image - CORRIGÉ : texte en blanc */}
         <div style={{
           background: `linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 100%), url(${offre.station_photo || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&auto=format&fit=crop'})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           padding: '3rem 2rem',
-          color: 'white',
+          color: 'white', // ← TOUT LE TEXTE EN BLANC
           borderRadius: '24px 24px 0 0'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
@@ -287,7 +287,8 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
               borderRadius: '30px',
               fontSize: '0.9rem',
               backdropFilter: 'blur(5px)',
-              fontWeight: '500'
+              fontWeight: '500',
+              color: 'white' // ← TEXTE EN BLANC
             }}>
               {offre.station_nom}
             </span>
@@ -297,14 +298,29 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
                 padding: '0.5rem 1rem',
                 borderRadius: '30px',
                 fontSize: '0.9rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                color: 'white' // ← TEXTE EN BLANC
               }}>
                 {offre.reduction}
               </span>
             )}
           </div>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: '700' }}>{offre.titre}</h2>
-          <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px' }}>{offre.description}</p>
+          <h2 style={{ 
+            fontSize: '2.5rem', 
+            marginBottom: '0.5rem', 
+            fontWeight: '700',
+            color: 'white' // ← TITRE EN BLANC
+          }}>
+            {offre.titre}
+          </h2>
+          <p style={{ 
+            fontSize: '1.1rem', 
+            opacity: 0.9, 
+            maxWidth: '600px',
+            color: 'white' // ← DESCRIPTION EN BLANC
+          }}>
+            {offre.description}
+          </p>
         </div>
 
         {/* Contenu du formulaire */}
@@ -755,7 +771,7 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
               </div>
             )}
 
-            {/* Étape 4 - Confirmation - DESIGN NOIR ET BLANC ÉLÉGANT */}
+            {/* Étape 4 - Confirmation */}
             {step === 4 && (
               <div style={{ animation: 'slideIn 0.3s ease' }}>
                 <h3 style={{ 
@@ -768,7 +784,7 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
                   Confirmation de votre réservation
                 </h3>
                 
-                {/* Carte récapitulative noir et blanc */}
+                {/* Carte récapitulative */}
                 <div style={{
                   background: '#ffffff',
                   borderRadius: '20px',
@@ -821,13 +837,12 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
                     </div>
                   </div>
 
-                  {/* Grille d'informations élégante */}
+                  {/* Grille d'informations */}
                   <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(2, 1fr)',
                     gap: '1.5rem'
                   }}>
-                    {/* Station */}
                     <div>
                       <span style={{
                         fontSize: '0.7rem',
@@ -848,7 +863,6 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
                       </span>
                     </div>
 
-                    {/* Dates */}
                     <div>
                       <span style={{
                         fontSize: '0.7rem',
@@ -869,7 +883,6 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
                       </span>
                     </div>
 
-                    {/* Personnes */}
                     <div>
                       <span style={{
                         fontSize: '0.7rem',
@@ -890,7 +903,6 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
                       </span>
                     </div>
 
-                    {/* Client */}
                     <div>
                       <span style={{
                         fontSize: '0.7rem',
@@ -1068,7 +1080,7 @@ const ReservationSki = ({ offre, onClose, isOpen }) => {
         </div>
       </div>
 
-      {/* Styles d'animation - CORRIGÉ : plus de "jsx" */}
+      {/* Styles d'animation */}
       <style>{`
         @keyframes slideIn {
           from {
