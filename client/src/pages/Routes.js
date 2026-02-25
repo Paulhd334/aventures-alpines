@@ -1,16 +1,12 @@
 // src/pages/Routes.js
 import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
 import HikingRoute from '../components/HikingRoute';
-import { 
-  hikingRoutes, 
-  difficulteOptions, 
-  dureeOptions, 
-  distanceOptions 
-} from '../data/Routes';
 
 const Routes = () => {
   const [itineraires, setItineraires] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [filteredItineraires, setFilteredItineraires] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     difficulte: '',
     duree: '',
@@ -19,47 +15,128 @@ const Routes = () => {
     type: ''
   });
 
+  const API_BASE_URL = 'http://localhost:5000';
+
+  // Charger les itinéraires depuis la BDD
+  useEffect(() => {
+    const fetchItineraires = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/itineraires`);
+        console.log('✅ Itinéraires chargés:', response.data);
+        setItineraires(response.data);
+        setFilteredItineraires(response.data);
+      } catch (err) {
+        console.error('❌ Erreur chargement itinéraires:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItineraires();
+  }, []);
+
   // Extraire les options de filtres uniques depuis les données
   const regionOptions = useMemo(() => {
-    const regions = [...new Set(hikingRoutes.map(route => route.region))];
+    const regions = [...new Set(itineraires.map(route => route.region))];
     return [
       { value: "", label: "Toutes régions" },
       ...regions.map(region => ({ value: region, label: region }))
     ];
-  }, []);
+  }, [itineraires]);
 
-  const typeOptions = useMemo(() => {
-    const types = [...new Set(hikingRoutes.map(route => route.type))];
-    return [
-      { value: "", label: "Tous types" },
-      ...types.map(type => ({ value: type, label: type }))
-    ];
-  }, []);
+  const difficulteOptions = [
+    { value: "", label: "Toutes difficultés" },
+    { value: "facile", label: "Facile" },
+    { value: "moyen", label: "Moyen" },
+    { value: "difficile", label: "Difficile" },
+    { value: "expert", label: "Expert" }
+  ];
+
+  // Catégoriser les durées
+  const getDureeCategorie = (duree) => {
+    if (!duree) return '';
+    if (duree.includes('jour')) {
+      const jours = parseInt(duree.split(' ')[0]);
+      if (jours === 1) return '1 jour';
+      if (jours <= 3) return '2-3 jours';
+      if (jours <= 7) return '4-7 jours';
+      if (jours <= 14) return '8-14 jours';
+      return '15+ jours';
+    }
+    return '';
+  };
+
+  const dureeOptions = [
+    { value: "", label: "Toutes durées" },
+    { value: "1 jour", label: "1 jour" },
+    { value: "2-3 jours", label: "2-3 jours" },
+    { value: "4-7 jours", label: "4-7 jours" },
+    { value: "8-14 jours", label: "8-14 jours" },
+    { value: "15+ jours", label: "15+ jours" }
+  ];
+
+  // Catégoriser les distances
+  const getDistanceCategorie = (distance) => {
+    const dist = parseFloat(distance);
+    if (dist < 20) return "< 20km";
+    if (dist <= 50) return "20-50km";
+    if (dist <= 100) return "50-100km";
+    return "> 100km";
+  };
+
+  const distanceOptions = [
+    { value: "", label: "Toutes distances" },
+    { value: "< 20km", label: "Moins de 20km" },
+    { value: "20-50km", label: "20 - 50km" },
+    { value: "50-100km", label: "50 - 100km" },
+    { value: "> 100km", label: "Plus de 100km" }
+  ];
+
+  const typeOptions = [
+    { value: "", label: "Tous types" },
+    { value: "randonnée", label: "Randonnée" },
+    { value: "trek", label: "Trek" },
+    { value: "alpinisme", label: "Alpinisme" }
+  ];
 
   // Filtrer les itinéraires
   useEffect(() => {
     setLoading(true);
     
-    const filteredRoutes = hikingRoutes.filter(route => {
-      return (
-        (!filters.difficulte || route.difficulte === filters.difficulte) &&
-        (!filters.duree || route.duree === filters.duree) &&
-        (!filters.distance || 
-          (filters.distance === "< 20km" && parseFloat(route.distance) < 20) ||
-          (filters.distance === "20-50km" && parseFloat(route.distance) >= 20 && parseFloat(route.distance) <= 50) ||
-          (filters.distance === "50-100km" && parseFloat(route.distance) > 50 && parseFloat(route.distance) <= 100) ||
-          (filters.distance === "> 100km" && parseFloat(route.distance) > 100)) &&
-        (!filters.region || route.region === filters.region) &&
-        (!filters.type || route.type === filters.type)
-      );
+    const filtered = itineraires.filter(route => {
+      // Filtre difficulté
+      if (filters.difficulte && route.difficulte !== filters.difficulte) return false;
+      
+      // Filtre région
+      if (filters.region && route.region !== filters.region) return false;
+      
+      // Filtre distance
+      if (filters.distance) {
+        const distCat = getDistanceCategorie(route.distance);
+        if (distCat !== filters.distance) return false;
+      }
+      
+      // Filtre durée
+      if (filters.duree) {
+        const dureeCat = getDureeCategorie(route.duree);
+        if (dureeCat !== filters.duree) return false;
+      }
+      
+      // Filtre type (si vous avez un champ type dans votre table)
+      if (filters.type) {
+        // Adaptez selon votre logique de type
+        if (route.difficulte === 'expert' && filters.type !== 'alpinisme') return false;
+        if (route.distance > 100 && filters.type !== 'trek') return false;
+      }
+      
+      return true;
     });
 
-    // Simuler un chargement pour l'UX
     setTimeout(() => {
-      setItineraires(filteredRoutes);
+      setFilteredItineraires(filtered);
       setLoading(false);
     }, 300);
-  }, [filters]);
+  }, [filters, itineraires]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -80,7 +157,7 @@ const Routes = () => {
   };
 
   // Statistiques
-  const totalRoutes = hikingRoutes.length;
+  const totalRoutes = itineraires.length;
   const activeFilters = Object.values(filters).filter(v => v !== '').length;
 
   return (
@@ -270,7 +347,7 @@ const Routes = () => {
               }}></div>
               <p style={{ color: 'var(--gray-dark)' }}>Chargement des itinéraires...</p>
             </div>
-          ) : itineraires.length === 0 ? (
+          ) : filteredItineraires.length === 0 ? (
             <div style={{ 
               textAlign: 'center', 
               padding: '4rem',
@@ -296,7 +373,7 @@ const Routes = () => {
                 color: 'var(--gray-dark)',
                 marginBottom: '1.5rem'
               }}>
-                Aucun itinéraire ne correspond à vos critères de recherche.
+                Modifiez vos critères de recherche pour voir plus d'itinéraires.
               </p>
               <button 
                 className="btn btn-secondary"
@@ -321,7 +398,7 @@ const Routes = () => {
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em'
                 }}>
-                  {itineraires.length} itinéraire{itineraires.length > 1 ? 's' : ''} trouvé{itineraires.length > 1 ? 's' : ''}
+                  {filteredItineraires.length} itinéraire{filteredItineraires.length > 1 ? 's' : ''} trouvé{filteredItineraires.length > 1 ? 's' : ''}
                 </div>
                 
                 <div style={{
@@ -336,7 +413,7 @@ const Routes = () => {
                     borderRadius: '50%',
                     marginRight: '0.5rem'
                   }}></span>
-                  Données locales
+                  Données issues de notre base de données
                 </div>
               </div>
 
@@ -346,32 +423,13 @@ const Routes = () => {
                 gap: '2rem',
                 marginBottom: '3rem'
               }}>
-                {itineraires.map((itineraire) => (
+                {filteredItineraires.map((itineraire) => (
                   <HikingRoute 
                     key={itineraire.id}
                     itineraire={itineraire}
                   />
                 ))}
               </div>
-
-              {/* Pagination/Chargement simulé */}
-              {itineraires.length > 0 && itineraires.length < totalRoutes && (
-                <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-                  <button 
-                    className="btn btn-outline"
-                    onClick={() => {
-                      // Simuler le chargement de plus d'itinéraires
-                      // Dans une vraie app, on aurait une pagination
-                    }}
-                    style={{ 
-                      padding: '0.75rem 2rem',
-                      borderColor: 'var(--platinum)'
-                    }}
-                  >
-                    Voir plus d'itinéraires
-                  </button>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -418,7 +476,7 @@ const Routes = () => {
       </section>
 
       {/* Style pour l'animation de spin */}
-      <style jsx>{`
+      <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }

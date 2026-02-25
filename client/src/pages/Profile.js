@@ -7,7 +7,7 @@ const Profile = () => {
   const [publications, setPublications] = useState([]);
   const [reservationsSki, setReservationsSki] = useState([]);
   const [reservationsRandonnee, setReservationsRandonnee] = useState([]);
-  const [reservationsActivites, setReservationsActivites] = useState([]);
+  const [reservationsEscalade, setReservationsEscalade] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingReservations, setLoadingReservations] = useState(false);
   const [activeTab, setActiveTab] = useState('infos');
@@ -76,7 +76,7 @@ const Profile = () => {
       console.error('❌ Impossible de charger les réservations: utilisateur non connecté');
       setReservationsSki([]);
       setReservationsRandonnee([]);
-      setReservationsActivites([]);
+      setReservationsEscalade([]);
       return;
     }
 
@@ -94,17 +94,17 @@ const Profile = () => {
         // Séparer les réservations par type
         const ski = response.data.filter(res => res.type === 'ski');
         const randonnee = response.data.filter(res => res.type === 'randonnee');
-        const activites = response.data.filter(res => res.type === 'activite');
+        const escalade = response.data.filter(res => res.type === 'escalade');
         
         setReservationsSki(ski);
         setReservationsRandonnee(randonnee);
-        setReservationsActivites(activites);
+        setReservationsEscalade(escalade);
         
-        console.log(`✅ ${ski.length} ski, ${randonnee.length} randonnées, ${activites.length} activités`);
+        console.log(`✅ ${ski.length} ski, ${randonnee.length} randonnées, ${escalade.length} escalade`);
       } else {
         setReservationsSki([]);
         setReservationsRandonnee([]);
-        setReservationsActivites([]);
+        setReservationsEscalade([]);
       }
     } catch (err) {
       console.error('❌ Erreur chargement réservations:', err.message);
@@ -116,7 +116,7 @@ const Profile = () => {
       
       setReservationsSki([]);
       setReservationsRandonnee([]);
-      setReservationsActivites([]);
+      setReservationsEscalade([]);
     } finally {
       if (showLoading) setLoadingReservations(false);
     }
@@ -239,7 +239,7 @@ const Profile = () => {
         // Mettre à jour toutes les listes
         setReservationsSki(prev => prev.filter(r => r.id !== reservationId));
         setReservationsRandonnee(prev => prev.filter(r => r.id !== reservationId));
-        setReservationsActivites(prev => prev.filter(r => r.id !== reservationId));
+        setReservationsEscalade(prev => prev.filter(r => r.id !== reservationId));
         setLastUpdate(Date.now());
       }
     } catch (error) {
@@ -365,7 +365,7 @@ const Profile = () => {
     );
   }
 
-  const totalReservations = reservationsSki.length + reservationsRandonnee.length + reservationsActivites.length;
+  const totalReservations = reservationsSki.length + reservationsRandonnee.length + reservationsEscalade.length;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem', minHeight: 'calc(100vh - 200px)' }}>
@@ -449,19 +449,19 @@ const Profile = () => {
         </button>
         <button 
           onClick={() => {
-            setActiveTab('activites');
+            setActiveTab('escalade');
             loadReservations(true);
           }} 
           style={{ 
             border: 'none', 
             background: 'none', 
-            borderBottom: activeTab === 'activites' ? '2px solid #000' : '2px solid transparent', 
+            borderBottom: activeTab === 'escalade' ? '2px solid #000' : '2px solid transparent', 
             cursor: 'pointer', 
-            fontWeight: activeTab === 'activites' ? 600 : 400, 
+            fontWeight: activeTab === 'escalade' ? 600 : 400, 
             padding: '0.5rem 0' 
           }}
         >
-          Activités ({reservationsActivites.length})
+          Escalade ({reservationsEscalade.length})
         </button>
       </div>
 
@@ -1035,32 +1035,32 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Onglet ACTIVITÉS DE MONTAGNE */}
-        {activeTab === 'activites' && (
+        {/* Onglet ESCALADE */}
+        {activeTab === 'escalade' && (
           <div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
-              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes activités de montagne</h2>
-              <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 1.5rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer' }}>
-                ➕ Réserver une activité
+              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes sessions d'escalade</h2>
+              <button onClick={() => navigate('/escalade')} style={{ padding:'0.75rem 1.5rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer' }}>
+                ➕ Réserver une session escalade
               </button>
             </div>
             
             {loadingReservations ? (
               <div style={{ textAlign:'center', padding:'3rem' }}>
                 <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '3px solid #e5e5e5', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                <p style={{ marginTop: '1rem', color: '#666' }}>Chargement de vos activités...</p>
+                <p style={{ marginTop: '1rem', color: '#666' }}>Chargement de vos sessions...</p>
               </div>
-            ) : reservationsActivites.length === 0 ? (
+            ) : reservationsEscalade.length === 0 ? (
               <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé d'activité</p>
-                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos activités de montagne !</p>
-                <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
-                  Voir les activités
+                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé de session d'escalade</p>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos offres d'escalade !</p>
+                <button onClick={() => navigate('/escalade')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
+                  Voir les offres d'escalade
                 </button>
               </div>
             ) : (
               <div style={{ display:'grid', gap:'1.5rem' }}>
-                {reservationsActivites.map(res => (
+                {reservationsEscalade.map(res => (
                   <div key={res.id} style={{ padding:'1.5rem', border:'1px solid #e0e0e0', borderRadius:'8px', backgroundColor:'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
@@ -1073,11 +1073,11 @@ const Profile = () => {
                           flexShrink: 0
                         }}>
                           <img 
-                            src={res.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop'} 
+                            src={res.image_url || 'https://images.unsplash.com/photo-1522163182402-834f875f7c3b?w=200&auto=format&fit=crop'} 
                             alt={res.activite_nom}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {
-                              e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop';
+                              e.target.src = 'https://images.unsplash.com/photo-1522163182402-834f875f7c3b?w=200&auto=format&fit=crop';
                             }}
                           />
                         </div>
@@ -1090,9 +1090,10 @@ const Profile = () => {
                               background: '#e5e5e5', 
                               borderRadius: '4px', 
                               fontSize: '0.7rem',
-                              fontWeight: '600'
+                              fontWeight: '600',
+                              color: '#8B4513'
                             }}>
-                              {res.activite_type?.toUpperCase() || 'ACTIVITÉ'}
+                              ESCALADE
                             </span>
                             <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
                               {res.activite_nom}
@@ -1114,19 +1115,37 @@ const Profile = () => {
                                 <span style={{ fontWeight: '500' }}>Difficulté:</span> {res.difficulte}
                               </div>
                             )}
+                            {res.duree && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Durée:</span> {res.duree}
+                              </div>
+                            )}
+                            {res.prix && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Prix:</span> {res.prix}€
+                              </div>
+                            )}
                           </div>
 
-                          {/* Notes supplémentaires */}
-                          {res.notes && typeof res.notes === 'string' && (
+                          {/* Détails de l'escalade */}
+                          {res.details && (
                             <div style={{ 
-                              marginTop: '0.75rem', 
-                              padding: '0.5rem', 
-                              background: '#f9f9f9', 
-                              borderRadius: '4px',
-                              fontSize: '0.875rem',
-                              color: '#666'
+                              marginTop: '1rem', 
+                              padding: '0.75rem', 
+                              background: '#f5f5f5', 
+                              borderRadius: '6px',
+                              fontSize: '0.875rem'
                             }}>
-                              <span style={{ fontWeight: '500' }}>Notes:</span> {res.notes}
+                              {res.details.niveau && (
+                                <div style={{ marginBottom: '0.5rem' }}>
+                                  <span style={{ fontWeight: '500' }}>Niveau choisi:</span> {res.details.niveau}
+                                </div>
+                              )}
+                              {res.details.prixTotal && (
+                                <div style={{ marginTop: '0.5rem', fontWeight: '500' }}>
+                                  Total: {res.details.prixTotal}€
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
