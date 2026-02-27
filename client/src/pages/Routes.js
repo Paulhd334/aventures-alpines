@@ -11,8 +11,7 @@ const Routes = () => {
     difficulte: '',
     duree: '',
     distance: '',
-    region: '',
-    type: ''
+    region: ''
   });
 
   const API_BASE_URL = 'http://localhost:5000';
@@ -22,7 +21,7 @@ const Routes = () => {
     const fetchItineraires = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/itineraires`);
+        const response = await axios.get(`${API_BASE_URL}/api/Itineraires`);
         console.log('✅ Itinéraires chargés:', response.data);
         setItineraires(response.data);
         setFilteredItineraires(response.data);
@@ -37,7 +36,7 @@ const Routes = () => {
 
   // Extraire les options de filtres uniques depuis les données
   const regionOptions = useMemo(() => {
-    const regions = [...new Set(itineraires.map(route => route.region))];
+    const regions = [...new Set(itineraires.map(route => route.region).filter(Boolean))];
     return [
       { value: "", label: "Toutes régions" },
       ...regions.map(region => ({ value: region, label: region }))
@@ -46,63 +45,67 @@ const Routes = () => {
 
   const difficulteOptions = [
     { value: "", label: "Toutes difficultés" },
-    { value: "facile", label: "Facile" },
-    { value: "moyen", label: "Moyen" },
-    { value: "difficile", label: "Difficile" },
-    { value: "expert", label: "Expert" }
+    { value: "Facile", label: "Facile" },
+    { value: "Moyen", label: "Moyen" },
+    { value: "Difficile", label: "Difficile" },
+    { value: "Très Difficile", label: "Très difficile" }
   ];
+
+  // Fonction pour extraire le nombre de jours depuis la durée
+  const getDureeJours = (duree) => {
+    if (!duree) return 0;
+    // Extrait le premier nombre trouvé (ex: "7-10 jours" -> 7)
+    const match = duree.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
 
   // Catégoriser les durées
   const getDureeCategorie = (duree) => {
-    if (!duree) return '';
-    if (duree.includes('jour')) {
-      const jours = parseInt(duree.split(' ')[0]);
-      if (jours === 1) return '1 jour';
-      if (jours <= 3) return '2-3 jours';
-      if (jours <= 7) return '4-7 jours';
-      if (jours <= 14) return '8-14 jours';
-      return '15+ jours';
-    }
-    return '';
+    const jours = getDureeJours(duree);
+    if (jours === 0) return '';
+    if (jours <= 2) return '1-2 jours';
+    if (jours <= 4) return '3-4 jours';
+    if (jours <= 7) return '5-7 jours';
+    if (jours <= 10) return '8-10 jours';
+    return '11+ jours';
   };
 
   const dureeOptions = [
     { value: "", label: "Toutes durées" },
-    { value: "1 jour", label: "1 jour" },
-    { value: "2-3 jours", label: "2-3 jours" },
-    { value: "4-7 jours", label: "4-7 jours" },
-    { value: "8-14 jours", label: "8-14 jours" },
-    { value: "15+ jours", label: "15+ jours" }
+    { value: "1-2 jours", label: "1-2 jours" },
+    { value: "3-4 jours", label: "3-4 jours" },
+    { value: "5-7 jours", label: "5-7 jours" },
+    { value: "8-10 jours", label: "8-10 jours" },
+    { value: "11+ jours", label: "11 jours et plus" }
   ];
+
+  // Extraire la distance en km depuis la chaîne
+  const getDistanceKm = (distance) => {
+    if (!distance) return 0;
+    const match = distance.match(/(\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  };
 
   // Catégoriser les distances
   const getDistanceCategorie = (distance) => {
-    const dist = parseFloat(distance);
-    if (dist < 20) return "< 20km";
-    if (dist <= 50) return "20-50km";
+    const dist = getDistanceKm(distance);
+    if (dist === 0) return '';
+    if (dist < 50) return "Moins de 50km";
     if (dist <= 100) return "50-100km";
-    return "> 100km";
+    if (dist <= 150) return "100-150km";
+    return "Plus de 150km";
   };
 
   const distanceOptions = [
     { value: "", label: "Toutes distances" },
-    { value: "< 20km", label: "Moins de 20km" },
-    { value: "20-50km", label: "20 - 50km" },
-    { value: "50-100km", label: "50 - 100km" },
-    { value: "> 100km", label: "Plus de 100km" }
-  ];
-
-  const typeOptions = [
-    { value: "", label: "Tous types" },
-    { value: "randonnée", label: "Randonnée" },
-    { value: "trek", label: "Trek" },
-    { value: "alpinisme", label: "Alpinisme" }
+    { value: "Moins de 50km", label: "Moins de 50 km" },
+    { value: "50-100km", label: "50 - 100 km" },
+    { value: "100-150km", label: "100 - 150 km" },
+    { value: "Plus de 150km", label: "Plus de 150 km" }
   ];
 
   // Filtrer les itinéraires
   useEffect(() => {
-    setLoading(true);
-    
     const filtered = itineraires.filter(route => {
       // Filtre difficulté
       if (filters.difficulte && route.difficulte !== filters.difficulte) return false;
@@ -122,20 +125,10 @@ const Routes = () => {
         if (dureeCat !== filters.duree) return false;
       }
       
-      // Filtre type (si vous avez un champ type dans votre table)
-      if (filters.type) {
-        // Adaptez selon votre logique de type
-        if (route.difficulte === 'expert' && filters.type !== 'alpinisme') return false;
-        if (route.distance > 100 && filters.type !== 'trek') return false;
-      }
-      
       return true;
     });
 
-    setTimeout(() => {
-      setFilteredItineraires(filtered);
-      setLoading(false);
-    }, 300);
+    setFilteredItineraires(filtered);
   }, [filters, itineraires]);
 
   const handleFilterChange = (e) => {
@@ -151,8 +144,7 @@ const Routes = () => {
       difficulte: '',
       duree: '',
       distance: '',
-      region: '',
-      type: ''
+      region: ''
     });
   };
 
@@ -303,22 +295,6 @@ const Routes = () => {
                   onChange={handleFilterChange}
                 >
                   {regionOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="form-label">Type</label>
-                <select 
-                  className="form-control"
-                  name="type" 
-                  value={filters.type}
-                  onChange={handleFilterChange}
-                >
-                  {typeOptions.map(option => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>

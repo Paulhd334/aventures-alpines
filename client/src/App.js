@@ -18,6 +18,7 @@ import Escalade from './pages/Escalade';
 import Ski from './pages/Ski';
 import VideosPage from './pages/Videos';
 import ArticleDetail from './pages/ArticleDetail';
+import ItineraireDetail from './pages/ItineraireDetail';  // ← CHANGEMENT ICI (Import des detaisl de itinéraire)
 
 function App() {
   return (
@@ -38,14 +39,15 @@ function App() {
             <Route path="/randonnee" element={<Randonnee />} />
             <Route path="/escalade" element={<Escalade />} />
             <Route path="/ski" element={<Ski />} />
-            <Route path="/routes" element={<RoutesPage />} /> {/* ← CHANGEMENT ICI */}
+            <Route path="/routes" element={<RoutesPage />} /> 
             
             {/* Articles et publications */}
             <Route path="/blog/new" element={<CreatePublication />} />
             <Route path="/blog" element={<Articles />} />
             <Route path="/articles" element={<Articles />} />
-            <Route path="/article/:id" element={<ArticleDetail />} />  {/* ← AJOUTEZ CETTE LIGNE */}
+            <Route path="/article/:id" element={<ArticleDetail />} />  
             <Route path="/videos" element={<VideosPage />} />
+            <Route path="/itineraires/:id" element={<ItineraireDetail />} />  {/* ← CHANGEMENT ICI (Route pour les détails de itinéraire) */}
             
             {/* Route 404 */}
             <Route path="*" element={<Home />} />
