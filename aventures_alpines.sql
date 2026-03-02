@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : ven. 27 fév. 2026 à 09:46
+-- Généré le : lun. 02 mars 2026 à 10:13
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -165,7 +165,7 @@ CREATE TABLE `itineraires` (
 --
 
 INSERT INTO `itineraires` (`id`, `nom`, `description`, `difficulte`, `duree`, `distance`, `denivele`, `meilleure_saison`, `points_interet`, `region`, `image_url`, `created_at`) VALUES
-(11, 'Tour du Mont Blanc', 'Le tour du Mont Blanc est une randonnée mythique qui fait le tour du plus haut sommet d\'Europe occidentale. L\'itinéraire traverse trois pays : la France, l\'Italie et la Suisse.', 'Difficile', '7-10 jours', '170 km', '+10000 m', 'Juillet à Septembre', 'Vue sur le Mont Blanc, glaciers, refuges typiques, villages alpins', 'Alpes', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
+(11, 'Tour du Mont Blanc', 'Le tour du Mont Blanc est une randonnée mythique qui fait le tour du plus haut sommet d\'Europe occidentale. L\'itinéraire traverse trois pays : la France, l\'Italie et la Suisse.', 'Difficile', '7-10 jours', '170 km', '+10000 m', 'Juillet à Septembre', 'Vue sur le Mont Blanc, glaciers, refuges typiques, villages alpins', 'Alpes', 'https://www.lumieres-du-monde.com/blog/photos/gr5-mont-blanc-briancon/etape8/gr5-mont-blanc-briancon-pralognan-sentier.jpg', '2026-01-26 08:50:16'),
 (12, 'GR20 Corse', 'Considéré comme le sentier de grande randonnée le plus difficile d\'Europe, le GR20 traverse la Corse du Nord au Sud à travers les montagnes corses.', 'Très Difficile', '15 jours', '180 km', '+12000 m', 'Juin à Septembre', 'Lacs de montagne, aiguilles de Bavella, forêts, bergeries', 'Corse', 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
 (13, 'Chemin de Stevenson', 'Sur les traces de Robert Louis Stevenson et son âne à travers les Cévennes. Randonnée culturelle et historique.', 'Facile', '12 jours', '220 km', '+5000 m', 'Avril à Octobre', 'Villages cévenols, châtaigneraies, histoire, patrimoine', 'Cévennes', 'https://images.unsplash.com/photo-1464278533981-50106e6176b1?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
 (14, 'Tour des Écrins', 'Randonnée autour du massif des Écrins, parc national avec une biodiversité exceptionnelle. Itinéraire sauvage et préservé.', 'Difficile', '10-12 jours', '150 km', '+9000 m', 'Juillet à Septembre', 'Glaciers, chamois, villages authentiques, faune sauvage', 'Alpes', 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop', '2026-01-26 08:50:16'),
