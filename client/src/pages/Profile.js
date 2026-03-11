@@ -40,7 +40,53 @@ const Profile = () => {
     }
   };
 
-  // Fonction pour charger les réservations
+  // FONCTION CORRIGÉE - Charge UNIQUEMENT les articles de l'utilisateur connecté
+  const loadUserPublications = useCallback(async () => {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !currentUser.id) {
+      console.log('❌ Pas d\'utilisateur connecté');
+      return;
+    }
+
+    console.log('🔍 Chargement des articles pour utilisateur ID:', currentUser.id);
+    
+    try {
+      // Essayer d'abord la route spécifique à l'utilisateur
+      const response = await axios.get(`${API_BASE_URL}/api/articles/utilisateur/${currentUser.id}`);
+      
+      if (Array.isArray(response.data)) {
+        console.log(`✅ ${response.data.length} articles trouvés pour l'utilisateur ${currentUser.id}`);
+        setPublications(response.data);
+      } else {
+        setPublications([]);
+      }
+    } catch (err) {
+      console.log('⚠️ API spécifique non disponible, utilisation du filtre côté client');
+      
+      // Fallback: récupérer tous les articles et filtrer
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/articles`);
+        if (Array.isArray(response.data)) {
+          const userPubs = response.data.filter(pub => {
+            if (pub.auteur_id === currentUser.id) return true;
+            if (pub.userId === currentUser.id) return true;
+            if (pub.auteur?.id === currentUser.id) return true;
+            
+            const pubUsername = pub.auteur?.nom_utilisateur || pub.auteur?.username || pub.username;
+            return pubUsername === currentUser.nom_utilisateur;
+          });
+          
+          console.log(`✅ ${userPubs.length} articles filtrés pour l'utilisateur ${currentUser.nom_utilisateur}`);
+          setPublications(userPubs);
+        }
+      } catch (error) {
+        console.error('❌ Erreur chargement articles:', error.message);
+        setPublications([]);
+      }
+    }
+  }, []);
+
+  // ✅ FONCTION CORRIGÉE - Charge TOUTES les réservations (activités + ski)
   const loadReservations = useCallback(async (showLoading = false) => {
     const currentUser = getCurrentUser();
     
@@ -51,16 +97,18 @@ const Profile = () => {
     }
 
     const userId = currentUser.id;
-    console.log(`🔍 Chargement réservations pour utilisateur ID: ${userId}`);
+    console.log(`🔍 Chargement des réservations pour utilisateur ID: ${userId}`);
     
     if (showLoading) setLoadingReservations(true);
     
     try {
+      // ✅ Utiliser la route unifiée qui retourne TOUTES les réservations
       const response = await axios.get(`${API_BASE_URL}/api/reservations/user/${userId}`);
       console.log('📊 Réservations reçues:', response.data);
       
       if (Array.isArray(response.data)) {
         setReservations(response.data);
+        console.log(`✅ ${response.data.length} réservations chargées (activités + ski)`);
       } else {
         setReservations([]);
       }
@@ -69,26 +117,6 @@ const Profile = () => {
       setReservations([]);
     } finally {
       if (showLoading) setLoadingReservations(false);
-    }
-  }, []);
-
-  // Fonction pour charger les publications de l'utilisateur
-  const loadUserPublications = useCallback(async () => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/articles`);
-      if (Array.isArray(response.data)) {
-        const userPubs = response.data.filter(pub => {
-          const auteurUsername = pub.auteur?.nom_utilisateur || pub.auteur?.username || pub.username;
-          const auteurId = pub.auteur_id || pub.userId || pub.auteur?.id;
-          return auteurUsername === currentUser.nom_utilisateur || auteurId === currentUser.id;
-        });
-        setPublications(userPubs);
-      }
-    } catch (err) {
-      console.error('Erreur chargement articles:', err.message);
     }
   }, []);
 
@@ -126,7 +154,6 @@ const Profile = () => {
           lieu: '',
           type: 'récit'
         });
-        // Recharger les publications
         await loadUserPublications();
       }
     } catch (error) {
@@ -137,7 +164,7 @@ const Profile = () => {
     }
   };
 
-  // Charger l'utilisateur, ses publications ET ses réservations au montage
+  // Charger l'utilisateur et ses données au montage
   useEffect(() => {
     const currentUser = getCurrentUser();
     
@@ -168,7 +195,7 @@ const Profile = () => {
       // Charger les publications
       loadUserPublications();
 
-      // Charger les réservations dès le départ
+      // ✅ Charger TOUTES les réservations (activités + ski)
       loadReservations(false);
 
     } catch (error) {
@@ -180,7 +207,7 @@ const Profile = () => {
     }
   }, [navigate, loadReservations, loadUserPublications]);
 
-  // Effet pour recharger quand lastUpdate change (après annulation)
+  // Effet pour recharger quand lastUpdate change
   useEffect(() => {
     if (lastUpdate) {
       console.log('🔄 Mise à jour des réservations après modification');
@@ -207,22 +234,13 @@ const Profile = () => {
 
       if (response.data.success) {
         alert('✅ Réservation annulée avec succès');
-        
-        // Mettre à jour l'état local immédiatement
         setReservations(prev => prev.filter(r => r.id !== reservationId));
-        
-        // Forcer un rechargement
         setLastUpdate(Date.now());
       }
     } catch (error) {
       console.error('Erreur annulation:', error);
       alert(error.response?.data?.error || 'Erreur lors de l\'annulation');
     }
-  };
-
-  // Rafraîchir manuellement
-  const refreshReservations = () => {
-    loadReservations(true);
   };
 
   const handleLogout = () => {
@@ -305,17 +323,18 @@ const Profile = () => {
     }
   };
 
-  const formatTime = (dateString) => {
-    if (!dateString) return '';
+  const formatShortDate = (dateString) => {
+    if (!dateString) return 'N/A';
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toLocaleTimeString('fr-FR', {
-        hour: '2-digit',
-        minute: '2-digit'
+      if (isNaN(date.getTime())) return 'Date invalide';
+      return date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
       });
     } catch (error) {
-      return '';
+      return 'N/A';
     }
   };
 
@@ -659,34 +678,126 @@ const Profile = () => {
               </div>
             ) : reservations.length === 0 ? (
               <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé d'activité</p>
-                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos activités de montagne et réservez votre prochaine aventure !</p>
-                <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
-                  Explorer les activités
-                </button>
+                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé</p>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos activités et offres de ski !</p>
+                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                  <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
+                    Activités
+                  </button>
+                  <button onClick={() => navigate('/ski')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
+                    Offres de ski
+                  </button>
+                </div>
               </div>
             ) : (
               <div style={{ display:'grid', gap:'1.5rem' }}>
                 {reservations.map(res => (
                   <div key={res.id} style={{ padding:'1.5rem', border:'1px solid #e0e0e0', borderRadius:'8px', backgroundColor:'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <div style={{ flex: 1 }}>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem' }}>
-                          {res.activite_nom || 'Activité'}
-                        </h3>
-                        <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', color: '#666' }}>
-                          <div>
-                            <span style={{ fontWeight: '500' }}>Date:</span> {formatDate(res.date_reservation)}
+                      <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
+                        {/* Image */}
+                        <div style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          borderRadius: '8px', 
+                          overflow: 'hidden',
+                          flexShrink: 0
+                        }}>
+                          <img 
+                            src={res.image_url || (res.type === 'ski' 
+                              ? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&auto=format&fit=crop'
+                              : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop'
+                            )} 
+                            alt={res.activite_nom}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&auto=format&fit=crop';
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Détails */}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            {res.type === 'ski' && (
+                              <span style={{ 
+                                padding: '0.25rem 0.5rem', 
+                                background: '#e5e5e5', 
+                                borderRadius: '4px', 
+                                fontSize: '0.7rem',
+                                fontWeight: '600'
+                              }}>
+                                SKI
+                              </span>
+                            )}
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                              {res.activite_nom}
+                            </h3>
                           </div>
-                          <div>
-                            <span style={{ fontWeight: '500' }}>Personnes:</span> {res.nb_personnes || 1}
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Date:</span> {formatShortDate(res.date_reservation)}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Personnes:</span> {res.nb_personnes || 1}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Lieu:</span> {res.lieu || 'Non spécifié'}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Type:</span> {res.activite_type || res.type || 'Activité'}
+                            </div>
                           </div>
-                          <div>
-                            <span style={{ fontWeight: '500' }}>Lieu:</span> {res.lieu || 'Non spécifié'}
-                          </div>
+
+                          {/* Détails supplémentaires pour le ski */}
+                          {res.type === 'ski' && res.details && (
+                            <div style={{ 
+                              marginTop: '1rem', 
+                              padding: '0.75rem', 
+                              background: '#f5f5f5', 
+                              borderRadius: '6px',
+                              fontSize: '0.875rem'
+                            }}>
+                              <div style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Détails du séjour :</div>
+                              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                {res.details.dateFin && (
+                                  <span>📅 Départ: {formatShortDate(res.details.dateFin)}</span>
+                                )}
+                                {res.details.prixTotal && (
+                                  <span>💰 Total: {res.details.prixTotal}€</span>
+                                )}
+                                {res.details.options && Object.entries(res.details.options).map(([key, value]) => 
+                                  value && key !== 'forfaitSki' && (
+                                    <span key={key} style={{ 
+                                      background: '#e5e5e5', 
+                                      padding: '0.2rem 0.5rem',
+                                      borderRadius: '4px',
+                                      fontSize: '0.75rem'
+                                    }}>
+                                      {key === 'coursSki' ? '📚 Cours' :
+                                       key === 'locationMateriel' ? '🎿 Location' :
+                                       key === 'assurance' ? '🛡️ Assurance' :
+                                       key === 'parking' ? '🅿️ Parking' :
+                                       key === 'garderie' ? '🧸 Garderie' :
+                                       key === 'restauration' ? '🍽️ Restauration' : key}
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: '500', backgroundColor: '#d1fae5', color: '#065f46' }}>
+
+                      <span style={{ 
+                        padding: '0.25rem 0.75rem', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: '500', 
+                        backgroundColor: '#d1fae5', 
+                        color: '#065f46' 
+                      }}>
                         {res.statut || 'Confirmée'}
                       </span>
                     </div>

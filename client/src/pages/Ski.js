@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import ReservationSki from './ReservationSki';
 
 const Ski = () => {
   const [activeTab, setActiveTab] = useState('disciplines');
@@ -9,6 +11,8 @@ const Ski = () => {
   const [loading, setLoading] = useState(true);
   const [filtreRegion, setFiltreRegion] = useState('tous');
   const [filtreType, setFiltreType] = useState('tous');
+  const [showReservation, setShowReservation] = useState(false);
+  const [selectedOffre, setSelectedOffre] = useState(null);
   const [nouveauTemoignage, setNouveauTemoignage] = useState({
     nom: '',
     email: '',
@@ -18,6 +22,7 @@ const Ski = () => {
     note: 5
   });
   const [messageSuccess, setMessageSuccess] = useState('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +48,23 @@ const Ski = () => {
     fetchData();
   }, [activeTab]);
 
+  const handleReservation = (offre) => {
+    const user = localStorage.getItem('user');
+    
+    if (!user) {
+      navigate('/login', { 
+        state: { 
+          from: '/ski',
+          offre: offre,
+          message: 'Connectez-vous pour réserver cette offre'
+        }
+      });
+    } else {
+      setSelectedOffre(offre);
+      setShowReservation(true);
+    }
+  };
+
   const handleSubmitTemoignage = async (e) => {
     e.preventDefault();
     try {
@@ -57,7 +79,6 @@ const Ski = () => {
         note: 5
       });
       
-      // Recharger les témoignages
       const response = await axios.get('http://localhost:5000/api/ski/temoignages');
       setTemoignages(response.data);
       
@@ -76,7 +97,6 @@ const Ski = () => {
 
   const regions = [...new Set(stations.map(s => s.region))];
 
-  // Fonction pour calculer les statistiques avec sécurité
   const calculateStats = () => {
     const totalKm = stationsFiltrees.reduce((sum, s) => {
       return sum + (parseFloat(s.km_pistes) || 0);
@@ -106,89 +126,64 @@ const Ski = () => {
       </p>
       
       <div className="disciplines-grid">
-        <div className="discipline-card">
-          <h3>Ski Alpin</h3>
-          <p>Ski sur pistes damées, idéal pour débutants et confirmés. 
-          Disciplines : slalom, géant, descente.</p>
-          <div className="discipline-info">
-            <span className="info-label">Niveau :</span>
-            <span className="info-value">Débutant à Expert</span>
+        {[
+          {
+            titre: 'Ski Alpin',
+            description: 'Ski sur pistes damées, idéal pour débutants et confirmés. Disciplines : slalom, géant, descente.',
+            niveau: 'Débutant à Expert',
+            equipement: 'Ski carving, chaussures rigides',
+            icon: '⛷️'
+          },
+          {
+            titre: 'Ski de Fond',
+            description: 'Ski sur terrain plat ou vallonné, excellent pour l\'endurance et la découverte des paysages.',
+            niveau: 'Débutant à Intermédiaire',
+            equipement: 'Skis longs et étroits',
+            icon: '🎿'
+          },
+          {
+            titre: 'Ski de Randonnée',
+            description: 'Montée à ski (peaux de phoque) puis descente hors-piste. Pour les amateurs de nature sauvage.',
+            niveau: 'Intermédiaire à Expert',
+            equipement: 'Peaux, matériel sécurité',
+            icon: '🏔️'
+          },
+          {
+            titre: 'Freestyle',
+            description: 'Figures et sauts dans les snowparks. Modules : big air, half-pipe, rails.',
+            niveau: 'Intermédiaire à Expert',
+            equipement: 'Twin tips, protections',
+            icon: '🤸'
+          },
+          {
+            titre: 'Freeride',
+            description: 'Descente hors-piste dans la neige vierge. Équipement de sécurité obligatoire.',
+            niveau: 'Expert',
+            equipement: 'DVA, sonde, pelle',
+            icon: '❄️'
+          },
+          {
+            titre: 'Ski Familial',
+            description: 'Activités adaptées aux familles : jardins d\'enfants, pistes débutants, animations.',
+            niveau: 'Débutant',
+            equipement: 'Location sur place',
+            icon: '👨‍👩‍👧‍👦'
+          }
+        ].map((discipline, index) => (
+          <div key={index} className="discipline-card">
+            <div className="discipline-icon">{discipline.icon}</div>
+            <h3>{discipline.titre}</h3>
+            <p>{discipline.description}</p>
+            <div className="discipline-info">
+              <span className="info-label">Niveau :</span>
+              <span className="info-value">{discipline.niveau}</span>
+            </div>
+            <div className="discipline-info">
+              <span className="info-label">Équipement :</span>
+              <span className="info-value">{discipline.equipement}</span>
+            </div>
           </div>
-          <div className="discipline-info">
-            <span className="info-label">Équipement :</span>
-            <span className="info-value">Ski carving, chaussures rigides</span>
-          </div>
-        </div>
-
-        <div className="discipline-card">
-          <h3>Ski de Fond</h3>
-          <p>Ski sur terrain plat ou vallonné, excellent pour l'endurance 
-          et la découverte des paysages.</p>
-          <div className="discipline-info">
-            <span className="info-label">Niveau :</span>
-            <span className="info-value">Débutant à Intermédiaire</span>
-          </div>
-          <div className="discipline-info">
-            <span className="info-label">Équipement :</span>
-            <span className="info-value">Skis longs et étroits</span>
-          </div>
-        </div>
-
-        <div className="discipline-card">
-          <h3>Ski de Randonnée</h3>
-          <p>Montée à ski (peaux de phoque) puis descente hors-piste. 
-          Pour les amateurs de nature sauvage.</p>
-          <div className="discipline-info">
-            <span className="info-label">Niveau :</span>
-            <span className="info-value">Intermédiaire à Expert</span>
-          </div>
-          <div className="discipline-info">
-            <span className="info-label">Équipement :</span>
-            <span className="info-value">Peaux, matériel sécurité</span>
-          </div>
-        </div>
-
-        <div className="discipline-card">
-          <h3>Freestyle</h3>
-          <p>Figures et sauts dans les snowparks. 
-          Modules : big air, half-pipe, rails.</p>
-          <div className="discipline-info">
-            <span className="info-label">Niveau :</span>
-            <span className="info-value">Intermédiaire à Expert</span>
-          </div>
-          <div className="discipline-info">
-            <span className="info-label">Équipement :</span>
-            <span className="info-value">Twin tips, protections</span>
-          </div>
-        </div>
-
-        <div className="discipline-card">
-          <h3>Freeride</h3>
-          <p>Descente hors-piste dans la neige vierge. 
-          Équipement de sécurité obligatoire.</p>
-          <div className="discipline-info">
-            <span className="info-label">Niveau :</span>
-            <span className="info-value">Expert</span>
-          </div>
-          <div className="discipline-info">
-            <span className="info-label">Équipement :</span>
-            <span className="info-value">DVA, sonde, pelle</span>
-          </div>
-        </div>
-
-        <div className="discipline-card">
-          <h3>Ski Familial</h3>
-          <p>Activités adaptées aux familles : 
-          jardins d'enfants, pistes débutants, animations.</p>
-          <div className="discipline-info">
-            <span className="info-label">Niveau :</span>
-            <span className="info-value">Débutant</span>
-          </div>
-          <div className="discipline-info">
-            <span className="info-label">Équipement :</span>
-            <span className="info-value">Location sur place</span>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
@@ -247,21 +242,15 @@ const Ski = () => {
                 <span className="stat-label">Stations</span>
               </div>
               <div className="stat-card">
-                <span className="stat-number">
-                  {stats.totalKm.toFixed(0)}
-                </span>
+                <span className="stat-number">{stats.totalKm.toFixed(0)}</span>
                 <span className="stat-label">km de pistes</span>
               </div>
               <div className="stat-card">
-                <span className="stat-number">
-                  {stats.totalRemontees}
-                </span>
+                <span className="stat-number">{stats.totalRemontees}</span>
                 <span className="stat-label">Remontées</span>
               </div>
               <div className="stat-card">
-                <span className="stat-number">
-                  {stats.moyenneNeige}
-                </span>
+                <span className="stat-number">{stats.moyenneNeige}</span>
                 <span className="stat-label">cm de neige (moy)</span>
               </div>
             </div>
@@ -466,7 +455,6 @@ const Ski = () => {
   );
 
   const renderOffres = () => {
-    // Vérifier si les offres sont chargées
     if (loading) {
       return (
         <div className="offres-section">
@@ -490,21 +478,7 @@ const Ski = () => {
               Profitez de promotions exclusives pour votre prochain séjour à la neige
             </p>
           </div>
-          <div className="no-data">Chargement des offres depuis la base de données...</div>
-          <div className="debug-info">
-            <p>Vérifiez que :</p>
-            <ol>
-              <li>La table "offres_ski" existe dans la base de données</li>
-              <li>Le serveur Node.js est démarré sur le port 5000</li>
-              <li>Les données d'exemple ont été insérées</li>
-            </ol>
-            <button 
-              onClick={() => window.location.reload()}
-              className="refresh-button"
-            >
-              Rafraîchir la page
-            </button>
-          </div>
+          <div className="no-data">Aucune offre disponible pour le moment</div>
         </div>
       );
     }
@@ -564,16 +538,12 @@ const Ski = () => {
                   )}
                 </div>
                 
-                {offre.lien_resa && (
-                  <a 
-                    href={offre.lien_resa} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="reservation-button"
-                  >
-                    Réserver maintenant
-                  </a>
-                )}
+                <button 
+                  onClick={() => handleReservation(offre)}
+                  className="reservation-button"
+                >
+                  Réserver maintenant
+                </button>
               </div>
             </div>
           ))}
@@ -628,6 +598,18 @@ const Ski = () => {
         {activeTab === 'temoignages' && renderTemoignages()}
         {activeTab === 'offres' && renderOffres()}
       </div>
+
+      {/* Modale de réservation */}
+      {showReservation && selectedOffre && (
+        <ReservationSki 
+          offre={selectedOffre}
+          isOpen={showReservation}
+          onClose={() => {
+            setShowReservation(false);
+            setTimeout(() => setSelectedOffre(null), 300);
+          }}
+        />
+      )}
     </div>
   );
 };

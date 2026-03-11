@@ -1,12 +1,11 @@
 // ============================================
-// server.js - VERSION FINALE OPTIMISÉE
+// server.js - VERSION FINALE CORRIGÉE
 // ============================================
 
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcrypt');
-const axios = require('axios');
 
 // Configuration MySQL MAMP
 const dbConfig = {
@@ -46,31 +45,34 @@ app.use((req, res, next) => {
 // ============================================
 async function getConnection() {
   try {
-    return await mysql.createConnection(dbConfig);
+    console.log('🔄 Tentative de connexion à MySQL...');
+    const connection = await mysql.createConnection(dbConfig);
+    console.log('✅ Connexion MySQL établie');
+    return connection;
   } catch (error) {
     console.error('❌ Erreur connexion MySQL:', error.message);
+    console.error('📝 Détail:', error);
     throw error;
   }
 }
 
 // ============================================
-// ROUTE DE TEST
+// ROUTE DE TEST PRINCIPALE
 // ============================================
-
 app.get('/api', (req, res) => {
   res.json({
     message: 'API Aventures Alpines',
     status: 'online',
     timestamp: new Date().toISOString(),
     endpoints: {
-      articles: '/api/articles',
+      articles: '/api/articles, /api/articles/utilisateur/:id',
       itineraires: '/api/Itineraires',
       activites: '/api/activites',
       galerie: '/api/galerie-randonnee',
       ski: '/api/ski/stations, /api/ski/temoignages, /api/ski/offres',
       contact: '/api/contact (POST)',
       auth: '/api/auth/register, /api/auth/login, /api/auth/me',
-      reservations: '/api/reservations, /api/reservations/user/:id'
+      reservations: '/api/reservations (POST), /api/reservations/user/:id (GET), /api/reservations/:id (DELETE)'
     }
   });
 });
@@ -79,12 +81,40 @@ app.get('/api', (req, res) => {
 // 1. ARTICLES
 // ============================================
 
+// Articles par utilisateur
+app.get('/api/articles/utilisateur/:userId', async (req, res) => {
+  const userId = req.params.userId;
+  console.log(`🔍 Recherche des articles pour l'utilisateur ID: ${userId}`);
+  
+  let connection;
+  try {
+    connection = await getConnection();
+    
+    const [rows] = await connection.execute(`
+      SELECT a.*, u.username as auteur_nom, u.email as auteur_email
+      FROM articles a 
+      LEFT JOIN users u ON a.auteur_id = u.id 
+      WHERE a.auteur_id = ?
+      ORDER BY a.created_at DESC
+    `, [userId]);
+    
+    console.log(`✅ ${rows.length} articles trouvés`);
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Erreur chargement articles utilisateur:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// Tous les articles
 app.get('/api/articles', async (req, res) => {
   let connection;
   try {
     connection = await getConnection();
     const [rows] = await connection.execute(`
-      SELECT a.*, u.username as auteur_nom 
+      SELECT a.*, u.username as auteur_nom, u.email as auteur_email
       FROM articles a 
       LEFT JOIN users u ON a.auteur_id = u.id 
       ORDER BY a.created_at DESC
@@ -98,6 +128,7 @@ app.get('/api/articles', async (req, res) => {
   }
 });
 
+// Article par ID
 app.get('/api/articles/:id', async (req, res) => {
   let connection;
   try {
@@ -119,6 +150,7 @@ app.get('/api/articles/:id', async (req, res) => {
   }
 });
 
+// Créer un article
 app.post('/api/articles', async (req, res) => {
   const { titre, contenu, auteur_id, lieu, type } = req.body;
   
@@ -151,6 +183,39 @@ app.post('/api/articles', async (req, res) => {
   }
 });
 
+// Supprimer un article
+app.delete('/api/articles/:id', async (req, res) => {
+  const articleId = req.params.id;
+  const { userId } = req.body;
+  
+  if (!userId) {
+    return res.status(400).json({ error: 'ID utilisateur requis' });
+  }
+  
+  let connection;
+  try {
+    connection = await getConnection();
+    
+    const [article] = await connection.execute(
+      'SELECT * FROM articles WHERE id = ? AND auteur_id = ?',
+      [articleId, userId]
+    );
+    
+    if (article.length === 0) {
+      return res.status(404).json({ error: 'Article non trouvé ou non autorisé' });
+    }
+    
+    await connection.execute('DELETE FROM articles WHERE id = ?', [articleId]);
+    
+    res.json({ message: 'Article supprimé avec succès', success: true });
+  } catch (error) {
+    console.error('❌ Erreur suppression article:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
 // ============================================
 // 2. ITINÉRAIRES
 // ============================================
@@ -159,10 +224,7 @@ app.get('/api/Itineraires', async (req, res) => {
   let connection;
   try {
     connection = await getConnection();
-    const [rows] = await connection.execute(`
-      SELECT * FROM itineraires 
-      ORDER BY difficulte, nom
-    `);
+    const [rows] = await connection.execute('SELECT * FROM itineraires ORDER BY difficulte, nom');
     res.json(rows);
   } catch (error) {
     console.error('❌ Erreur Itineraires:', error.message);
@@ -176,10 +238,7 @@ app.get('/api/Itineraires/:id', async (req, res) => {
   let connection;
   try {
     connection = await getConnection();
-    const [rows] = await connection.execute(
-      'SELECT * FROM itineraires WHERE id = ?',
-      [req.params.id]
-    );
+    const [rows] = await connection.execute('SELECT * FROM itineraires WHERE id = ?', [req.params.id]);
     
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Itinéraire non trouvé' });
@@ -293,21 +352,12 @@ app.put('/api/galerie-randonnee/:id/like', async (req, res) => {
     connection = await getConnection();
     
     if (action === 'increment') {
-      await connection.execute(
-        'UPDATE galerie_randonnee SET likes = likes + 1 WHERE id = ?',
-        [req.params.id]
-      );
+      await connection.execute('UPDATE galerie_randonnee SET likes = likes + 1 WHERE id = ?', [req.params.id]);
     } else if (action === 'decrement') {
-      await connection.execute(
-        'UPDATE galerie_randonnee SET likes = GREATEST(likes - 1, 0) WHERE id = ?',
-        [req.params.id]
-      );
+      await connection.execute('UPDATE galerie_randonnee SET likes = GREATEST(likes - 1, 0) WHERE id = ?', [req.params.id]);
     }
     
-    const [updated] = await connection.execute(
-      'SELECT likes FROM galerie_randonnee WHERE id = ?',
-      [req.params.id]
-    );
+    const [updated] = await connection.execute('SELECT likes FROM galerie_randonnee WHERE id = ?', [req.params.id]);
     
     res.json({
       message: 'Like mis à jour',
@@ -358,7 +408,7 @@ app.get('/api/activites/:id', async (req, res) => {
 });
 
 // ============================================
-// 5. CONTACT - CORRIGÉ POUR TABLE contact_messages
+// 5. CONTACT
 // ============================================
 
 app.post('/api/contact', async (req, res) => {
@@ -366,20 +416,10 @@ app.post('/api/contact', async (req, res) => {
   
   console.log('📨 Données reçues contact:', { nom, email, sujet, message });
   
-  // Validation
   if (!nom || !email || !sujet || !message) {
-    return res.status(400).json({ 
-      error: 'Tous les champs sont requis',
-      missing: {
-        nom: !nom,
-        email: !email,
-        sujet: !sujet,
-        message: !message
-      }
-    });
+    return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
   
-  // Validation email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: 'Format email invalide' });
@@ -389,12 +429,8 @@ app.post('/api/contact', async (req, res) => {
   try {
     connection = await getConnection();
     
-    // Vérifier si la table contact_messages existe
-    const [tables] = await connection.execute(
-      "SHOW TABLES LIKE 'contact_messages'"
-    );
+    const [tables] = await connection.execute("SHOW TABLES LIKE 'contact_messages'");
     
-    // Si la table n'existe pas, la créer
     if (tables.length === 0) {
       console.log('📝 Création de la table contact_messages...');
       await connection.execute(`
@@ -407,10 +443,8 @@ app.post('/api/contact', async (req, res) => {
           date_envoi DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
-      console.log('✅ Table contact_messages créée avec succès');
     }
     
-    // Insérer le message dans contact_messages
     const [result] = await connection.execute(
       'INSERT INTO contact_messages (nom, email, sujet, message, date_envoi) VALUES (?, ?, ?, ?, NOW())',
       [nom, email, sujet, message]
@@ -425,11 +459,7 @@ app.post('/api/contact', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Erreur contact:', error.message);
-    console.error('📝 Stack trace:', error.stack);
-    res.status(500).json({ 
-      error: 'Erreur serveur lors de l\'envoi du message',
-      details: error.message 
-    });
+    res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     if (connection) await connection.end();
   }
@@ -443,10 +473,7 @@ app.get('/api/ski/stations', async (req, res) => {
   let connection;
   try {
     connection = await getConnection();
-    const [rows] = await connection.execute(`
-      SELECT * FROM stations_ski 
-      ORDER BY region, nom
-    `);
+    const [rows] = await connection.execute('SELECT * FROM stations_ski ORDER BY region, nom');
     res.json(rows);
   } catch (error) {
     console.error('❌ Erreur stations ski:', error.message);
@@ -460,10 +487,7 @@ app.get('/api/ski/stations/:id', async (req, res) => {
   let connection;
   try {
     connection = await getConnection();
-    const [rows] = await connection.execute(
-      'SELECT * FROM stations_ski WHERE id = ?',
-      [req.params.id]
-    );
+    const [rows] = await connection.execute('SELECT * FROM stations_ski WHERE id = ?', [req.params.id]);
     
     if (rows.length === 0) {
       return res.status(404).json({ error: 'Station non trouvée' });
@@ -535,9 +559,9 @@ app.get('/api/ski/offres', async (req, res) => {
       LEFT JOIN stations_ski s ON o.station_id = s.id
       WHERE o.actif = TRUE
       ORDER BY o.prix
-      LIMIT 10
     `);
     
+    console.log(`✅ ${rows.length} offres de ski chargées`);
     res.json(rows);
   } catch (error) {
     console.error('❌ Erreur offres ski:', error.message);
@@ -548,54 +572,64 @@ app.get('/api/ski/offres', async (req, res) => {
 });
 
 // ============================================
-// 7. RÉSERVATIONS
+// 7. RÉSERVATIONS - VERSION CORRIGÉE
 // ============================================
 
+// ✅ POST - Créer une réservation
 app.post('/api/reservations', async (req, res) => {
+  console.log('\n' + '='.repeat(50));
+  console.log('🔥 ROUTE POST /api/reservations APPELEE !');
+  console.log('📦 Corps de la requête reçu:', JSON.stringify(req.body, null, 2));
+  console.log('='.repeat(50));
+  
   const { userId, activityId, date, nbPersonnes, notes } = req.body;
   
   if (!userId || !activityId || !date) {
+    console.log('❌ Erreur validation: champs manquants');
     return res.status(400).json({ 
       error: 'ID utilisateur, ID activité et date sont requis' 
     });
   }
+
+  console.log(`✅ Validation OK - userId: ${userId}, activityId: ${activityId}, date: ${date}`);
   
   let connection;
   try {
+    console.log('📡 Tentative de connexion à MySQL...');
     connection = await getConnection();
+    console.log('✅ Connexion MySQL établie');
     
     // Vérifier utilisateur
+    console.log(`🔍 Vérification utilisateur ID: ${userId}...`);
     const [users] = await connection.execute(
       'SELECT id, username FROM users WHERE id = ?',
       [userId]
     );
     
     if (users.length === 0) {
+      console.log('❌ Utilisateur non trouvé');
       return res.status(404).json({ error: 'Utilisateur non trouvé' });
     }
+    console.log(`✅ Utilisateur trouvé: ${users[0].username}`);
     
-    // Vérifier activité
-    const [activities] = await connection.execute(
-      'SELECT id, nom, capacite_max FROM activites WHERE id = ?',
+    // Vérifier l'offre de ski
+    console.log(`🔍 Vérification offre ski ID: ${activityId}...`);
+    const [offres] = await connection.execute(
+      'SELECT id, titre FROM offres_ski WHERE id = ?',
       [activityId]
     );
     
-    if (activities.length === 0) {
-      return res.status(404).json({ error: 'Activité non trouvée' });
+    if (offres.length === 0) {
+      console.log('❌ Offre de ski non trouvée');
+      return res.status(404).json({ error: 'Offre de ski non trouvée' });
     }
+    console.log(`✅ Offre trouvée: ${offres[0].titre}`);
     
-    // Vérifier disponibilité
-    const [existing] = await connection.execute(
-      'SELECT COUNT(*) as count FROM reservations WHERE activite_id = ? AND date_reservation = ?',
-      [activityId, date]
-    );
-    
-    const capaciteMax = activities[0].capacite_max || 10;
-    if (existing[0].count >= capaciteMax) {
-      return res.status(400).json({ error: 'Complet pour cette date' });
-    }
+    // Formater la date
+    const dateTime = date + ' 12:00:00';
     
     // Créer réservation
+    console.log('💾 Insertion réservation...');
     const [result] = await connection.execute(`
       INSERT INTO reservations 
       (membre_id, activite_id, date_reservation, nb_personnes, notes, statut, date_creation)
@@ -603,56 +637,46 @@ app.post('/api/reservations', async (req, res) => {
     `, [
       userId,
       activityId,
-      date,
+      dateTime,
       nbPersonnes || 1,
       notes || null
     ]);
     
-    // Récupérer la réservation créée
-    const [newReservation] = await connection.execute(`
-      SELECT r.*, 
-             a.nom as activite_nom,
-             a.type as activite_type,
-             a.image_url,
-             u.username as client_nom
-      FROM reservations r
-      LEFT JOIN activites a ON r.activite_id = a.id
-      LEFT JOIN users u ON r.membre_id = u.id
-      WHERE r.id = ?
-    `, [result.insertId]);
+    console.log(`✅ RÉSERVATION CRÉÉE AVEC ID: ${result.insertId}`);
     
     res.status(201).json({
       message: '✅ Réservation effectuée avec succès',
       success: true,
-      reservation: newReservation[0]
+      reservationId: result.insertId
     });
     
   } catch (error) {
-    console.error('❌ Erreur réservation:', error.message);
+    console.error('❌ ERREUR:', error.message);
     res.status(500).json({ 
       error: 'Erreur lors de la réservation',
-      details: error.message 
+      details: error.message
     });
   } finally {
     if (connection) await connection.end();
+    console.log('='.repeat(50) + '\n');
   }
 });
 
+// ✅ GET - Réservations d'un utilisateur (VERSION CORRIGÉE)
 app.get('/api/reservations/user/:userId', async (req, res) => {
   const userId = req.params.userId;
+  console.log(`🔍 Recherche des réservations pour l'utilisateur ID: ${userId}`);
   
   let connection;
   try {
     connection = await getConnection();
     
+    // Récupérer TOUTES les réservations (activités + ski)
     const [reservations] = await connection.execute(`
       SELECT r.*, 
              a.nom as activite_nom,
              a.type as activite_type,
-             a.description,
              a.image_url,
-             a.duree,
-             a.difficulte,
              a.lieu,
              u.username as membre_nom
       FROM reservations r
@@ -662,7 +686,68 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
       ORDER BY r.date_reservation DESC
     `, [userId]);
     
-    res.json(reservations);
+    console.log(`✅ ${reservations.length} réservations trouvées dans la table reservations`);
+    
+    // Transformer les réservations pour l'affichage
+    const formattedReservations = reservations.map(res => {
+      try {
+        // Essayer de parser le champ notes (pour les réservations de ski)
+        if (res.notes && res.notes.startsWith('{')) {
+          const notes = JSON.parse(res.notes);
+          
+          // Si c'est une réservation de ski (avec les champs spécifiques)
+          if (notes.offre || notes.station) {
+            return {
+              id: res.id,
+              type: 'ski',
+              activite_nom: notes.offre || res.activite_nom || 'Séjour ski',
+              activite_type: 'ski',
+              lieu: notes.station || res.lieu || 'Station de ski',
+              date_reservation: res.date_reservation,
+              nb_personnes: res.nb_personnes,
+              statut: res.statut,
+              image_url: notes.station_photo || res.image_url || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop',
+              details: {
+                dateFin: notes.dateFin,
+                options: notes.options,
+                clientInfo: notes.clientInfo,
+                prixTotal: notes.prixTotal
+              }
+            };
+          }
+        }
+        
+        // Sinon, c'est une réservation d'activité normale
+        return {
+          id: res.id,
+          type: 'activite',
+          activite_nom: res.activite_nom || 'Activité',
+          activite_type: res.activite_type || 'activite',
+          lieu: res.lieu || 'Non spécifié',
+          date_reservation: res.date_reservation,
+          nb_personnes: res.nb_personnes,
+          statut: res.statut,
+          image_url: res.image_url
+        };
+      } catch (e) {
+        // En cas d'erreur de parsing, retourner la réservation brute
+        console.log('⚠️ Erreur parsing notes pour réservation', res.id);
+        return {
+          id: res.id,
+          type: 'activite',
+          activite_nom: res.activite_nom || 'Réservation',
+          activite_type: res.activite_type || 'activite',
+          lieu: res.lieu || 'Non spécifié',
+          date_reservation: res.date_reservation,
+          nb_personnes: res.nb_personnes,
+          statut: res.statut,
+          image_url: res.image_url
+        };
+      }
+    });
+    
+    console.log(`✅ ${formattedReservations.length} réservations formatées pour affichage`);
+    res.json(formattedReservations);
     
   } catch (error) {
     console.error('❌ Erreur liste réservations:', error.message);
@@ -674,9 +759,12 @@ app.get('/api/reservations/user/:userId', async (req, res) => {
   }
 });
 
+// ✅ DELETE - Supprimer une réservation
 app.delete('/api/reservations/:id', async (req, res) => {
   const reservationId = req.params.id;
   const { userId } = req.body;
+  
+  console.log(`🗑️ Suppression réservation ID: ${reservationId} pour user: ${userId}`);
   
   if (!userId) {
     return res.status(400).json({ error: 'ID utilisateur requis' });
@@ -697,11 +785,9 @@ app.delete('/api/reservations/:id', async (req, res) => {
       });
     }
     
-    await connection.execute(
-      'DELETE FROM reservations WHERE id = ?',
-      [reservationId]
-    );
+    await connection.execute('DELETE FROM reservations WHERE id = ?', [reservationId]);
     
+    console.log(`✅ Réservation ${reservationId} supprimée`);
     res.json({
       message: '✅ Réservation supprimée avec succès',
       success: true
@@ -709,9 +795,7 @@ app.delete('/api/reservations/:id', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Erreur suppression:', error.message);
-    res.status(500).json({ 
-      error: 'Erreur serveur lors de la suppression'
-    });
+    res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     if (connection) await connection.end();
   }
@@ -724,7 +808,6 @@ app.delete('/api/reservations/:id', async (req, res) => {
 app.post('/api/auth/register', async (req, res) => {
   const { username, email, password } = req.body;
   
-  // Validations
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Tous les champs sont requis' });
   }
@@ -742,7 +825,6 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     connection = await getConnection();
     
-    // Vérifier si l'utilisateur existe déjà
     const [existing] = await connection.execute(
       'SELECT id FROM users WHERE username = ? OR email = ?',
       [username, email]
@@ -752,7 +834,6 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(409).json({ error: 'Nom d\'utilisateur ou email déjà utilisé' });
     }
     
-    // Créer l'utilisateur
     const hashedPassword = await bcrypt.hash(password, 10);
     const [result] = await connection.execute(
       'INSERT INTO users (username, email, password_hash, created_at) VALUES (?, ?, ?, NOW())',
@@ -764,14 +845,14 @@ app.post('/api/auth/register', async (req, res) => {
       [result.insertId]
     );
     
-    res.status(201).json({
-      message: 'Inscription réussie',
-      user: newUser[0]
+    res.status(201).json({ 
+      message: 'Inscription réussie', 
+      user: newUser[0] 
     });
     
   } catch (error) {
     console.error('❌ Erreur inscription:', error.message);
-    res.status(500).json({ error: 'Erreur serveur lors de l\'inscription' });
+    res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     if (connection) await connection.end();
   }
@@ -809,15 +890,16 @@ app.post('/api/auth/login', async (req, res) => {
       message: 'Connexion réussie',
       user: {
         id: user.id,
+        nom_utilisateur: user.username,
         username: user.username,
         email: user.email,
-        created_at: user.created_at
+        date_inscription: user.created_at
       }
     });
     
   } catch (error) {
     console.error('❌ Erreur connexion:', error.message);
-    res.status(500).json({ error: 'Erreur serveur lors de la connexion' });
+    res.status(500).json({ error: 'Erreur serveur' });
   } finally {
     if (connection) await connection.end();
   }
@@ -869,7 +951,6 @@ app.put('/api/users/:id', async (req, res) => {
   try {
     connection = await getConnection();
     
-    // Vérifier si l'email est déjà pris par un autre utilisateur
     const [existing] = await connection.execute(
       'SELECT id FROM users WHERE email = ? AND id != ?',
       [email, userId]
@@ -879,13 +960,11 @@ app.put('/api/users/:id', async (req, res) => {
       return res.status(409).json({ error: 'Email déjà utilisé' });
     }
     
-    // Mettre à jour l'utilisateur
     await connection.execute(
       'UPDATE users SET username = ?, email = ? WHERE id = ?',
       [nom_utilisateur, email, userId]
     );
     
-    // Récupérer l'utilisateur mis à jour
     const [updated] = await connection.execute(
       'SELECT id, username, email, created_at FROM users WHERE id = ?',
       [userId]
@@ -909,64 +988,18 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
-
-// ============================================
-// ROUTE DE TEST POUR VÉRIFIER LA TABLE CONTACT
-// ============================================
-
-app.get('/api/test/contact', async (req, res) => {
-  let connection;
-  try {
-    connection = await getConnection();
-    
-    // Vérifier les tables
-    const [tables] = await connection.execute("SHOW TABLES");
-    
-    // Chercher spécifiquement contact_messages
-    const [contactTable] = await connection.execute("SHOW TABLES LIKE 'contact_messages'");
-    
-    let structure = null;
-    let count = 0;
-    
-    if (contactTable.length > 0) {
-      const [columns] = await connection.execute("DESCRIBE contact_messages");
-      structure = columns;
-      
-      const [rowCount] = await connection.execute("SELECT COUNT(*) as count FROM contact_messages");
-      count = rowCount[0].count;
-    }
-    
-    res.json({
-      message: 'Test table contact',
-      tables: tables.map(t => Object.values(t)[0]),
-      contact_table_exists: contactTable.length > 0,
-      contact_table_name: contactTable.length > 0 ? 'contact_messages' : null,
-      structure: structure,
-      total_messages: count
-    });
-    
-  } catch (error) {
-    console.error('❌ Erreur test contact:', error.message);
-    res.status(500).json({ error: error.message });
-  } finally {
-    if (connection) await connection.end();
-  }
-});
-
 // ============================================
 // MIDDLEWARE DE GESTION D'ERREURS
 // ============================================
 
 app.use((req, res) => {
+  console.log(`❌ Route non trouvée: ${req.method} ${req.url}`);
   res.status(404).json({ error: 'Route non trouvée' });
 });
 
 app.use((err, req, res, next) => {
   console.error('❌ Erreur serveur:', err.stack);
-  res.status(500).json({ 
-    error: 'Erreur interne du serveur',
-    message: err.message 
-  });
+  res.status(500).json({ error: 'Erreur interne du serveur' });
 });
 
 // ============================================
@@ -979,32 +1012,17 @@ app.listen(PORT, () => {
   console.log(`🚀 SERVEUR DÉMARRÉ SUR http://localhost:${PORT}`);
   console.log('='.repeat(70));
   console.log('\n📡 ROUTES DISPONIBLES:');
-  console.log('   ┌─ Tests');
-  console.log('   │  ├─ GET  /api');
-  console.log('   │  └─ GET  /api/test/contact');
-  console.log('   │');
-  console.log('   ├─ Authentification');
-  console.log('   │  ├─ POST /api/auth/register');
-  console.log('   │  ├─ POST /api/auth/login');
-  console.log('   │  └─ GET  /api/auth/me');
-  console.log('   │');
-  console.log('   ├─ Contenu');
-  console.log('   │  ├─ GET  /api/articles');
-  console.log('   │  ├─ GET  /api/activites');
-  console.log('   │  ├─ GET  /api/Itineraires');
-  console.log('   │  └─ GET  /api/galerie-randonnee');
-  console.log('   │');
-  console.log('   ├─ Ski');
-  console.log('   │  ├─ GET  /api/ski/stations');
-  console.log('   │  ├─ GET  /api/ski/temoignages');
-  console.log('   │  └─ GET  /api/ski/offres');
-  console.log('   │');
-  console.log('   ├─ Contact');
-  console.log('   │  └─ POST /api/contact');
-  console.log('   │');
-  console.log('   └─ Réservations');
+  console.log('   ├─ GET  /api');
+  console.log('   ├─ Articles: GET, POST, DELETE');
+  console.log('   ├─ Itinéraires: GET');
+  console.log('   ├─ Galerie: GET, POST, PUT');
+  console.log('   ├─ Activités: GET');
+  console.log('   ├─ Contact: POST');
+  console.log('   ├─ Ski: stations, temoignages, offres');
+  console.log('   ├─ Auth: register, login, me');
+  console.log('   └─ Réservations:');
   console.log('      ├─ POST   /api/reservations');
-  console.log('      ├─ GET    /api/reservations/user/:id');
+  console.log('      ├─ GET    /api/reservations/user/:id ✅ (ski + activités)');
   console.log('      └─ DELETE /api/reservations/:id');
   console.log('='.repeat(70));
 });
