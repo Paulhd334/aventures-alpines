@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : mer. 18 fév. 2026 à 16:38
+-- Généré le : ven. 27 fév. 2026 à 09:46
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -51,9 +51,7 @@ INSERT INTO `activites` (`id`, `nom`, `description`, `type`, `date_debut`, `date
 (1, 'Ski alpin à Chamonix', 'Des pistes mythiques pour tous les niveaux. Expérience unique dans la vallée de Chamonix avec moniteurs qualifiés.', 'ski', '2026-01-20 09:00:00', '2026-01-20 17:00:00', 'Chamonix', 20, '2026-01-19 20:54:13', 'https://picsum.photos/id/1015/800/600', '1 journée', 'Intermédiaire', 'Hiver'),
 (2, 'Randonnée du Lac Blanc', 'Randonnée familiale avec vue magnifique sur les Alpes. Accessible à tous les âges.', 'randonnee', '2026-06-15 08:30:00', '2026-06-15 12:00:00', 'Argentière', 15, '2026-01-19 20:54:13', 'https://picsum.photos/id/1018/800/600', '3h30', 'Facile', 'Été'),
 (3, 'Escalade aux Drus', 'Voies d\'escalade technique pour grimpeurs expérimentés. Équipement fourni.', 'escalade', '2026-07-10 08:00:00', '2026-07-10 18:00:00', 'Les Drus', 8, '2026-01-19 20:54:13', 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800&h=600&fit=crop', '1 journée', 'Difficile', 'Été'),
-(4, 'VTT descente à Morzine', 'Descentes techniques dans les Alpes avec équipement fourni. Pour les amateurs de sensations fortes.', 'vtt', '2026-07-20 14:00:00', '2026-07-20 16:30:00', 'Morzine', 12, '2026-01-19 20:54:13', 'https://pierrelonchampt.com/wp-content/uploads/2020/11/photo-mont-margeriaz-hiver-bauges-020219.jpg', '2h30', 'Intermédiaire', 'Été'),
 (5, 'Randonnée glaciaire sur la Mer de Glace', 'Découverte des glaciers avec guide professionnel. Équipement de sécurité fourni.', 'randonnee', '2026-05-10 07:00:00', '2026-05-10 11:00:00', 'Mer de Glace', 10, '2026-01-19 20:54:13', 'https://pierrelonchampt.com/wp-content/uploads/2023/12/PL231111-01382-vallon-ecrins-768x1151.jpg', '4 heures', 'Moyen', 'Printemps-Été'),
-(6, 'Ski freeride à Val Thorens', 'Hors-piste encadré par des guides experts. Pour les skieurs confirmés.', 'ski', '2026-02-15 09:00:00', '2026-02-15 16:00:00', 'Val Thorens', 6, '2026-01-19 20:54:13', 'https://picsum.photos/id/1019/800/600', '1 journée', 'Expert', 'Hiver'),
 (7, 'Via ferrata des Aravis', 'Parcours sécurisé pour découvrir l\'escalade en montagne. Parfait pour les débutants.', 'escalade', '2026-08-05 10:00:00', '2026-08-05 13:00:00', 'Les Aravis', 12, '2026-01-19 20:54:13', 'https://picsum.photos/id/1057/800/600', '3 heures', 'Intermédiaire', 'Été'),
 (8, 'Raquettes au Col de la Croix', 'Balade en raquettes avec vue panoramique. Accessible sans expérience.', 'randonnee', '2026-01-25 13:30:00', '2026-01-25 16:00:00', 'Col de la Croix', 15, '2026-01-19 20:54:13', 'https://pierrelonchampt.com/wp-content/uploads/2020/11/photo-vallee-ga-meije-ecrins-080720.jpg', '2h30', 'Facile', 'Hiver');
 
@@ -84,7 +82,9 @@ INSERT INTO `articles` (`id`, `titre`, `contenu`, `auteur_id`, `lieu`, `type`, `
 (4, 'Escalade aux Drus', 'Voies techniques pour grimpeurs expérimentés dans les Drus. Équipement fourni.', 14, 'Les Drus', 'récit', '2026-02-18 10:30:00'),
 (5, 'Tour du Beaufortain', 'Randonnée dans le massif du Beaufortain, alpages et vues sur le Mont Blanc.', 8, 'Beaufortain', 'guide', '2026-02-18 11:00:00'),
 (6, 'Sommets des Vosges', 'Randonnée facile pour découvrir les sommets des Vosges et profiter de paysages variés.', 4, 'Vosges', 'article', '2026-02-18 11:30:00'),
-(7, 'Raquettes au Col de la Croix', 'Balade hivernale en raquettes avec vue panoramique sur les montagnes.', 11, 'Col de la Croix', 'récit', '2026-02-18 12:00:00');
+(7, 'Raquettes au Col de la Croix', 'Balade hivernale en raquettes avec vue panoramique sur les montagnes.', 11, 'Col de la Croix', 'récit', '2026-02-18 12:00:00'),
+(8, 'test', 'gg', 21, 'ici', 'article', '2026-02-18 16:25:03'),
+(9, 'Paul', 'test', 22, 'test ', 'récit', '2026-02-23 15:00:49');
 
 -- --------------------------------------------------------
 
@@ -175,6 +175,73 @@ INSERT INTO `itineraires` (`id`, `nom`, `description`, `difficulte`, `duree`, `d
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `offres_escalade`
+--
+
+CREATE TABLE `offres_escalade` (
+  `id` int(11) NOT NULL,
+  `titre` varchar(255) NOT NULL,
+  `description` text,
+  `lieu` varchar(255) DEFAULT NULL,
+  `type_escalade` varchar(100) DEFAULT NULL,
+  `difficulte` varchar(50) DEFAULT NULL,
+  `hauteur` int(11) DEFAULT NULL,
+  `longueurs` int(11) DEFAULT NULL,
+  `duree` varchar(100) DEFAULT NULL,
+  `prix` decimal(10,2) DEFAULT NULL,
+  `guide_inclus` tinyint(1) DEFAULT '0',
+  `materiel_inclus` tinyint(1) DEFAULT '0',
+  `niveau_requis` varchar(100) DEFAULT NULL,
+  `image_url` text,
+  `date_debut` date DEFAULT NULL,
+  `date_fin` date DEFAULT NULL,
+  `actif` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `offres_escalade`
+--
+
+INSERT INTO `offres_escalade` (`id`, `titre`, `description`, `lieu`, `type_escalade`, `difficulte`, `hauteur`, `longueurs`, `duree`, `prix`, `guide_inclus`, `materiel_inclus`, `niveau_requis`, `image_url`, `date_debut`, `date_fin`, `actif`, `created_at`) VALUES
+(1, 'Aiguille du Midi - Voie des Cosmiques', 'Ascension mythique de l\'Aiguille du Midi avec vue imprenable sur le Mont Blanc. Parcours d\'arête en haute montagne, neige et rocher. Une expérience inoubliable pour les amateurs de sensations fortes.', 'Chamonix - Aiguille du Midi', 'alpinisme', 'AD (Assez Difficile)', 3842, 8, '8h', '450.00', 1, 1, 'Intermédiaire - Terrain d\'aventure requis', 'https://img.hardloop.com/image/upload/v1586452369/articles/id-90-5-bonnes-raisons-de-debuter-l-escalade/5-bonnes-raisons-de-debuter-l-escalade_rfs5br.jpg', '2025-06-01', '2025-09-30', 1, '2026-02-27 08:38:16'),
+(2, 'Falaise de Presles - Voies du Vercors', 'Ecole d\'escalade réputée du Vercors. Plus de 300 voies équipées dans un cadre magnifique. Parfait pour tous les niveaux, du débutant au confirmé.', 'Presles - Vercors', 'falaise', '5c à 7b', 300, 1, '4h', '90.00', 1, 0, 'Débutant à Intermédiaire', 'https://img.hardloop.com/image/upload/v1586536831/articles/id-90-5-bonnes-raisons-de-debuter-l-escalade/debuter-escalade-sport-complet_hg52ii.jpg', '2025-04-01', '2025-10-31', 1, '2026-02-27 08:38:16'),
+(3, 'Escalade en bord de mer - Calanques', 'Grimpez au-dessus de la mer Méditerranée dans les célèbres Calanques de Marseille. Cadre exceptionnel entre ciel et mer, avec vue imprenable sur la Méditerranée.', 'Calanques - Marseille', 'falaise', '6a', 150, 1, '3h', '75.00', 1, 0, 'Débutant avec bonne condition physique', 'https://img.hardloop.com/image/upload/v1586537035/articles/id-90-5-bonnes-raisons-de-debuter-l-escalade/debuter-escalade-contact-avec-nature_r8phxc.jpg', '2025-05-01', '2025-10-15', 1, '2026-02-27 08:38:16');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `offres_randonnee`
+--
+
+CREATE TABLE `offres_randonnee` (
+  `id` int(11) NOT NULL,
+  `titre` varchar(255) NOT NULL,
+  `description` text,
+  `lieu` varchar(255) DEFAULT NULL,
+  `difficulte` varchar(50) DEFAULT NULL,
+  `duree` varchar(100) DEFAULT NULL,
+  `prix` decimal(10,2) DEFAULT NULL,
+  `guide_inclus` tinyint(1) DEFAULT '0',
+  `image_url` text,
+  `date_debut` date DEFAULT NULL,
+  `date_fin` date DEFAULT NULL,
+  `actif` tinyint(1) DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `offres_randonnee`
+--
+
+INSERT INTO `offres_randonnee` (`id`, `titre`, `description`, `lieu`, `difficulte`, `duree`, `prix`, `guide_inclus`, `image_url`, `date_debut`, `date_fin`, `actif`, `created_at`) VALUES
+(1, 'Randonnée au Mont Blanc', 'Une randonnée exceptionnelle au cœur des Alpes', 'Chamonix', 'Difficile', '8 heures', '89.90', 1, 'https://magazine.sportihome.com/wp-content/uploads/2019/04/randonnee-alpes-1068x712.jpg', NULL, NULL, 1, '2026-02-26 11:06:04'),
+(2, 'Balade aux Aiguilles Rouges', 'Parcours accessible à tous avec vue panoramique', 'Les Houches', 'Facile', '4 heures', '45.50', 0, 'https://media.skirentalsolution.sport2000.fr/images/cache/cms_image_runtime/rc/7qntNvPz/cms/CMS%20Guide%20Sport%202000/Ou-aller-randonner-en-montagne.jpg', NULL, NULL, 1, '2026-02-26 11:06:04'),
+(3, 'Traversée du Tour du Mont Blanc', '3 jours de randonnée inoubliable', 'Tour du Mont Blanc', 'Moyen', '3 jours', '299.00', 1, 'https://i.notretemps.com/1200x0/smart/2025/03/18/randonner-1.jpg', NULL, NULL, 1, '2026-02-26 11:06:04');
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `offres_ski`
 --
 
@@ -230,7 +297,25 @@ CREATE TABLE `reservations` (
 --
 
 INSERT INTO `reservations` (`id`, `membre_id`, `activite_id`, `date_reservation`, `nb_personnes`, `notes`, `statut`, `date_creation`) VALUES
-(1, 21, 1, '2026-02-18 00:00:00', 1, NULL, 'confirmée', '2026-02-18 16:27:41');
+(5, 22, 11, '2026-02-27 12:00:00', 1, '{\"offre\":\"Pack Débutant Complet\",\"station\":\"Val Thorens\",\"dateFin\":\"2026-03-06\",\"options\":{\"forfaitSki\":true,\"coursSki\":false,\"locationMateriel\":false,\"typeCours\":\"collectif\",\"niveau\":\"débutant\",\"assurance\":false,\"parking\":false,\"garderie\":false,\"restauration\":false},\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"Paulde\",\"prenom\":\"fef\",\"email\":\"pau@gmail.com\",\"telephone\":\"ze\",\"adresse\":\"fez\",\"cp\":\"feefzef\",\"ville\":\"fz\",\"pays\":\"France\"},\"prixTotal\":1560}', 'confirmée', '2026-02-23 17:29:08'),
+(7, 22, 11, '2026-02-27 12:00:00', 1, '{\"offre\":\"Pack Débutant Complet\",\"station\":\"Val Thorens\",\"dateFin\":\"2026-02-28\",\"options\":{\"forfaitSki\":true,\"coursSki\":false,\"locationMateriel\":false,\"typeCours\":\"collectif\",\"niveau\":\"débutant\",\"assurance\":false,\"parking\":false,\"garderie\":false,\"restauration\":false},\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"Paulde\",\"prenom\":\"kgbh\",\"email\":\"pau@gmail.com\",\"telephone\":\"088890\",\"adresse\":\"GIH\",\"cp\":\"BNJK\",\"ville\":\"HOIU\",\"pays\":\"France\"},\"prixTotal\":390}', 'confirmée', '2026-02-23 17:35:26');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `reservations_ski`
+--
+
+CREATE TABLE `reservations_ski` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `offre_ski_id` int(11) NOT NULL,
+  `date_reservation` datetime NOT NULL,
+  `nb_personnes` int(11) DEFAULT '1',
+  `notes` text,
+  `statut` varchar(50) DEFAULT 'confirmée',
+  `date_creation` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -295,7 +380,9 @@ CREATE TABLE `temoignages_ski` (
 --
 
 INSERT INTO `temoignages_ski` (`id`, `nom`, `email`, `type_ski`, `station_id`, `message`, `note`, `approuve`, `created_at`, `updated_at`) VALUES
-(1, 'Test', 'test@gmail.cim', 'rando', NULL, 'tesr', 4, 1, '2026-01-28 14:02:11', '2026-01-28 14:02:11');
+(1, 'Test', 'test@gmail.cim', 'rando', NULL, 'tesr', 4, 1, '2026-01-28 14:02:11', '2026-01-28 14:02:11'),
+(2, 'papo', 'fond@gmail.com', 'fond', NULL, 'plutôt agréable je recommande ! ', 4, 1, '2026-02-18 15:54:00', '2026-02-23 15:15:30'),
+(3, 'nul', 'nul@gmail.com', 'freeride', NULL, 'vraiment super nul', 1, 1, '2026-02-23 15:10:05', '2026-02-23 15:10:05');
 
 -- --------------------------------------------------------
 
@@ -330,7 +417,8 @@ INSERT INTO `users` (`id`, `username`, `password_hash`, `created_at`, `email`) V
 (18, 'frjuizp', '$2b$10$9zhd1CTEUO9uTst/9IkJVek7sSZsxYGMaLcIzyG4uSY43/FWhc.O6', '2026-02-11 11:01:36', 'ioppsdj@gmail.com'),
 (19, 'AZERTY', '$2b$10$QaefnvEBeBLTvKiCWZMiBuRW3l9Q0vP3fMQJGCDefYvQkL3mtS2PS', '2026-02-11 11:15:12', 'AZERTY@GMAIL.COM'),
 (20, 'JKLHGF', '$2b$10$iKk7.tZ0G4vq0gDKmizHOuAdI41X.92OhEstBCzUeXO4NxK87.kHG', '2026-02-11 11:19:58', 'HJJ@gmail.coom'),
-(21, 'PAPO', '$2b$10$y47/7zzu.RY8mV3..i826ugCVEFkkSWBz5GL4Si4tZ7RkqJwNYT2G', '2026-02-18 16:25:14', 'PAPO@GMAIL.COM');
+(21, 'PAPO', '$2b$10$y47/7zzu.RY8mV3..i826ugCVEFkkSWBz5GL4Si4tZ7RkqJwNYT2G', '2026-02-18 16:25:14', 'PAPO@GMAIL.COM'),
+(22, 'Paulde', '$2b$10$klOVj3dscNikEUuitKHJ0.tJHaH8329WDOaQ0/A3Wata/jOpf107m', '2026-02-23 15:52:15', 'pau@gmail.com');
 
 --
 -- Index pour les tables déchargées
@@ -369,6 +457,18 @@ ALTER TABLE `itineraires`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Index pour la table `offres_escalade`
+--
+ALTER TABLE `offres_escalade`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Index pour la table `offres_randonnee`
+--
+ALTER TABLE `offres_randonnee`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `offres_ski`
 --
 ALTER TABLE `offres_ski`
@@ -383,6 +483,14 @@ ALTER TABLE `reservations`
   ADD PRIMARY KEY (`id`),
   ADD KEY `membre_id` (`membre_id`),
   ADD KEY `activite_id` (`activite_id`);
+
+--
+-- Index pour la table `reservations_ski`
+--
+ALTER TABLE `reservations_ski`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `offre_ski_id` (`offre_ski_id`);
 
 --
 -- Index pour la table `stations_ski`
@@ -422,7 +530,7 @@ ALTER TABLE `activites`
 -- AUTO_INCREMENT pour la table `articles`
 --
 ALTER TABLE `articles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT pour la table `contact_messages`
@@ -443,6 +551,18 @@ ALTER TABLE `itineraires`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
+-- AUTO_INCREMENT pour la table `offres_escalade`
+--
+ALTER TABLE `offres_escalade`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT pour la table `offres_randonnee`
+--
+ALTER TABLE `offres_randonnee`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT pour la table `offres_ski`
 --
 ALTER TABLE `offres_ski`
@@ -452,7 +572,13 @@ ALTER TABLE `offres_ski`
 -- AUTO_INCREMENT pour la table `reservations`
 --
 ALTER TABLE `reservations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT pour la table `reservations_ski`
+--
+ALTER TABLE `reservations_ski`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT pour la table `stations_ski`
@@ -464,13 +590,13 @@ ALTER TABLE `stations_ski`
 -- AUTO_INCREMENT pour la table `temoignages_ski`
 --
 ALTER TABLE `temoignages_ski`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Contraintes pour les tables déchargées
@@ -498,8 +624,14 @@ ALTER TABLE `offres_ski`
 -- Contraintes pour la table `reservations`
 --
 ALTER TABLE `reservations`
-  ADD CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `reservations_ibfk_2` FOREIGN KEY (`activite_id`) REFERENCES `activites` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `reservations_ibfk_1` FOREIGN KEY (`membre_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Contraintes pour la table `reservations_ski`
+--
+ALTER TABLE `reservations_ski`
+  ADD CONSTRAINT `reservations_ski_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `reservations_ski_ibfk_2` FOREIGN KEY (`offre_ski_id`) REFERENCES `offres_ski` (`id`) ON DELETE CASCADE;
 
 --
 -- Contraintes pour la table `temoignages_ski`
