@@ -12,7 +12,7 @@ export const hikingRoutes = [
     pointDepart: "Les Houches",
     pointArrivee: "Les Houches",
     saison: "Juin à Septembre",
-    image: "https://source.unsplash.com/800x600/?mont-blanc,hiking",
+    image: "https://fichier0.cirkwi.com/image/photo/circuit/800x500/680855/fr/0.jpg?1763618988",
     gpsTrack: "/tracks/tmb.gpx",
     altitudeMax: "2665m",
     refuges: "12 refuges",
@@ -32,7 +32,7 @@ export const hikingRoutes = [
     pointDepart: "Annecy",
     pointArrivee: "Annecy",
     saison: "Mai à Octobre",
-    image: "https://source.unsplash.com/800x600/?annecy,mountain",
+    image: "https://www.oisans.com/app/uploads/2024/11/plateau-d-emparis-05.webp",
     gpsTrack: "/tracks/annecy.gpx",
     altitudeMax: "1937m",
     refuges: "7 refuges",
@@ -52,7 +52,7 @@ export const hikingRoutes = [
     pointDepart: "Monêtier",
     pointArrivee: "Valgaudémar",
     saison: "Juillet à Août",
-    image: "https://source.unsplash.com/800x600/?alps,trek",
+    image: "https://www.oisans.com/app/uploads/2024/11/plateau-d-emparis-04.webp",
     gpsTrack: "/tracks/ecrins.gpx",
     altitudeMax: "3568m",
     refuges: "9 refuges",
@@ -72,7 +72,7 @@ export const hikingRoutes = [
     pointDepart: "Calenzana",
     pointArrivee: "Conca",
     saison: "Juin à Septembre",
-    image: "https://source.unsplash.com/800x600/?corsica,mountains",
+    image: "https://www.oisans.com/app/uploads/iris-images/12857/randonnee-muzelle-04-1920x1080-f42_76.webp",
     gpsTrack: "/tracks/gr20.gpx",
     altitudeMax: "2625m",
     refuges: "15 refuges",
@@ -92,7 +92,7 @@ export const hikingRoutes = [
     pointDepart: "Arvieux",
     pointArrivee: "Arvieux",
     saison: "Juin à Octobre",
-    image: "https://source.unsplash.com/800x600/?alpine-trail",
+    image: "https://fichier0.cirkwi.com/image/photo/circuit/800x400/680855/fr/1.jpg?1763618988",
     gpsTrack: "/tracks/queyras.gpx",
     altitudeMax: "2880m",
     refuges: "8 refuges",
@@ -112,7 +112,7 @@ export const hikingRoutes = [
     pointDepart: "Chamonix",
     pointArrivee: "Zermatt",
     saison: "Juillet à Août",
-    image: "https://source.unsplash.com/800x600/?chamonix,hiking",
+    image: "https://fichier0.cirkwi.com/image/photo/circuit/800x400/680855/fr/2.jpg?1763618988",
     gpsTrack: "/tracks/haute-route.gpx",
     altitudeMax: "3800m",
     refuges: "11 refuges",
@@ -124,7 +124,7 @@ export const hikingRoutes = [
 ];
 
 
-// ✅ EXPORTS MANQUANTS — corrigés
+// EXPORTS — corrigés
 
 export const difficulteOptions = [
   { value: "", label: "Tous niveaux" },
