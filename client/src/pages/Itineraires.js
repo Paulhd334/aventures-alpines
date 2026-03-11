@@ -26,11 +26,17 @@ const Itineraires = () => {
   }, []);
 
   const itinerairesFiltres = itineraires.filter(it => {
-    if (filtreDifficulte !== 'tous' && it.difficulte !== filtreDifficulte) return false;
+    // Correction : la base a "facile", pas "Facile"
+    if (filtreDifficulte !== 'tous') {
+      // Convertir "Facile" en "facile", etc.
+      const difficulteBase = it.difficulte.toLowerCase();
+      const filtreBase = filtreDifficulte.toLowerCase();
+      if (difficulteBase !== filtreBase) return false;
+    }
     
     if (filtreDuree !== 'tous') {
       const dureeStr = it.duree || '';
-      if (dureeStr.includes('jours')) {
+      if (dureeStr.includes('jours') || dureeStr.includes('jour')) {
         const joursMatch = dureeStr.match(/(\d+)/);
         if (joursMatch) {
           const jours = parseInt(joursMatch[1]);
@@ -66,10 +72,10 @@ const Itineraires = () => {
             onChange={(e) => setFiltreDifficulte(e.target.value)}
           >
             <option value="tous">Tous niveaux</option>
-            <option value="Facile">Facile</option>
-            <option value="Moyen">Moyen</option>
-            <option value="Difficile">Difficile</option>
-            <option value="Très Difficile">Très Difficile</option>
+            <option value="facile">Facile</option>
+            <option value="moyen">Moyen</option>
+            <option value="difficile">Difficile</option>
+            <option value="expert">Expert</option>
           </select>
         </div>
         
@@ -100,11 +106,11 @@ const Itineraires = () => {
         <div className="itineraires-grid">
           {itinerairesFiltres.map((itineraire) => (
             <div key={itineraire.id} className="itineraire-card">
-              {/* Image */}
-              {itineraire.image_url && (
+              {/* Image - Correction : photo_url au lieu de image_url */}
+              {itineraire.photo_url && (
                 <div className="itineraire-image-container">
                   <img 
-                    src={itineraire.image_url} 
+                    src={itineraire.photo_url} 
                     alt={itineraire.nom}
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop';
@@ -130,11 +136,14 @@ const Itineraires = () => {
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">📏 Distance</span>
-                    <span className="detail-value">{itineraire.distance}</span>
+                    <span className="detail-value">{itineraire.distance} km</span>
                   </div>
+                  {/* Correction : dénivelé positif + négatif */}
                   <div className="detail-item">
-                    <span className="detail-label">⬆️ Dénivelé</span>
-                    <span className="detail-value">{itineraire.denivele}</span>
+                    <span className="detail-label">⬆️ D+ / D-</span>
+                    <span className="detail-value">
+                      {itineraire.denivele_positif}m / {itineraire.denivele_negatif}m
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">📍 Région</span>
@@ -144,13 +153,21 @@ const Itineraires = () => {
 
                 <div className="info-section">
                   <span className="info-label">🌤️ Meilleure saison :</span>
-                  <span className="info-value">{itineraire.meilleure_saison}</span>
+                  {/* Correction : saison_recommandee au lieu de meilleure_saison */}
+                  <span className="info-value">{itineraire.saison_recommandee}</span>
                 </div>
 
                 {itineraire.points_interet && (
                   <div className="info-section">
                     <span className="info-label">✨ Points d'intérêt :</span>
                     <p className="info-value">{itineraire.points_interet}</p>
+                  </div>
+                )}
+
+                {itineraire.equipement && (
+                  <div className="info-section">
+                    <span className="info-label">🎒 Équipement recommandé :</span>
+                    <p className="info-value">{itineraire.equipement}</p>
                   </div>
                 )}
 
@@ -176,7 +193,7 @@ const Itineraires = () => {
               <li><strong>Facile :</strong> Sentiers bien marqués, peu de dénivelé</li>
               <li><strong>Moyen :</strong> Dénivelé modéré, bonne condition physique requise</li>
               <li><strong>Difficile :</strong> Dénivelé important, expérience recommandée</li>
-              <li><strong>Très Difficile :</strong> Technicité élevée, réservé aux randonneurs expérimentés</li>
+              <li><strong>Expert :</strong> Technicité élevée, réservé aux randonneurs expérimentés</li>
             </ul>
           </div>
           <div className="conseil-categorie">
@@ -197,10 +214,10 @@ const Itineraires = () => {
 
 function getDifficultyClass(difficulte) {
   switch(difficulte) {
-    case 'Facile': return 'facile';
-    case 'Moyen': return 'moyen';
-    case 'Difficile': return 'difficile';
-    case 'Très Difficile': return 'tres-difficile';
+    case 'facile': return 'facile';
+    case 'moyen': return 'moyen';
+    case 'difficile': return 'difficile';
+    case 'expert': return 'expert';
     default: return 'default';
   }
 }
