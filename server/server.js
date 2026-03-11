@@ -929,6 +929,53 @@ app.get('/api/randonnee/offres/:id', async (req, res) => {
   }
 });
 
+
+
+// ============================================
+// ROUTES POUR OFFRES ESCALADE
+// ============================================
+
+// GET - Toutes les offres d'escalade
+app.get('/api/escalade/offres', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [rows] = await connection.execute(`
+      SELECT * FROM offres_escalade 
+      WHERE actif = TRUE 
+      ORDER BY prix
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Erreur chargement offres escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET - Une offre par ID
+app.get('/api/escalade/offres/:id', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [rows] = await connection.execute(
+      'SELECT * FROM offres_escalade WHERE id = ?',
+      [req.params.id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Offre non trouvée' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Erreur chargement offre:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
 // ============================================
 // 8. AUTHENTIFICATION
 // ============================================
