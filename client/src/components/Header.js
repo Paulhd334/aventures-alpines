@@ -7,7 +7,7 @@ const Header = () => {
   const [isMontagneOpen, setIsMontagneOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  // ÉTAT utilisateur
+  // ✅ ÉTAT utilisateur - Initialisé depuis localStorage
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
     try {
@@ -17,65 +17,119 @@ const Header = () => {
     }
   });
 
+  // ✅ ÉCOUTER tous les événements d'authentification
   useEffect(() => {
-    console.log('🔍 Header - Utilisateur:', user);
-    console.log('🔍 Header - LocalStorage:', localStorage.getItem('user'));
-    
-    const handleUserLogin = () => {
-      console.log('🔄 Header: Événement login reçu');
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error('Erreur parsing:', e);
-        }
-      }
-    };
+    console.log(' Header - Utilisateur actuel:', user);
 
-    window.addEventListener('user-login', handleUserLogin);
-    
-    const handleStorageChange = () => {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
+    // 1. Écouter l'événement personnalisé 'user-login'
+    const handleUserLogin = (event) => {
+      console.log('🔄 Header: Événement login reçu', event.detail);
+      const userData = event.detail || localStorage.getItem('user');
+      if (userData) {
         try {
-          const parsed = JSON.parse(storedUser);
+          const parsed = typeof userData === 'string' ? JSON.parse(userData) : userData;
           setUser(parsed);
+          console.log('✅ Header: Utilisateur mis à jour après login');
         } catch (e) {
-          console.error('Erreur parsing storage:', e);
+          console.error('❌ Erreur parsing login:', e);
         }
-      } else {
-        setUser(null);
       }
     };
 
+    // 2. Écouter l'événement personnalisé 'user-register'
+    const handleUserRegister = (event) => {
+      console.log('🔄 Header: Événement register reçu', event.detail);
+      const userData = event.detail || localStorage.getItem('user');
+      if (userData) {
+        try {
+          const parsed = typeof userData === 'string' ? JSON.parse(userData) : userData;
+          setUser(parsed);
+          console.log('✅ Header: Utilisateur mis à jour après inscription');
+        } catch (e) {
+          console.error('❌ Erreur parsing register:', e);
+        }
+      }
+    };
+
+    // 3. Écouter l'événement personnalisé 'user-logout'
+    const handleUserLogout = () => {
+      console.log('🔄 Header: Événement logout reçu');
+      setUser(null);
+      console.log('✅ Header: Utilisateur déconnecté');
+    };
+
+    // 4. Écouter les changements localStorage (pour cross-tabs)
+    const handleStorageChange = (e) => {
+      if (e.key === 'user') {
+        console.log('🔄 Header: Changement localStorage détecté');
+        if (e.newValue) {
+          try {
+            const parsed = JSON.parse(e.newValue);
+            setUser(parsed);
+          } catch (e) {
+            console.error('❌ Erreur parsing storage:', e);
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    };
+
+    // ✅ AJOUTER tous les écouteurs d'événements
+    window.addEventListener('user-login', handleUserLogin);
+    window.addEventListener('user-register', handleUserRegister);
+    window.addEventListener('user-logout', handleUserLogout);
     window.addEventListener('storage', handleStorageChange);
-    
+
+    // ✅ NETTOYAGE
     return () => {
       window.removeEventListener('user-login', handleUserLogin);
+      window.removeEventListener('user-register', handleUserRegister);
+      window.removeEventListener('user-logout', handleUserLogout);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, []); // Dépendances vides = exécuté 1 fois au montage
 
-  // Vérifier si connecté
+  // ✅ Vérifier si connecté
   const isLoggedIn = !!user;
-  const userName = user?.username || user?.nom_utilisateur;
+  const userName = user?.username || user?.nom_utilisateur || user?.prenom || user?.nom || 'Mon Profil';
 
   // Fonction pour remonter en haut de la page
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: 'instant' // Défilement instantané
+      behavior: 'instant'
     });
   };
 
   // Fonction pour gérer la navigation
   const handleNavigation = (path) => {
-    // Remonter en haut seulement si on change de page
     if (location.pathname !== path) {
       scrollToTop();
     }
+  };
+
+  // ✅ Fonction de déconnexion améliorée
+  const handleLogout = () => {
+    // Supprimer du localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth');
+    
+    // Mettre à jour l'état
+    setUser(null);
+    
+    // Émettre l'événement logout
+    window.dispatchEvent(new CustomEvent('user-logout'));
+    
+    // Scroll en haut
+    scrollToTop();
+    
+    // Rediriger vers l'accueil
+    navigate('/');
+    
+    console.log('✅ Déconnexion réussie');
   };
 
   // Tous les liens en UNE ligne
@@ -95,14 +149,6 @@ const Header = () => {
       ]
     },
   ];
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    scrollToTop(); // Remonter en haut
-    navigate('/');
-    window.location.reload();
-  };
 
   return (
     <header style={{
@@ -275,73 +321,66 @@ const Header = () => {
                 </div>
               );
             })}
-            
-            {/* Nom utilisateur (si connecté) */}
-            {isLoggedIn && userName && (
-              <div style={{ position: 'relative', marginLeft: '2rem' }}>
+          </nav>
+
+          {/*  Authentification - Mise à jour AUTOMATIQUE */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {isLoggedIn ? (
+              <>
+                {/* Nom utilisateur cliquable */}
                 <Link
                   to="/profile"
                   onClick={() => handleNavigation('/profile')}
-                  style={{ 
-                    padding: '0 2rem',
+                  style={{
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    padding: '0.5rem 1rem',
                     textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '60px',
-                    position: 'relative'
+                    color: '#000',
+                    border: '1px solid #000',
+                    backgroundColor: 'white',
+                    transition: 'all 0.3s ease',
+                    fontWeight: 500
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.querySelector('.nav-text').style.color = '#000';
+                    e.currentTarget.style.backgroundColor = '#000';
+                    e.currentTarget.style.color = 'white';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.querySelector('.nav-text').style.color = '#7A7A7A';
+                    e.currentTarget.style.backgroundColor = 'white';
+                    e.currentTarget.style.color = '#000';
                   }}
                 >
-                  <span 
-                    className="nav-text"
-                    style={{ 
-                      fontSize: '0.875rem',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.15em',
-                      fontWeight: location.pathname === '/profile' ? 500 : 300,
-                      color: location.pathname === '/profile' ? '#000' : '#7A7A7A',
-                      transition: 'color 0.3s ease'
-                    }}
-                  >
-                    {userName}
-                  </span>
+                  {userName}
                 </Link>
-              </div>
-            )}
-          </nav>
-
-          {/* Authentification */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {isLoggedIn ? (
-              <button
-                onClick={handleLogout}
-                style={{
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  padding: '0.5rem 1rem',
-                  border: '1px solid #D9D9D9',
-                  backgroundColor: 'transparent',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  color: '#7A7A7A'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#000';
-                  e.currentTarget.style.color = '#000';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#D9D9D9';
-                  e.currentTarget.style.color = '#7A7A7A';
-                }}
-              >
-                Déconnexion
-              </button>
+                
+                {/* Bouton déconnexion */}
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    fontSize: '0.75rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    padding: '0.5rem 1rem',
+                    border: '1px solid #D9D9D9',
+                    backgroundColor: 'transparent',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    color: '#7A7A7A'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#ff4444';
+                    e.currentTarget.style.color = '#ff4444';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#D9D9D9';
+                    e.currentTarget.style.color = '#7A7A7A';
+                  }}
+                >
+                  Déconnexion
+                </button>
+              </>
             ) : (
               <>
                 <Link 
@@ -400,7 +439,7 @@ const Header = () => {
       </div>
 
       {/* Animation CSS inline */}
-      <style jsx="true">{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
