@@ -6,6 +6,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [publications, setPublications] = useState([]);
   const [reservationsSki, setReservationsSki] = useState([]);
+  const [reservationsRandonnee, setReservationsRandonnee] = useState([]);
   const [reservationsActivites, setReservationsActivites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingReservations, setLoadingReservations] = useState(false);
@@ -74,6 +75,7 @@ const Profile = () => {
     if (!currentUser || !currentUser.id) {
       console.error('❌ Impossible de charger les réservations: utilisateur non connecté');
       setReservationsSki([]);
+      setReservationsRandonnee([]);
       setReservationsActivites([]);
       return;
     }
@@ -91,26 +93,29 @@ const Profile = () => {
       if (Array.isArray(response.data)) {
         // Séparer les réservations par type
         const ski = response.data.filter(res => res.type === 'ski');
+        const randonnee = response.data.filter(res => res.type === 'randonnee');
         const activites = response.data.filter(res => res.type === 'activite');
         
         setReservationsSki(ski);
+        setReservationsRandonnee(randonnee);
         setReservationsActivites(activites);
         
-        console.log(`✅ ${ski.length} réservations ski, ${activites.length} activités trouvées`);
+        console.log(`✅ ${ski.length} ski, ${randonnee.length} randonnées, ${activites.length} activités`);
       } else {
         setReservationsSki([]);
+        setReservationsRandonnee([]);
         setReservationsActivites([]);
       }
     } catch (err) {
       console.error('❌ Erreur chargement réservations:', err.message);
       
-      // Afficher plus de détails sur l'erreur
       if (err.response) {
         console.error('📦 Réponse erreur:', err.response.data);
         console.error('🔢 Status:', err.response.status);
       }
       
       setReservationsSki([]);
+      setReservationsRandonnee([]);
       setReservationsActivites([]);
     } finally {
       if (showLoading) setLoadingReservations(false);
@@ -231,8 +236,9 @@ const Profile = () => {
 
       if (response.data.success) {
         alert('✅ Réservation annulée avec succès');
-        // Mettre à jour les deux listes
+        // Mettre à jour toutes les listes
         setReservationsSki(prev => prev.filter(r => r.id !== reservationId));
+        setReservationsRandonnee(prev => prev.filter(r => r.id !== reservationId));
         setReservationsActivites(prev => prev.filter(r => r.id !== reservationId));
         setLastUpdate(Date.now());
       }
@@ -359,7 +365,7 @@ const Profile = () => {
     );
   }
 
-  const totalReservations = reservationsSki.length + reservationsActivites.length;
+  const totalReservations = reservationsSki.length + reservationsRandonnee.length + reservationsActivites.length;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem', minHeight: 'calc(100vh - 200px)' }}>
@@ -427,6 +433,22 @@ const Profile = () => {
         </button>
         <button 
           onClick={() => {
+            setActiveTab('randonnee');
+            loadReservations(true);
+          }} 
+          style={{ 
+            border: 'none', 
+            background: 'none', 
+            borderBottom: activeTab === 'randonnee' ? '2px solid #000' : '2px solid transparent', 
+            cursor: 'pointer', 
+            fontWeight: activeTab === 'randonnee' ? 600 : 400, 
+            padding: '0.5rem 0' 
+          }}
+        >
+          Randonnées ({reservationsRandonnee.length})
+        </button>
+        <button 
+          onClick={() => {
             setActiveTab('activites');
             loadReservations(true);
           }} 
@@ -439,7 +461,7 @@ const Profile = () => {
             padding: '0.5rem 0' 
           }}
         >
-          Activités de montagne ({reservationsActivites.length})
+          Activités ({reservationsActivites.length})
         </button>
       </div>
 
@@ -798,6 +820,181 @@ const Profile = () => {
                                   )
                                 )}
                               </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <span style={{ 
+                        padding: '0.25rem 0.75rem', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: '500', 
+                        backgroundColor: '#d1fae5', 
+                        color: '#065f46' 
+                      }}>
+                        {res.statut || 'Confirmée'}
+                      </span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
+                      <button
+                        onClick={() => cancelReservation(res.id)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          border: '1px solid #ef4444',
+                          color: '#ef4444',
+                          backgroundColor: 'transparent',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Onglet RANDONNÉES */}
+        {activeTab === 'randonnee' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
+              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes randonnées</h2>
+              <button onClick={() => navigate('/randonnee')} style={{ padding:'0.75rem 1.5rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer' }}>
+                ➕ Réserver une randonnée
+              </button>
+            </div>
+            
+            {loadingReservations ? (
+              <div style={{ textAlign:'center', padding:'3rem' }}>
+                <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '3px solid #e5e5e5', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ marginTop: '1rem', color: '#666' }}>Chargement de vos randonnées...</p>
+              </div>
+            ) : reservationsRandonnee.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
+                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé de randonnée</p>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos randonnées accompagnées !</p>
+                <button onClick={() => navigate('/randonnee')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
+                  Voir les randonnées
+                </button>
+              </div>
+            ) : (
+              <div style={{ display:'grid', gap:'1.5rem' }}>
+                {reservationsRandonnee.map(res => (
+                  <div key={res.id} style={{ padding:'1.5rem', border:'1px solid #e0e0e0', borderRadius:'8px', backgroundColor:'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
+                        {/* Image */}
+                        <div style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          borderRadius: '8px', 
+                          overflow: 'hidden',
+                          flexShrink: 0
+                        }}>
+                          <img 
+                            src={res.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop'} 
+                            alt={res.activite_nom}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop';
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Détails */}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <span style={{ 
+                              padding: '0.25rem 0.5rem', 
+                              background: '#e5e5e5', 
+                              borderRadius: '4px', 
+                              fontSize: '0.7rem',
+                              fontWeight: '600',
+                              color: '#2c3e50'
+                            }}>
+                              RANDONNÉE
+                            </span>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                              {res.activite_nom}
+                            </h3>
+                          </div>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Date:</span> {formatShortDate(res.date_reservation)}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Personnes:</span> {res.nb_personnes || 1}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Lieu:</span> {res.lieu || 'Non spécifié'}
+                            </div>
+                            {res.difficulte && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Difficulté:</span> {res.difficulte}
+                              </div>
+                            )}
+                            {res.duree && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Durée:</span> {res.duree}
+                              </div>
+                            )}
+                            {res.prix && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Prix:</span> {res.prix}€
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Options de randonnée */}
+                          {res.details && (
+                            <div style={{ 
+                              marginTop: '1rem', 
+                              padding: '0.75rem', 
+                              background: '#f5f5f5', 
+                              borderRadius: '6px',
+                              fontSize: '0.875rem'
+                            }}>
+                              {res.details.niveau && (
+                                <div style={{ marginBottom: '0.5rem' }}>
+                                  <span style={{ fontWeight: '500' }}>Niveau choisi:</span> {res.details.niveau}
+                                </div>
+                              )}
+                              {(res.guide_inclus || res.details.options?.guide) && (
+                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                  {res.guide_inclus && (
+                                    <span style={{ 
+                                      background: '#e5e5e5', 
+                                      padding: '0.2rem 0.5rem',
+                                      borderRadius: '4px',
+                                      fontSize: '0.75rem'
+                                    }}>
+                                      🧭 Guide inclus
+                                    </span>
+                                  )}
+                                  {res.details.options?.guide && !res.guide_inclus && (
+                                    <span style={{ 
+                                      background: '#e5e5e5', 
+                                      padding: '0.2rem 0.5rem',
+                                      borderRadius: '4px',
+                                      fontSize: '0.75rem'
+                                    }}>
+                                      🧭 Guide accompagnateur
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {res.details.prixTotal && (
+                                <div style={{ marginTop: '0.5rem', fontWeight: '500' }}>
+                                  Total: {res.details.prixTotal}€
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
