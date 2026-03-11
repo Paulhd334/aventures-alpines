@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import CreatePublication from './pages/CreatePublication';
 import Articles from './pages/Articles'; // ← ON GARDE Articles.js
 import ProfilePublic from './pages/ProfilePublic'; // ← AJOUT
+import Itineraires from './pages/Itineraires'; // IMPORT CORRIGÉ
 
 function App() {
   return (
@@ -27,9 +28,10 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/:username" element={<ProfilePublic />} /> {/* ← NOUVELLE ROUTE */}
+            <Route path="/itineraires" element={<Itineraires />} /> {/*PAGE NOUVELLE ITINERAIRE */}
             <Route path="/blog/new" element={<CreatePublication />} />
             <Route path="/blog" element={<Articles />} /> {/* ← UTILISE Articles.js */}
-            <Route path="/articles" element={<Articles />} /> {/* ← ALIAS OPTIONNEL */}
+            <Route path="/articles" element={<Articles />} /> {/* ← ALIAS */}
             
             {/* Route 404 */}
             <Route path="*" element={<Home />} />
