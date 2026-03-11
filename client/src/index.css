@@ -1703,7 +1703,7 @@ textarea.form-control {
 
 /* Hero section - Noir profond */
 .ski-hero {
-  background: var(--black);
+  background: var(--WHITE);
   color: var(--white);
   padding: 6rem 2rem;
   text-align: center;
@@ -1752,9 +1752,8 @@ textarea.form-control {
   font-weight: 300;
   line-height: 1.7;
   opacity: 0.8;
-  color: var(--platinum);
+  color: var(--black);
 }
-
 /* Tabs navigation - Architecture pure */
 .ski-tabs {
   display: flex;

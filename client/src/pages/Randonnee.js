@@ -56,7 +56,7 @@ const Randonnee = () => {
             <h2 style={{ fontSize: '2rem', fontWeight: 300, marginBottom: '2rem' }}>Informations sur la Randonnée</h2>
             <div className="info-cards">
               <div className="info-card">
-                <h3>🥾 Niveaux de Difficulté</h3>
+                <h3>    Niveaux de Difficulté</h3>
                 <ul>
                   <li><strong>Facile:</strong> Sentiers bien marqués, dénivelé modéré</li>
                   <li><strong>Moyen:</strong> Dénivelé important, bonne condition physique</li>
@@ -66,7 +66,7 @@ const Randonnee = () => {
               </div>
 
               <div className="info-card">
-                <h3>🎒 Équipement Recommandé</h3>
+                <h3>Équipement Recommandé</h3>
                 <ul>
                   <li>Chaussures de randonnée imperméables</li>
                   <li>Vêtements techniques (système 3 couches)</li>
@@ -78,7 +78,7 @@ const Randonnee = () => {
               </div>
 
               <div className="info-card">
-                <h3>📅 Meilleures Saisons</h3>
+                <h3>Meilleures Saisons</h3>
                 <ul>
                   <li><strong>Printemps (Avril-Juin):</strong> Fleurs, peu de monde, sentiers parfois boueux</li>
                   <li><strong>Été (Juillet-Août):</strong> Conditions optimales, refuges ouverts, orages fréquents</li>

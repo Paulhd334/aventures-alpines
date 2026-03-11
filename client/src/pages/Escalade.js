@@ -569,26 +569,7 @@ const Escalade = () => {
         )}
       </div>
 
-      {/* Footer avec avertissement */}
-      <div className="randonnee-warning" style={{
-        background: '#f8f8f8',
-        borderTop: '1px solid #eee',
-        padding: '2rem',
-        textAlign: 'center',
-        marginTop: '4rem'
-      }}>
-        <p style={{ 
-          color: '#666', 
-          fontSize: '0.9rem',
-          maxWidth: '700px', 
-          margin: '0 auto',
-          lineHeight: '1.5'
-        }}>
-          L'escalade est un sport à risque. Toujours grimper avec un partenaire compétent, 
-          vérifier son matériel systématiquement, et respecter ses limites. 
-          En extérieur, consulter les prévisions météo et prévenir quelqu'un de son itinéraire.
-        </p>
-      </div>
+      
     </div>
   );
 };

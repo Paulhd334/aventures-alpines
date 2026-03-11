@@ -76,6 +76,27 @@ const Ski = () => {
 
   const regions = [...new Set(stations.map(s => s.region))];
 
+  // Fonction pour calculer les statistiques avec sécurité
+  const calculateStats = () => {
+    const totalKm = stationsFiltrees.reduce((sum, s) => {
+      return sum + (parseFloat(s.km_pistes) || 0);
+    }, 0);
+    
+    const totalRemontees = stationsFiltrees.reduce((sum, s) => {
+      return sum + (parseInt(s.nb_remontees) || 0);
+    }, 0);
+    
+    const totalNeige = stationsFiltrees.reduce((sum, s) => {
+      return sum + (parseInt(s.enneigement_actuel) || 0);
+    }, 0);
+    
+    const moyenneNeige = stationsFiltrees.length > 0 
+      ? Math.round(totalNeige / stationsFiltrees.length) 
+      : 0;
+    
+    return { totalKm, totalRemontees, moyenneNeige };
+  };
+
   const renderDisciplines = () => (
     <div className="disciplines-section">
       <h2 className="section-title">Les Disciplines du Ski</h2>
@@ -86,7 +107,6 @@ const Ski = () => {
       
       <div className="disciplines-grid">
         <div className="discipline-card">
-          <div className="discipline-icon"></div>
           <h3>Ski Alpin</h3>
           <p>Ski sur pistes damées, idéal pour débutants et confirmés. 
           Disciplines : slalom, géant, descente.</p>
@@ -101,7 +121,6 @@ const Ski = () => {
         </div>
 
         <div className="discipline-card">
-          <div className="discipline-icon"></div>
           <h3>Ski de Fond</h3>
           <p>Ski sur terrain plat ou vallonné, excellent pour l'endurance 
           et la découverte des paysages.</p>
@@ -116,7 +135,6 @@ const Ski = () => {
         </div>
 
         <div className="discipline-card">
-          <div className="discipline-icon"></div>
           <h3>Ski de Randonnée</h3>
           <p>Montée à ski (peaux de phoque) puis descente hors-piste. 
           Pour les amateurs de nature sauvage.</p>
@@ -131,7 +149,6 @@ const Ski = () => {
         </div>
 
         <div className="discipline-card">
-          <div className="discipline-icon"></div>
           <h3>Freestyle</h3>
           <p>Figures et sauts dans les snowparks. 
           Modules : big air, half-pipe, rails.</p>
@@ -146,7 +163,6 @@ const Ski = () => {
         </div>
 
         <div className="discipline-card">
-          <div className="discipline-icon"></div>
           <h3>Freeride</h3>
           <p>Descente hors-piste dans la neige vierge. 
           Équipement de sécurité obligatoire.</p>
@@ -161,7 +177,6 @@ const Ski = () => {
         </div>
 
         <div className="discipline-card">
-          <div className="discipline-icon"></div>
           <h3>Ski Familial</h3>
           <p>Activités adaptées aux familles : 
           jardins d'enfants, pistes débutants, animations.</p>
@@ -178,151 +193,155 @@ const Ski = () => {
     </div>
   );
 
-  const renderStations = () => (
-    <div className="stations-section">
-      <div className="section-header">
-        <h2 className="section-title">Stations de Ski Partenaires</h2>
-        <p className="section-description">
-          Consultez les conditions d'enneigement en temps réel 
-          et découvrez nos stations partenaires
-        </p>
-      </div>
-
-      <div className="filtres-container">
-        <div className="filtre-group">
-          <label htmlFor="region-filtre">Région :</label>
-          <select 
-            id="region-filtre"
-            value={filtreRegion} 
-            onChange={(e) => setFiltreRegion(e.target.value)}
-          >
-            <option value="tous">Toutes les régions</option>
-            {regions.map(region => (
-              <option key={region} value={region}>{region}</option>
-            ))}
-          </select>
+  const renderStations = () => {
+    const stats = calculateStats();
+    
+    return (
+      <div className="stations-section">
+        <div className="section-header">
+          <h2 className="section-title">Stations de Ski Partenaires</h2>
+          <p className="section-description">
+            Consultez les conditions d'enneigement en temps réel 
+            et découvrez nos stations partenaires
+          </p>
         </div>
-        
-        <div className="filtre-group">
-          <label htmlFor="type-filtre">Type :</label>
-          <select 
-            id="type-filtre"
-            value={filtreType} 
-            onChange={(e) => setFiltreType(e.target.value)}
-          >
-            <option value="tous">Tous types</option>
-            <option value="petite">Petite station</option>
-            <option value="moyenne">Station moyenne</option>
-            <option value="grande">Grande station</option>
-            <option value="très grande">Très grande station</option>
-          </select>
-        </div>
-      </div>
 
-      {loading ? (
-        <div className="loading">Chargement des stations...</div>
-      ) : (
-        <>
-          <div className="stations-stats">
-            <div className="stat-card">
-              <span className="stat-number">{stationsFiltrees.length}</span>
-              <span className="stat-label">Stations</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">
-                {stationsFiltrees.reduce((sum, s) => sum + s.km_pistes, 0).toFixed(0)}
-              </span>
-              <span className="stat-label">km de pistes</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">
-                {stationsFiltrees.reduce((sum, s) => sum + s.nb_remontees, 0)}
-              </span>
-              <span className="stat-label">Remontées</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-number">
-                {stationsFiltrees.reduce((sum, s) => sum + s.enneigement_actuel, 0) / stationsFiltrees.length || 0}
-              </span>
-              <span className="stat-label">cm de neige (moy)</span>
-            </div>
+        <div className="filtres-container">
+          <div className="filtre-group">
+            <label htmlFor="region-filtre">Région :</label>
+            <select 
+              id="region-filtre"
+              value={filtreRegion} 
+              onChange={(e) => setFiltreRegion(e.target.value)}
+            >
+              <option value="tous">Toutes les régions</option>
+              {regions.map(region => (
+                <option key={region} value={region}>{region}</option>
+              ))}
+            </select>
           </div>
+          
+          <div className="filtre-group">
+            <label htmlFor="type-filtre">Type :</label>
+            <select 
+              id="type-filtre"
+              value={filtreType} 
+              onChange={(e) => setFiltreType(e.target.value)}
+            >
+              <option value="tous">Tous types</option>
+              <option value="petite">Petite station</option>
+              <option value="moyenne">Station moyenne</option>
+              <option value="grande">Grande station</option>
+              <option value="très grande">Très grande station</option>
+            </select>
+          </div>
+        </div>
 
-          <div className="stations-grid">
-            {stationsFiltrees.map(station => (
-              <div key={station.id} className="station-card">
-                <div className="station-image">
-                  <img 
-                    src={station.photo_url} 
-                    alt={station.nom}
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop';
-                    }}
-                  />
-                  {station.enneigement_actuel && (
-                    <div className={`enneigement-badge ${station.enneigement_actuel > 80 ? 'good' : 'medium'}`}>
-                      ❄️ {station.enneigement_actuel} cm
-                    </div>
-                  )}
-                </div>
-                
-                <div className="station-content">
-                  <div className="station-header">
-                    <h3>{station.nom}</h3>
-                    <span className="station-type">{station.type_station}</span>
-                  </div>
-                  
-                  <p className="station-description">{station.description}</p>
-                  
-                  <div className="station-details">
-                    <div className="detail-item">
-                      <span className="detail-label">📍 Région</span>
-                      <span className="detail-value">{station.region}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">📏 Altitude</span>
-                      <span className="detail-value">{station.altitude_min}m - {station.altitude_max}m</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">⛷️ Pistes</span>
-                      <span className="detail-value">{station.nb_pistes}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">🚡 Remontées</span>
-                      <span className="detail-value">{station.nb_remontees}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-label">💰 Prix journée</span>
-                      <span className="detail-value">{station.prix_journee}€</span>
-                    </div>
-                  </div>
-                  
-                  <div className="station-season">
-                    <span className="season-label">Saison :</span>
-                    <span className="season-value">
-                      {new Date(station.ouverture).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })} - 
-                      {new Date(station.fermeture).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
-                  
-                  {station.site_web && (
-                    <a 
-                      href={station.site_web} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="station-website"
-                    >
-                      Visiter le site web →
-                    </a>
-                  )}
-                </div>
+        {loading ? (
+          <div className="loading">Chargement des stations...</div>
+        ) : (
+          <>
+            <div className="stations-stats">
+              <div className="stat-card">
+                <span className="stat-number">{stationsFiltrees.length}</span>
+                <span className="stat-label">Stations</span>
               </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
+              <div className="stat-card">
+                <span className="stat-number">
+                  {stats.totalKm.toFixed(0)}
+                </span>
+                <span className="stat-label">km de pistes</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-number">
+                  {stats.totalRemontees}
+                </span>
+                <span className="stat-label">Remontées</span>
+              </div>
+              <div className="stat-card">
+                <span className="stat-number">
+                  {stats.moyenneNeige}
+                </span>
+                <span className="stat-label">cm de neige (moy)</span>
+              </div>
+            </div>
+
+            <div className="stations-grid">
+              {stationsFiltrees.map(station => (
+                <div key={station.id} className="station-card">
+                  <div className="station-image">
+                    <img 
+                      src={station.photo_url || 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop'} 
+                      alt={station.nom}
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&auto=format&fit=crop';
+                      }}
+                    />
+                    {station.enneigement_actuel && (
+                      <div className={`enneigement-badge ${station.enneigement_actuel > 80 ? 'good' : 'medium'}`}>
+                        {station.enneigement_actuel} cm
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="station-content">
+                    <div className="station-header">
+                      <h3>{station.nom}</h3>
+                      <span className="station-type">{station.type_station}</span>
+                    </div>
+                    
+                    <p className="station-description">{station.description}</p>
+                    
+                    <div className="station-details">
+                      <div className="detail-item">
+                        <span className="detail-label">Région</span>
+                        <span className="detail-value">{station.region}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Altitude</span>
+                        <span className="detail-value">{station.altitude_min}m - {station.altitude_max}m</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Pistes</span>
+                        <span className="detail-value">{station.nb_pistes}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Remontées</span>
+                        <span className="detail-value">{station.nb_remontees}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Prix journée</span>
+                        <span className="detail-value">{station.prix_journee}€</span>
+                      </div>
+                    </div>
+                    
+                    <div className="station-season">
+                      <span className="season-label">Saison :</span>
+                      <span className="season-value">
+                        {station.ouverture ? new Date(station.ouverture).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }) : 'N/A'} - 
+                        {station.fermeture ? new Date(station.fermeture).toLocaleDateString('fr-FR', { month: 'short', day: 'numeric' }) : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    {station.site_web && (
+                      <a 
+                        href={station.site_web} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="station-website"
+                      >
+                        Visiter le site web →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   const renderTemoignages = () => (
     <div className="temoignages-section">
@@ -423,7 +442,7 @@ const Ski = () => {
                       )}
                     </div>
                     <div className="temoignage-rating">
-                      {'⭐'.repeat(temoignage.note)}
+                      {'⭐'.repeat(temoignage.note || 0)}
                     </div>
                   </div>
                   
@@ -431,10 +450,10 @@ const Ski = () => {
                   
                   <div className="temoignage-footer">
                     {temoignage.station_nom && (
-                      <span className="station-name">📍 {temoignage.station_nom}</span>
+                      <span className="station-name">{temoignage.station_nom}</span>
                     )}
                     <span className="temoignage-date">
-                      {new Date(temoignage.created_at).toLocaleDateString('fr-FR')}
+                      {temoignage.created_at ? new Date(temoignage.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
                     </span>
                   </div>
                 </div>
@@ -446,27 +465,66 @@ const Ski = () => {
     </div>
   );
 
-  const renderOffres = () => (
-    <div className="offres-section">
-      <div className="section-header">
-        <h2 className="section-title">Offres Spéciales</h2>
-        <p className="section-description">
-          Profitez de promotions exclusives pour votre prochain séjour à la neige
-        </p>
-      </div>
+  const renderOffres = () => {
+    // Vérifier si les offres sont chargées
+    if (loading) {
+      return (
+        <div className="offres-section">
+          <div className="section-header">
+            <h2 className="section-title">Offres Spéciales</h2>
+            <p className="section-description">
+              Profitez de promotions exclusives pour votre prochain séjour à la neige
+            </p>
+          </div>
+          <div className="loading">Chargement des offres...</div>
+        </div>
+      );
+    }
 
-      {loading ? (
-        <div className="loading">Chargement des offres...</div>
-      ) : offres.length === 0 ? (
-        <div className="no-data">Aucune offre disponible pour le moment</div>
-      ) : (
+    if (offres.length === 0) {
+      return (
+        <div className="offres-section">
+          <div className="section-header">
+            <h2 className="section-title">Offres Spéciales</h2>
+            <p className="section-description">
+              Profitez de promotions exclusives pour votre prochain séjour à la neige
+            </p>
+          </div>
+          <div className="no-data">Chargement des offres depuis la base de données...</div>
+          <div className="debug-info">
+            <p>Vérifiez que :</p>
+            <ol>
+              <li>La table "offres_ski" existe dans la base de données</li>
+              <li>Le serveur Node.js est démarré sur le port 5000</li>
+              <li>Les données d'exemple ont été insérées</li>
+            </ol>
+            <button 
+              onClick={() => window.location.reload()}
+              className="refresh-button"
+            >
+              Rafraîchir la page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="offres-section">
+        <div className="section-header">
+          <h2 className="section-title">Offres Spéciales</h2>
+          <p className="section-description">
+            Profitez de promotions exclusives pour votre prochain séjour à la neige
+          </p>
+        </div>
+
         <div className="offres-grid">
           {offres.map(offre => (
             <div key={offre.id} className="offre-card">
               <div className="offre-image">
                 <img 
-                  src={offre.station_photo} 
-                  alt={offre.station_nom}
+                  src={offre.station_photo || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop'} 
+                  alt={offre.station_nom || offre.titre}
                   onError={(e) => {
                     e.target.src = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop';
                   }}
@@ -520,9 +578,9 @@ const Ski = () => {
             </div>
           ))}
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   return (
     <div className="ski-page">
@@ -541,28 +599,24 @@ const Ski = () => {
           className={`ski-tab ${activeTab === 'disciplines' ? 'active' : ''}`}
           onClick={() => setActiveTab('disciplines')}
         >
-          <span className="tab-icon"></span>
           <span className="tab-text">Disciplines</span>
         </button>
         <button 
           className={`ski-tab ${activeTab === 'stations' ? 'active' : ''}`}
           onClick={() => setActiveTab('stations')}
         >
-          <span className="tab-icon"></span>
           <span className="tab-text">Stations</span>
         </button>
         <button 
           className={`ski-tab ${activeTab === 'temoignages' ? 'active' : ''}`}
           onClick={() => setActiveTab('temoignages')}
         >
-          <span className="tab-icon"></span>
           <span className="tab-text">Témoignages</span>
         </button>
         <button 
           className={`ski-tab ${activeTab === 'offres' ? 'active' : ''}`}
           onClick={() => setActiveTab('offres')}
         >
-          <span className="tab-icon"></span>
           <span className="tab-text">Offres</span>
         </button>
       </div>
@@ -573,19 +627,6 @@ const Ski = () => {
         {activeTab === 'stations' && renderStations()}
         {activeTab === 'temoignages' && renderTemoignages()}
         {activeTab === 'offres' && renderOffres()}
-      </div>
-
-      {/* Safety Notice */}
-      <div className="safety-notice">
-        <div className="notice-icon">⚠️</div>
-        <div className="notice-content">
-          <h4>Sécurité au ski</h4>
-          <p>
-            Consultez toujours les conditions météo et l'état des pistes avant de partir. 
-            Portez un casque, respectez les autres skieurs, et ne skiez jamais hors-piste sans 
-            équipement de sécurité et accompagnement professionnel.
-          </p>
-        </div>
       </div>
     </div>
   );
