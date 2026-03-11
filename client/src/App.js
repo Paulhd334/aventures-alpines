@@ -15,7 +15,8 @@ import ProfilePublic from './pages/ProfilePublic';
 import Itineraires from './pages/Itineraires';
 import Randonnee from './pages/Randonnee';
 import Escalade from './pages/Escalade';
-import Ski from './pages/Ski'; // ← AJOUT ICI
+import Ski from './pages/Ski';
+import VideosPage from './pages/Videos'; // ← CORRECTION ICI
 
 function App() {
   return (
@@ -35,13 +36,15 @@ function App() {
             {/* Pages d'activités */}
             <Route path="/randonnee" element={<Randonnee />} />
             <Route path="/escalade" element={<Escalade />} />
-            <Route path="/ski" element={<Ski />} /> {/* ← AJOUT ICI */}
+            <Route path="/ski" element={<Ski />} />
             <Route path="/itineraires" element={<Itineraires />} />
             
             {/* Articles et publications */}
             <Route path="/blog/new" element={<CreatePublication />} />
             <Route path="/blog" element={<Articles />} />
             <Route path="/articles" element={<Articles />} />
+
+            <Route path="/videos" element={<VideosPage />} /> {/* ← Chemin en minuscule */}
             
             {/* Route 404 */}
             <Route path="*" element={<Home />} />

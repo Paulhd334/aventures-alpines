@@ -1,9 +1,9 @@
+// src/pages/Escalade.js
 import React, { useState } from 'react';
 
 const Escalade = () => {
   const [activeTab, setActiveTab] = useState('intro');
-
-  // Sites d'escalade classés par difficulté
+  
   const climbingSites = [
     {
       niveau: "Débutant",
@@ -101,27 +101,33 @@ const Escalade = () => {
     }
   ];
 
-  // Vidéos de démonstration
+  // Données vidéos - AJOUTÉES
   const videos = [
     {
       id: 1,
-      title: "Techniques de base en bloc",
-      description: "Apprendre les placements et l'équilibre",
-      duration: "4:30",
+      title: "Les bases de l'escalade en falaise",
+      description: "Apprenez les techniques fondamentales pour débuter en extérieur en toute sécurité.",
+      thumbnail: "https://media.istockphoto.com/id/518208206/fr/photo/extr%C3%AAme-lescalade-hivernale.jpg?s=612x612&w=0&k=20&c=DtYPm-XkeYnw5VZ7x9n__y-2V5tuiAXyP_Fw2eIF3IU=",
+      embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      duration: "8:42",
       level: "Débutant"
     },
     {
       id: 2,
-      title: "Assurage et sécurité",
-      description: "Les bonnes pratiques pour grimper en sécurité",
-      duration: "6:15",
+      title: "Techniques avancées de bloc",
+      description: "Découvrez les mouvements techniques et la lecture de passage en bloc.",
+      thumbnail: "https://blog.ekosport.fr/wp-content/uploads/2020/05/camp_escalade-ortovox.jpg",
+      embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      duration: "15:23",
       level: "Intermédiaire"
     },
     {
       id: 3,
-      title: "Grande voie en multi-longueurs",
-      description: "Ascension complète avec bivouac",
-      duration: "12:45",
+      title: "Grandes voies en montagne",
+      description: "Préparation et ascension d'une grande voie alpine classique.",
+      thumbnail: "https://www.grimper.com/media/publi%20communique/MG_2949_CLIMBING_SS21_Halleranger_MaxDraeger_MidRes.jpeg",
+      embedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      duration: "22:18",
       level: "Expert"
     }
   ];
@@ -172,11 +178,11 @@ const Escalade = () => {
               padding: '1.5rem 2rem',
               background: 'none',
               border: 'none',
-              borderBottom: '2px solid transparent',
+              borderBottom: activeTab === tab ? '2px solid #000' : '2px solid transparent',
               fontSize: '0.9rem',
               textTransform: 'uppercase',
               letterSpacing: '0.1em',
-              color: '#666',
+              color: activeTab === tab ? '#000' : '#666',
               cursor: 'pointer',
               transition: 'all 0.2s'
             }}
@@ -208,7 +214,7 @@ const Escalade = () => {
             {/* Alerte sécurité */}
             <div style={{
               background: '#f8f8f8',
-              borderLeft: '1px solid #ccc',
+              borderLeft: '4px solid #000',
               padding: '2rem',
               marginBottom: '3rem'
             }}>
@@ -225,23 +231,23 @@ const Escalade = () => {
                 color: '#555'
               }}>
                 <li style={{ marginBottom: '0.8rem', paddingLeft: '1.2rem', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '0', color: '#999' }}>•</span>
+                  <span style={{ position: 'absolute', left: '0', color: '#000' }}>•</span>
                   Toujours grimper avec un partenaire
                 </li>
                 <li style={{ marginBottom: '0.8rem', paddingLeft: '1.2rem', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '0', color: '#999' }}>•</span>
+                  <span style={{ position: 'absolute', left: '0', color: '#000' }}>•</span>
                   Vérifier son matériel systématiquement
                 </li>
                 <li style={{ marginBottom: '0.8rem', paddingLeft: '1.2rem', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '0', color: '#999' }}>•</span>
+                  <span style={{ position: 'absolute', left: '0', color: '#000' }}>•</span>
                   Consulter les prévisions météo
                 </li>
                 <li style={{ marginBottom: '0.8rem', paddingLeft: '1.2rem', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '0', color: '#999' }}>•</span>
+                  <span style={{ position: 'absolute', left: '0', color: '#000' }}>•</span>
                   Avoir un plan B en cas de changement de conditions
                 </li>
                 <li style={{ paddingLeft: '1.2rem', position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: '0', color: '#999' }}>•</span>
+                  <span style={{ position: 'absolute', left: '0', color: '#000' }}>•</span>
                   Connaître et respecter ses limites
                 </li>
               </ul>
@@ -288,7 +294,7 @@ const Escalade = () => {
                         lineHeight: '1.5',
                         fontSize: '0.95rem'
                       }}>
-                        <span style={{ position: 'absolute', left: '0', color: '#999' }}>•</span>
+                        <span style={{ position: 'absolute', left: '0', color: '#000' }}>•</span>
                         {tip}
                       </li>
                     ))}
@@ -447,7 +453,7 @@ const Escalade = () => {
           </div>
         )}
 
-        {/* Vidéos */}
+        {/* Vidéos - Section dédiée */}
         {activeTab === 'videos' && (
           <div>
             <h2 style={{ 
@@ -458,7 +464,7 @@ const Escalade = () => {
               paddingBottom: '1rem',
               borderBottom: '1px solid #eee'
             }}>
-              Vidéos techniques et démonstrations
+              Vidéos de grimpeurs expérimentés
             </h2>
             
             <p style={{ 
@@ -467,109 +473,192 @@ const Escalade = () => {
               color: '#666',
               fontSize: '1rem'
             }}>
-              Apprenez des meilleurs grimpeurs grâce à ces démonstrations techniques.
-              De la base aux manœuvres avancées, progressez en toute sécurité.
+              Découvrez des grimpeurs expérimentés en action. Techniques avancées, sécurité, et ascensions spectaculaires.
             </p>
             
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))',
               gap: '2rem',
               marginBottom: '3rem'
             }}>
               {videos.map((video) => (
-                <div key={video.id} className="info-card" style={{
+                <div key={video.id} className="video-card" style={{
                   background: '#fff',
                   border: '1px solid #eee',
-                  padding: '2rem',
-                  transition: 'transform 0.2s, box-shadow 0.2s'
+                  overflow: 'hidden',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%'
                 }}>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <div style={{ 
-                      display: 'inline-block',
-                      padding: '0.4rem 0.8rem',
-                      border: '1px solid #ddd',
-                      fontSize: '0.75rem',
-                      fontWeight: '400',
-                      color: '#666',
-                      letterSpacing: '0.05em'
+                  {/* Miniature */}
+                  <div style={{
+                    position: 'relative',
+                    paddingBottom: '56.25%', // 16:9
+                    height: 0,
+                    overflow: 'hidden',
+                    background: '#f8f8f8'
+                  }}>
+                    <img 
+                      src={video.thumbnail} 
+                      alt={video.title}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '60px',
+                      height: '60px',
+                      background: 'rgba(0, 0, 0, 0.7)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer'
                     }}>
-                      {video.level}
+                      <span style={{ color: '#fff', fontSize: '1.5rem' }}>▶</span>
+                    </div>
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '10px',
+                      right: '10px',
+                      background: 'rgba(0, 0, 0, 0.8)',
+                      color: '#fff',
+                      padding: '2px 8px',
+                      fontSize: '0.75rem',
+                      borderRadius: '2px'
+                    }}>
+                      {video.duration}
                     </div>
                   </div>
                   
-                  <h3 style={{ 
-                    fontSize: '1.3rem', 
-                    fontWeight: '400', 
-                    marginBottom: '1rem',
-                    color: '#222'
-                  }}>
-                    {video.title}
-                  </h3>
-                  
-                  <p style={{ 
-                    marginBottom: '1.5rem', 
-                    lineHeight: '1.6',
-                    color: '#555',
-                    fontSize: '0.95rem'
-                  }}>
-                    {video.description}
-                  </p>
-                  
+                  {/* Contenu */}
                   <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    color: '#666',
-                    fontSize: '0.85rem',
-                    borderTop: '1px solid #eee',
-                    paddingTop: '1rem'
+                    padding: '1.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    flex: 1
                   }}>
-                    <span>Durée: {video.duration}</span>
-                    <span>Technique</span>
+                    <div style={{ marginBottom: '0.5rem' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '2px 8px',
+                        background: '#f0f0f0',
+                        fontSize: '0.75rem',
+                        color: '#666',
+                        borderRadius: '2px'
+                      }}>
+                        {video.level}
+                      </span>
+                    </div>
+                    
+                    <h3 style={{ 
+                      fontSize: '1.25rem', 
+                      fontWeight: '400', 
+                      marginBottom: '0.75rem',
+                      color: '#222'
+                    }}>
+                      {video.title}
+                    </h3>
+                    
+                    <p style={{ 
+                      marginBottom: '1.5rem', 
+                      lineHeight: '1.6',
+                      color: '#555',
+                      fontSize: '0.95rem',
+                      flex: 1
+                    }}>
+                      {video.description}
+                    </p>
+                    
+                    {/* Bouton Regarder la vidéo */}
+                    <button
+                      onClick={() => {
+                        window.open(video.embedUrl, '_blank');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.85rem',
+                        background: '#000',
+                        color: '#fff',
+                        border: '1px solid #000',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        fontWeight: '400',
+                        marginTop: 'auto'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = '#333';
+                        e.target.style.borderColor = '#333';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = '#000';
+                        e.target.style.borderColor = '#000';
+                      }}
+                    >
+                      Regarder la vidéo
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
             
+            {/* Lien vers la page vidéos complète */}
             <div style={{ 
-              background: '#fafafa', 
-              border: '1px solid #eee',
+              textAlign: 'center',
               padding: '2rem',
+              background: '#f8f8f8',
+              border: '1px solid #eee',
               marginTop: '2rem'
             }}>
-              <h3 style={{ 
-                marginBottom: '1.5rem', 
-                fontWeight: '400',
-                color: '#333'
+              <p style={{ 
+                marginBottom: '1rem', 
+                lineHeight: '1.6',
+                color: '#666'
               }}>
-                Playlist recommandée
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {[
-                  "Sécurité en grande voie",
-                  "Techniques de repos",
-                  "Gestion du mental",
-                  "Récupération et blessures"
-                ].map((playlist, idx) => (
-                  <div key={idx} style={{
-                    padding: '1rem',
-                    borderBottom: '1px solid #eee'
-                  }}>
-                    <div style={{ fontWeight: '400', marginBottom: '0.3rem', color: '#333' }}>
-                      {playlist}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                      5 vidéos
-                    </div>
-                  </div>
-                ))}
-              </div>
+                Découvrez plus de 50 vidéos sur toutes les disciplines de l'escalade.
+              </p>
+              <a 
+                href="/videos"
+                style={{
+                  display: 'inline-block',
+                  padding: '0.85rem 2rem',
+                  background: '#000',
+                  color: '#fff',
+                  border: '1px solid #000',
+                  fontSize: '0.9rem',
+                  fontWeight: '400',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#333';
+                  e.target.style.borderColor = '#333';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#000';
+                  e.target.style.borderColor = '#000';
+                }}
+              >
+                Voir toutes les vidéos
+              </a>
             </div>
           </div>
         )}
       </div>
-
-      
     </div>
   );
 };
