@@ -5,7 +5,8 @@ import axios from 'axios';
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [publications, setPublications] = useState([]);
-  const [reservations, setReservations] = useState([]);
+  const [reservationsSki, setReservationsSki] = useState([]);
+  const [reservationsActivites, setReservationsActivites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingReservations, setLoadingReservations] = useState(false);
   const [activeTab, setActiveTab] = useState('infos');
@@ -40,7 +41,7 @@ const Profile = () => {
     }
   };
 
-  // FONCTION CORRIGÉE - Charge UNIQUEMENT les articles de l'utilisateur connecté
+  // Charge UNIQUEMENT les articles de l'utilisateur connecté
   const loadUserPublications = useCallback(async () => {
     const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.id) {
@@ -51,48 +52,29 @@ const Profile = () => {
     console.log('🔍 Chargement des articles pour utilisateur ID:', currentUser.id);
     
     try {
-      // Essayer d'abord la route spécifique à l'utilisateur
+      // Utiliser la route spécifique à l'utilisateur
       const response = await axios.get(`${API_BASE_URL}/api/articles/utilisateur/${currentUser.id}`);
       
       if (Array.isArray(response.data)) {
-        console.log(`✅ ${response.data.length} articles trouvés pour l'utilisateur ${currentUser.id}`);
+        console.log(`✅ ${response.data.length} articles trouvés`);
         setPublications(response.data);
       } else {
         setPublications([]);
       }
     } catch (err) {
-      console.log('⚠️ API spécifique non disponible, utilisation du filtre côté client');
-      
-      // Fallback: récupérer tous les articles et filtrer
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/articles`);
-        if (Array.isArray(response.data)) {
-          const userPubs = response.data.filter(pub => {
-            if (pub.auteur_id === currentUser.id) return true;
-            if (pub.userId === currentUser.id) return true;
-            if (pub.auteur?.id === currentUser.id) return true;
-            
-            const pubUsername = pub.auteur?.nom_utilisateur || pub.auteur?.username || pub.username;
-            return pubUsername === currentUser.nom_utilisateur;
-          });
-          
-          console.log(`✅ ${userPubs.length} articles filtrés pour l'utilisateur ${currentUser.nom_utilisateur}`);
-          setPublications(userPubs);
-        }
-      } catch (error) {
-        console.error('❌ Erreur chargement articles:', error.message);
-        setPublications([]);
-      }
+      console.error('❌ Erreur chargement articles:', err.message);
+      setPublications([]);
     }
   }, []);
 
-  // ✅ FONCTION CORRIGÉE - Charge TOUTES les réservations (activités + ski)
+  // Charge TOUTES les réservations et les sépare par type
   const loadReservations = useCallback(async (showLoading = false) => {
     const currentUser = getCurrentUser();
     
     if (!currentUser || !currentUser.id) {
       console.error('❌ Impossible de charger les réservations: utilisateur non connecté');
-      setReservations([]);
+      setReservationsSki([]);
+      setReservationsActivites([]);
       return;
     }
 
@@ -102,19 +84,34 @@ const Profile = () => {
     if (showLoading) setLoadingReservations(true);
     
     try {
-      // ✅ Utiliser la route unifiée qui retourne TOUTES les réservations
+      // Route unifiée qui retourne TOUTES les réservations
       const response = await axios.get(`${API_BASE_URL}/api/reservations/user/${userId}`);
       console.log('📊 Réservations reçues:', response.data);
       
       if (Array.isArray(response.data)) {
-        setReservations(response.data);
-        console.log(`✅ ${response.data.length} réservations chargées (activités + ski)`);
+        // Séparer les réservations par type
+        const ski = response.data.filter(res => res.type === 'ski');
+        const activites = response.data.filter(res => res.type === 'activite');
+        
+        setReservationsSki(ski);
+        setReservationsActivites(activites);
+        
+        console.log(`✅ ${ski.length} réservations ski, ${activites.length} activités trouvées`);
       } else {
-        setReservations([]);
+        setReservationsSki([]);
+        setReservationsActivites([]);
       }
     } catch (err) {
       console.error('❌ Erreur chargement réservations:', err.message);
-      setReservations([]);
+      
+      // Afficher plus de détails sur l'erreur
+      if (err.response) {
+        console.error('📦 Réponse erreur:', err.response.data);
+        console.error('🔢 Status:', err.response.status);
+      }
+      
+      setReservationsSki([]);
+      setReservationsActivites([]);
     } finally {
       if (showLoading) setLoadingReservations(false);
     }
@@ -195,7 +192,7 @@ const Profile = () => {
       // Charger les publications
       loadUserPublications();
 
-      // ✅ Charger TOUTES les réservations (activités + ski)
+      // Charger TOUTES les réservations
       loadReservations(false);
 
     } catch (error) {
@@ -234,7 +231,9 @@ const Profile = () => {
 
       if (response.data.success) {
         alert('✅ Réservation annulée avec succès');
-        setReservations(prev => prev.filter(r => r.id !== reservationId));
+        // Mettre à jour les deux listes
+        setReservationsSki(prev => prev.filter(r => r.id !== reservationId));
+        setReservationsActivites(prev => prev.filter(r => r.id !== reservationId));
         setLastUpdate(Date.now());
       }
     } catch (error) {
@@ -360,6 +359,8 @@ const Profile = () => {
     );
   }
 
+  const totalReservations = reservationsSki.length + reservationsActivites.length;
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem', minHeight: 'calc(100vh - 200px)' }}>
       {/* En-tête */}
@@ -375,7 +376,7 @@ const Profile = () => {
             Membre depuis {formatDate(user.date_inscription)}
           </p>
           <p style={{ color: '#666', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-            ID: {user.id} • {reservations.length} réservation{reservations.length !== 1 ? 's' : ''} • {publications.length} publication{publications.length !== 1 ? 's' : ''}
+            ID: {user.id} • {totalReservations} réservation{totalReservations !== 1 ? 's' : ''} • {publications.length} publication{publications.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
@@ -410,19 +411,35 @@ const Profile = () => {
         </button>
         <button 
           onClick={() => {
-            setActiveTab('reservations');
+            setActiveTab('ski');
             loadReservations(true);
           }} 
           style={{ 
             border: 'none', 
             background: 'none', 
-            borderBottom: activeTab === 'reservations' ? '2px solid #000' : '2px solid transparent', 
+            borderBottom: activeTab === 'ski' ? '2px solid #000' : '2px solid transparent', 
             cursor: 'pointer', 
-            fontWeight: activeTab === 'reservations' ? 600 : 400, 
+            fontWeight: activeTab === 'ski' ? 600 : 400, 
             padding: '0.5rem 0' 
           }}
         >
-          Mes réservations ({reservations.length})
+          Séjours ski ({reservationsSki.length})
+        </button>
+        <button 
+          onClick={() => {
+            setActiveTab('activites');
+            loadReservations(true);
+          }} 
+          style={{ 
+            border: 'none', 
+            background: 'none', 
+            borderBottom: activeTab === 'activites' ? '2px solid #000' : '2px solid transparent', 
+            cursor: 'pointer', 
+            fontWeight: activeTab === 'activites' ? 600 : 400, 
+            padding: '0.5rem 0' 
+          }}
+        >
+          Activités de montagne ({reservationsActivites.length})
         </button>
       </div>
 
@@ -662,36 +679,32 @@ const Profile = () => {
           </div>
         )}
 
-        {activeTab === 'reservations' && (
+        {/* Onglet SÉJOURS SKI */}
+        {activeTab === 'ski' && (
           <div>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
-              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes réservations</h2>
-              <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 1.5rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer' }}>
-                ➕ Nouvelle réservation
+              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes séjours au ski</h2>
+              <button onClick={() => navigate('/ski')} style={{ padding:'0.75rem 1.5rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer' }}>
+                ➕ Réserver un séjour ski
               </button>
             </div>
             
             {loadingReservations ? (
               <div style={{ textAlign:'center', padding:'3rem' }}>
                 <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '3px solid #e5e5e5', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                <p style={{ marginTop: '1rem', color: '#666' }}>Chargement de vos réservations...</p>
+                <p style={{ marginTop: '1rem', color: '#666' }}>Chargement de vos séjours...</p>
               </div>
-            ) : reservations.length === 0 ? (
+            ) : reservationsSki.length === 0 ? (
               <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
-                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé</p>
-                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos activités et offres de ski !</p>
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                  <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
-                    Activités
-                  </button>
-                  <button onClick={() => navigate('/ski')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
-                    Offres de ski
-                  </button>
-                </div>
+                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé de séjour au ski</p>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos offres de ski !</p>
+                <button onClick={() => navigate('/ski')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
+                  Voir les offres de ski
+                </button>
               </div>
             ) : (
               <div style={{ display:'grid', gap:'1.5rem' }}>
-                {reservations.map(res => (
+                {reservationsSki.map(res => (
                   <div key={res.id} style={{ padding:'1.5rem', border:'1px solid #e0e0e0', borderRadius:'8px', backgroundColor:'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
@@ -704,10 +717,7 @@ const Profile = () => {
                           flexShrink: 0
                         }}>
                           <img 
-                            src={res.image_url || (res.type === 'ski' 
-                              ? 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&auto=format&fit=crop'
-                              : 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop'
-                            )} 
+                            src={res.image_url || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200&auto=format&fit=crop'} 
                             alt={res.activite_nom}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                             onError={(e) => {
@@ -719,17 +729,15 @@ const Profile = () => {
                         {/* Détails */}
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                            {res.type === 'ski' && (
-                              <span style={{ 
-                                padding: '0.25rem 0.5rem', 
-                                background: '#e5e5e5', 
-                                borderRadius: '4px', 
-                                fontSize: '0.7rem',
-                                fontWeight: '600'
-                              }}>
-                                SKI
-                              </span>
-                            )}
+                            <span style={{ 
+                              padding: '0.25rem 0.5rem', 
+                              background: '#e5e5e5', 
+                              borderRadius: '4px', 
+                              fontSize: '0.7rem',
+                              fontWeight: '600'
+                            }}>
+                              SKI
+                            </span>
                             <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
                               {res.activite_nom}
                             </h3>
@@ -743,15 +751,20 @@ const Profile = () => {
                               <span style={{ fontWeight: '500' }}>Personnes:</span> {res.nb_personnes || 1}
                             </div>
                             <div>
-                              <span style={{ fontWeight: '500' }}>Lieu:</span> {res.lieu || 'Non spécifié'}
+                              <span style={{ fontWeight: '500' }}>Lieu:</span> {res.lieu || 'Station de ski'}
                             </div>
                             <div>
-                              <span style={{ fontWeight: '500' }}>Type:</span> {res.activite_type || res.type || 'Activité'}
+                              <span style={{ fontWeight: '500' }}>Type:</span> {res.activite_type || 'forfait'}
                             </div>
+                            {res.prix && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Prix:</span> {res.prix}€
+                              </div>
+                            )}
                           </div>
 
-                          {/* Détails supplémentaires pour le ski */}
-                          {res.type === 'ski' && res.details && (
+                          {/* Détails supplémentaires */}
+                          {res.details && (
                             <div style={{ 
                               marginTop: '1rem', 
                               padding: '0.75rem', 
@@ -761,8 +774,8 @@ const Profile = () => {
                             }}>
                               <div style={{ fontWeight: '500', marginBottom: '0.5rem' }}>Détails du séjour :</div>
                               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                                {res.details.dateFin && (
-                                  <span>📅 Départ: {formatShortDate(res.details.dateFin)}</span>
+                                {res.date_fin && (
+                                  <span>📅 Départ: {formatShortDate(res.date_fin)}</span>
                                 )}
                                 {res.details.prixTotal && (
                                   <span>💰 Total: {res.details.prixTotal}€</span>
@@ -785,6 +798,138 @@ const Profile = () => {
                                   )
                                 )}
                               </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <span style={{ 
+                        padding: '0.25rem 0.75rem', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: '500', 
+                        backgroundColor: '#d1fae5', 
+                        color: '#065f46' 
+                      }}>
+                        {res.statut || 'Confirmée'}
+                      </span>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f0f0f0' }}>
+                      <button
+                        onClick={() => cancelReservation(res.id)}
+                        style={{
+                          padding: '0.5rem 1rem',
+                          border: '1px solid #ef4444',
+                          color: '#ef4444',
+                          backgroundColor: 'transparent',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Onglet ACTIVITÉS DE MONTAGNE */}
+        {activeTab === 'activites' && (
+          <div>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'1.5rem' }}>
+              <h2 style={{ fontSize:'1.5rem', fontWeight:'600' }}>Mes activités de montagne</h2>
+              <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 1.5rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer' }}>
+                ➕ Réserver une activité
+              </button>
+            </div>
+            
+            {loadingReservations ? (
+              <div style={{ textAlign:'center', padding:'3rem' }}>
+                <div style={{ display: 'inline-block', width: '40px', height: '40px', border: '3px solid #e5e5e5', borderTopColor: '#000', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                <p style={{ marginTop: '1rem', color: '#666' }}>Chargement de vos activités...</p>
+              </div>
+            ) : reservationsActivites.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'3rem', backgroundColor:'#f9f9f9', borderRadius:'8px' }}>
+                <p style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Vous n'avez pas encore réservé d'activité</p>
+                <p style={{ color: '#666', marginBottom: '2rem' }}>Découvrez nos activités de montagne !</p>
+                <button onClick={() => navigate('/activities')} style={{ padding:'0.75rem 2rem', backgroundColor:'#000', color:'white', border:'none', borderRadius:'6px', cursor:'pointer', fontSize: '1rem' }}>
+                  Voir les activités
+                </button>
+              </div>
+            ) : (
+              <div style={{ display:'grid', gap:'1.5rem' }}>
+                {reservationsActivites.map(res => (
+                  <div key={res.id} style={{ padding:'1.5rem', border:'1px solid #e0e0e0', borderRadius:'8px', backgroundColor:'white' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '1rem', flex: 1 }}>
+                        {/* Image */}
+                        <div style={{ 
+                          width: '80px', 
+                          height: '80px', 
+                          borderRadius: '8px', 
+                          overflow: 'hidden',
+                          flexShrink: 0
+                        }}>
+                          <img 
+                            src={res.image_url || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop'} 
+                            alt={res.activite_nom}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200&auto=format&fit=crop';
+                            }}
+                          />
+                        </div>
+                        
+                        {/* Détails */}
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <span style={{ 
+                              padding: '0.25rem 0.5rem', 
+                              background: '#e5e5e5', 
+                              borderRadius: '4px', 
+                              fontSize: '0.7rem',
+                              fontWeight: '600'
+                            }}>
+                              {res.activite_type?.toUpperCase() || 'ACTIVITÉ'}
+                            </span>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '600' }}>
+                              {res.activite_nom}
+                            </h3>
+                          </div>
+                          
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Date:</span> {formatShortDate(res.date_reservation)}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Personnes:</span> {res.nb_personnes || 1}
+                            </div>
+                            <div>
+                              <span style={{ fontWeight: '500' }}>Lieu:</span> {res.lieu || 'Non spécifié'}
+                            </div>
+                            {res.difficulte && (
+                              <div>
+                                <span style={{ fontWeight: '500' }}>Difficulté:</span> {res.difficulte}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Notes supplémentaires */}
+                          {res.notes && typeof res.notes === 'string' && (
+                            <div style={{ 
+                              marginTop: '0.75rem', 
+                              padding: '0.5rem', 
+                              background: '#f9f9f9', 
+                              borderRadius: '4px',
+                              fontSize: '0.875rem',
+                              color: '#666'
+                            }}>
+                              <span style={{ fontWeight: '500' }}>Notes:</span> {res.notes}
                             </div>
                           )}
                         </div>
