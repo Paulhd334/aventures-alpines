@@ -4143,14 +4143,62 @@ textarea.form-control {
 
 
 
-
-.home-hero-actions {
-  display: flex;
+/* Bouton "Voir toutes les activités" centré */
+.home-view-all-btn {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  padding: 1rem 3rem;
+  border: 1px solid var(--ink);
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: all var(--transition-smooth);
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
 }
 
-.home-hero-actions a {
-  position: relative;
-  left: 50%;
-  transform: translateX(-50%);
+.home-view-all-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 0, 0, 0.05), 
+    transparent);
+  transition: left var(--transition-slow);
+}
+
+.home-view-all-btn:hover::before {
+  left: 100%;
+}
+
+.home-view-all-btn:hover {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+  transform: translateY(-2px);
+}
+
+/* Conteneur centré */
+.view-all-container {
+  text-align: center;
+  margin-top: 3rem;
+  width: 100%;
+}
+
+/* Ou si vous voulez corriger la classe btn-secondary existante */
+.view-all-container .btn-secondary {
+  display: inline-block;
+  margin: 0 auto;
+  text-align: center;
 }
