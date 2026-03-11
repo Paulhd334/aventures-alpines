@@ -1163,6 +1163,256 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
+
+
+
+
+// ============================================
+// ROUTES POUR ESCALADE - SITES
+// ============================================
+app.get('/api/escalade/temoignages', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [rows] = await connection.execute(`
+      SELECT * FROM temoignages_escalade
+      WHERE approuve = 1
+      ORDER BY created_at DESC
+      LIMIT 20
+    `);
+    console.log(`✅ ${rows.length} témoignages escalade chargés`);
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Erreur témoignages escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+app.post('/api/escalade/temoignages', async (req, res) => {
+  const { nom, email, type_escalade, message, note } = req.body;
+
+  if (!nom || !message) {
+    return res.status(400).json({ error: 'Nom et message requis' });
+  }
+
+  let connection;
+  try {
+    connection = await getConnection();
+    const [result] = await connection.execute(
+      `INSERT INTO temoignages_escalade 
+       (nom, email, type_escalade, message, note, approuve) 
+       VALUES (?, ?, ?, ?, ?, 1)`,
+      [nom, email || null, type_escalade || null, message, note || 5]
+    );
+    console.log(`✅ Témoignage escalade créé ID: ${result.insertId}`);
+    res.status(201).json({ 
+      message: 'Témoignage envoyé avec succès', 
+      id: result.insertId 
+    });
+  } catch (error) {
+    console.error('❌ Erreur création témoignage escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+// ============================================
+// ROUTES POUR ESCALADE - TÉMOIGNAGES
+// ============================================
+
+
+
+app.post('/api/escalade/temoignages', async (req, res) => {
+  const { nom, email, type_escalade, site_id, message, note } = req.body;
+
+  if (!nom || !message) {
+    return res.status(400).json({ error: 'Nom et message requis' });
+  }
+
+  let connection;
+  try {
+    connection = await getConnection();
+    const [result] = await connection.execute(
+      `INSERT INTO temoignages_escalade 
+       (nom, email, type_escalade, site_id, message, note, approuve) 
+       VALUES (?, ?, ?, ?, ?, ?, 1)`,
+      [nom, email || null, type_escalade || null, site_id || null, message, note || 5]
+    );
+    console.log(`✅ Témoignage escalade créé ID: ${result.insertId}`);
+    res.status(201).json({ message: 'Témoignage envoyé avec succès', id: result.insertId });
+  } catch (error) {
+    console.error('❌ Erreur création témoignage escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// ============================================
+// ROUTES POUR ESCALADE - TÉMOIGNAGES
+// ============================================
+
+// GET - Tous les témoignages escalade
+app.get('/api/escalade/temoignages', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+
+    // Crée la table automatiquement si elle n'existe pas
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS temoignages_escalade (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nom VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        type_escalade VARCHAR(100),
+        site_id INT DEFAULT NULL,
+        message TEXT NOT NULL,
+        note INT DEFAULT 5,
+        approuve TINYINT(1) DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const [rows] = await connection.execute(`
+      SELECT t.*, s.nom as site_nom
+      FROM temoignages_escalade t
+      LEFT JOIN sites_escalade s ON t.site_id = s.id
+      WHERE t.approuve = 1
+      ORDER BY t.created_at DESC
+      LIMIT 20
+    `);
+
+    console.log(`✅ ${rows.length} témoignages escalade chargés`);
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Erreur témoignages escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// POST - Ajouter un témoignage escalade
+app.post('/api/escalade/temoignages', async (req, res) => {
+  const { nom, email, type_escalade, site_id, message, note } = req.body;
+
+  if (!nom || !message) {
+    return res.status(400).json({ error: 'Nom et message requis' });
+  }
+
+  let connection;
+  try {
+    connection = await getConnection();
+
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS temoignages_escalade (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nom VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        type_escalade VARCHAR(100),
+        site_id INT DEFAULT NULL,
+        message TEXT NOT NULL,
+        note INT DEFAULT 5,
+        approuve TINYINT(1) DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const [result] = await connection.execute(
+      'INSERT INTO temoignages_escalade (nom, email, type_escalade, site_id, message, note) VALUES (?, ?, ?, ?, ?, ?)',
+      [nom, email || null, type_escalade || null, site_id || null, message, note || 5]
+    );
+
+    console.log(`✅ Témoignage escalade créé avec ID: ${result.insertId}`);
+    res.status(201).json({
+      message: 'Témoignage envoyé avec succès',
+      id: result.insertId
+    });
+  } catch (error) {
+    console.error('❌ Erreur création témoignage escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET - Tous les sites d'escalade
+app.get('/api/escalade/sites', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    
+    // Vérifier si la table existe
+    const [tables] = await connection.execute("SHOW TABLES LIKE 'sites_escalade'");
+    
+    if (tables.length === 0) {
+      console.log('📝 Création de la table sites_escalade...');
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS sites_escalade (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          nom VARCHAR(255) NOT NULL,
+          lieu VARCHAR(255),
+          region VARCHAR(100),
+          difficulte VARCHAR(50),
+          type_voie VARCHAR(100),
+          hauteur INT,
+          nombre_voies INT,
+          description TEXT,
+          image_url VARCHAR(500),
+          coordonnees VARCHAR(255),
+          acces TEXT,
+          periode_recommandee VARCHAR(255),
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Ajouter des données de test
+      await connection.execute(`
+        INSERT INTO sites_escalade (nom, lieu, region, difficulte, type_voie, hauteur, nombre_voies, description, image_url) VALUES
+        ('Aiguille du Midi', 'Chamonix', 'Haute-Savoie', 'TD', 'Grande voie', 3842, 15, 'Site mythique de haute montagne', 'https://images.unsplash.com/photo-1522163182402-834f871fd851?w=800'),
+        ('Céüse', 'Gap', 'Hautes-Alpes', '7a', 'Falaise', 1200, 350, 'Spot international de grimpe', 'https://images.unsplash.com/photo-1547447134-cd3f5c716030?w=800'),
+        ('Saussois', 'Merry-sur-Yonne', 'Bourgogne', '6b', 'Falaise', 60, 180, 'Falaise calcaire réputée', 'https://images.unsplash.com/photo-1564769662533-4f00a87b4056?w=800'),
+        ('Verdon', 'Castellane', 'Alpes-de-Haute-Provence', '6c', 'Grande voie', 700, 1500, 'Les plus grandes falaises d\'Europe', 'https://images.unsplash.com/photo-1516307365426-bea59173b509?w=800'),
+        ('Fontainebleau', 'Fontainebleau', 'Île-de-France', '6a', 'Bloc', 15, 30000, 'Spot mondial de bloc', 'https://images.unsplash.com/photo-1590114538159-9f8a7e9e9c7a?w=800')
+      `);
+    }
+    
+    const [rows] = await connection.execute('SELECT * FROM sites_escalade ORDER BY region, nom');
+    console.log(`✅ ${rows.length} sites d'escalade chargés`);
+    res.json(rows);
+  } catch (error) {
+    console.error('❌ Erreur chargement sites escalade:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+// GET - Un site d'escalade par ID
+app.get('/api/escalade/sites/:id', async (req, res) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [rows] = await connection.execute(
+      'SELECT * FROM sites_escalade WHERE id = ?',
+      [req.params.id]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Site non trouvé' });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Erreur chargement site:', error.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  } finally {
+    if (connection) await connection.end();
+  }
+});
+
+
 // ============================================
 // MIDDLEWARE DE GESTION D'ERREURS
 // ============================================

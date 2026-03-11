@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : lun. 02 mars 2026 à 10:13
+-- Généré le : sam. 07 mars 2026 à 16:24
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -79,12 +79,9 @@ INSERT INTO `articles` (`id`, `titre`, `contenu`, `auteur_id`, `lieu`, `type`, `
 (1, 'Ascension du Mont Blanc', 'Une expérience incroyable pour gravir le plus haut sommet d’Europe. Prévoir équipement et guide.', 4, 'Mont Blanc', 'récit', '2026-02-18 09:00:00'),
 (2, 'Randonnée autour du Mont Blanc', 'Itinéraire panoramique traversant les vallées et glaciers autour du Mont Blanc.', 8, 'Mont Blanc', 'guide', '2026-02-18 09:30:00'),
 (3, 'Découverte des Alpes du Nord', 'Présentation des plus belles montagnes des Alpes du Nord et conseils pour les randonneurs.', 11, 'Alpes du Nord', 'article', '2026-02-18 10:00:00'),
-(4, 'Escalade aux Drus', 'Voies techniques pour grimpeurs expérimentés dans les Drus. Équipement fourni.', 14, 'Les Drus', 'récit', '2026-02-18 10:30:00'),
 (5, 'Tour du Beaufortain', 'Randonnée dans le massif du Beaufortain, alpages et vues sur le Mont Blanc.', 8, 'Beaufortain', 'guide', '2026-02-18 11:00:00'),
 (6, 'Sommets des Vosges', 'Randonnée facile pour découvrir les sommets des Vosges et profiter de paysages variés.', 4, 'Vosges', 'article', '2026-02-18 11:30:00'),
-(7, 'Raquettes au Col de la Croix', 'Balade hivernale en raquettes avec vue panoramique sur les montagnes.', 11, 'Col de la Croix', 'récit', '2026-02-18 12:00:00'),
-(8, 'test', 'gg', 21, 'ici', 'article', '2026-02-18 16:25:03'),
-(9, 'Paul', 'test', 22, 'test ', 'récit', '2026-02-23 15:00:49');
+(7, 'Raquettes au Col de la Croix', 'Balade hivernale en raquettes avec vue panoramique sur les montagnes.', 11, 'Col de la Croix', 'récit', '2026-02-18 12:00:00');
 
 -- --------------------------------------------------------
 
@@ -285,20 +282,13 @@ CREATE TABLE `reservations` (
   `id` int(11) NOT NULL,
   `membre_id` int(11) NOT NULL,
   `activite_id` int(11) NOT NULL,
+  `type_activite` varchar(50) DEFAULT NULL,
   `date_reservation` datetime NOT NULL,
   `nb_personnes` int(11) DEFAULT '1',
   `notes` text,
   `statut` varchar(50) DEFAULT 'confirmée',
   `date_creation` datetime DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Déchargement des données de la table `reservations`
---
-
-INSERT INTO `reservations` (`id`, `membre_id`, `activite_id`, `date_reservation`, `nb_personnes`, `notes`, `statut`, `date_creation`) VALUES
-(5, 22, 11, '2026-02-27 12:00:00', 1, '{\"offre\":\"Pack Débutant Complet\",\"station\":\"Val Thorens\",\"dateFin\":\"2026-03-06\",\"options\":{\"forfaitSki\":true,\"coursSki\":false,\"locationMateriel\":false,\"typeCours\":\"collectif\",\"niveau\":\"débutant\",\"assurance\":false,\"parking\":false,\"garderie\":false,\"restauration\":false},\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"Paulde\",\"prenom\":\"fef\",\"email\":\"pau@gmail.com\",\"telephone\":\"ze\",\"adresse\":\"fez\",\"cp\":\"feefzef\",\"ville\":\"fz\",\"pays\":\"France\"},\"prixTotal\":1560}', 'confirmée', '2026-02-23 17:29:08'),
-(7, 22, 11, '2026-02-27 12:00:00', 1, '{\"offre\":\"Pack Débutant Complet\",\"station\":\"Val Thorens\",\"dateFin\":\"2026-02-28\",\"options\":{\"forfaitSki\":true,\"coursSki\":false,\"locationMateriel\":false,\"typeCours\":\"collectif\",\"niveau\":\"débutant\",\"assurance\":false,\"parking\":false,\"garderie\":false,\"restauration\":false},\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"Paulde\",\"prenom\":\"kgbh\",\"email\":\"pau@gmail.com\",\"telephone\":\"088890\",\"adresse\":\"GIH\",\"cp\":\"BNJK\",\"ville\":\"HOIU\",\"pays\":\"France\"},\"prixTotal\":390}', 'confirmée', '2026-02-23 17:35:26');
 
 -- --------------------------------------------------------
 
@@ -316,6 +306,31 @@ CREATE TABLE `reservations_ski` (
   `statut` varchar(50) DEFAULT 'confirmée',
   `date_creation` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `sites_escalade`
+--
+
+CREATE TABLE `sites_escalade` (
+  `id` int(11) NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `lieu` varchar(255) DEFAULT NULL,
+  `region` varchar(100) DEFAULT NULL,
+  `difficulte` varchar(50) DEFAULT NULL,
+  `image_url` varchar(500) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `sites_escalade`
+--
+
+INSERT INTO `sites_escalade` (`id`, `nom`, `lieu`, `region`, `difficulte`, `image_url`, `created_at`) VALUES
+(1, 'Aiguille du Midi', 'Chamonix', 'Haute-Savoie', 'TD', 'https://images.pexels.com/photos/2481093/pexels-photo-2481093.jpeg?w=800', '2026-03-07 16:20:04'),
+(2, 'Céüse', 'Gap', 'Hautes-Alpes', '7a', 'https://images.pexels.com/photos/2161447/pexels-photo-2161447.jpeg?w=800', '2026-03-07 16:20:04'),
+(3, 'Saussois', 'Merry-sur-Yonne', 'Bourgogne', '6b', 'https://images.pexels.com/photos/2481094/pexels-photo-2481094.jpeg?w=800', '2026-03-07 16:20:04');
 
 -- --------------------------------------------------------
 
@@ -408,17 +423,11 @@ INSERT INTO `users` (`id`, `username`, `password_hash`, `created_at`, `email`) V
 (9, 'TEST', '$2b$10$zaNmwsSKKsGykzkGNGFCcubsvg0qeql34gGJ.CQItpJtrvCpxOG8y', '2026-02-04 15:59:14', 'TEST@GMAIL.COM'),
 (10, 'test23', '$2b$10$V445kCGU73FLcJ69WdVipOFm4tWhyZwM4x5YkEwZI3YME9VcsiR3q', '2026-02-04 16:22:37', 'test2@gmail.com'),
 (11, 'Paul8', '$2b$10$PborY5fZpHVDQUFRgUVqRunpnWbkCFzPKtJdwN1.VIM3lg/MHgqRW', '2026-02-05 08:20:47', 'paul8@gmail.com'),
-(12, 'po', '$2b$10$Pzw2DMUASsF5zqUcWSSiq.sZuDLjON04fSEQ6Qe0dCcfxHAKQHV1C', '2026-02-05 08:23:18', '1@g.fr'),
 (13, 'fff', '$2b$10$0rbSYbSd/gVJ1zZg3Bax3ewNrNzTSPmG6mDy1nXYtwXHiqnDtnuMq', '2026-02-05 08:25:11', 'a.toto@gouv.fr'),
-(14, 'Paul_', '$2b$10$PQc7U1D1ZbrQvLe9LrpnG.zfBourHK/zIGbx6nCXveQq1oMps63qi', '2026-02-05 09:02:44', 'paik@gmail.com'),
 (15, 'PAULLLL', '$2b$10$5NJjileLDT3VfltL8qEn1OfgJaClO5WyvlsyUvE9O.W8IFXNvfocK', '2026-02-05 09:30:15', 'PPZZ@gmail.com'),
-(16, 'Paul9999', '$2b$10$sfo2timtCJiETX8Tg6a93OfREmhrGroiVanZp32YoaM3KQrZXjyNi', '2026-02-05 09:34:26', 'oz@gmail.com'),
 (17, 'PAUL', '$2b$10$M8LUn4oReAYxobnGeW01eecklfbRZIe5ikUyNYdx2Vfi4tZ60uy02', '2026-02-11 09:47:47', 'paul99@gmail.com'),
 (18, 'frjuizp', '$2b$10$9zhd1CTEUO9uTst/9IkJVek7sSZsxYGMaLcIzyG4uSY43/FWhc.O6', '2026-02-11 11:01:36', 'ioppsdj@gmail.com'),
-(19, 'AZERTY', '$2b$10$QaefnvEBeBLTvKiCWZMiBuRW3l9Q0vP3fMQJGCDefYvQkL3mtS2PS', '2026-02-11 11:15:12', 'AZERTY@GMAIL.COM'),
-(20, 'JKLHGF', '$2b$10$iKk7.tZ0G4vq0gDKmizHOuAdI41X.92OhEstBCzUeXO4NxK87.kHG', '2026-02-11 11:19:58', 'HJJ@gmail.coom'),
-(21, 'PAPO', '$2b$10$y47/7zzu.RY8mV3..i826ugCVEFkkSWBz5GL4Si4tZ7RkqJwNYT2G', '2026-02-18 16:25:14', 'PAPO@GMAIL.COM'),
-(22, 'Paulde', '$2b$10$klOVj3dscNikEUuitKHJ0.tJHaH8329WDOaQ0/A3Wata/jOpf107m', '2026-02-23 15:52:15', 'pau@gmail.com');
+(20, 'JKLHGF', '$2b$10$iKk7.tZ0G4vq0gDKmizHOuAdI41X.92OhEstBCzUeXO4NxK87.kHG', '2026-02-11 11:19:58', 'HJJ@gmail.coom');
 
 --
 -- Index pour les tables déchargées
@@ -491,6 +500,12 @@ ALTER TABLE `reservations_ski`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`),
   ADD KEY `offre_ski_id` (`offre_ski_id`);
+
+--
+-- Index pour la table `sites_escalade`
+--
+ALTER TABLE `sites_escalade`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Index pour la table `stations_ski`
@@ -579,6 +594,12 @@ ALTER TABLE `reservations`
 --
 ALTER TABLE `reservations_ski`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT pour la table `sites_escalade`
+--
+ALTER TABLE `sites_escalade`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `stations_ski`
