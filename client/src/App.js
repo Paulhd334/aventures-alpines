@@ -17,6 +17,7 @@ import Randonnee from './pages/Randonnee';
 import Escalade from './pages/Escalade';
 import Ski from './pages/Ski';
 import VideosPage from './pages/Videos';
+import ArticleDetail from './pages/ArticleDetail';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
             <Route path="/blog/new" element={<CreatePublication />} />
             <Route path="/blog" element={<Articles />} />
             <Route path="/articles" element={<Articles />} />
+            <Route path="/article/:id" element={<ArticleDetail />} />  {/* ← AJOUTEZ CETTE LIGNE */}
             <Route path="/videos" element={<VideosPage />} />
             
             {/* Route 404 */}
