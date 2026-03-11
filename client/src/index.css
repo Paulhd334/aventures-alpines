@@ -3383,3 +3383,200 @@ textarea.form-control {
     transform: scale(40, 40);
   }
 }
+
+
+
+
+
+
+
+/* src/components/HikingRoute.css - STYLE BLANC PUR */
+
+/* ===== CARTE RANDONNÉE BLANCHE ===== */
+.hiking-route-card {
+  background: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.hiking-route-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: #d0d0d0;
+}
+
+/* Image */
+.route-image {
+  position: relative;
+  height: 180px;
+  overflow: hidden;
+  background: #f8f8f8;
+}
+
+.route-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.hiking-route-card:hover .route-image img {
+  transform: scale(1.03);
+}
+
+/* Badge difficulté */
+.route-difficulty {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid #ccc;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  border-radius: 4px;
+}
+
+/* Contenu */
+.route-content {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-title {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  color: #222;
+  line-height: 1.4;
+}
+
+.route-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.route-description {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 16px;
+  font-size: 14px;
+  flex: 1;
+}
+
+/* Détails */
+.route-details {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 6px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #777;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-size: 13px;
+  color: #222;
+  font-weight: 400;
+}
+
+/* Actions */
+.route-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.route-actions .btn {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.route-actions .btn:hover {
+  background: #f8f8f8;
+  border-color: #bbb;
+}
+
+.route-actions .btn-primary {
+  background: #222;
+  color: #fff;
+  border-color: #222;
+}
+
+.route-actions .btn-primary:hover {
+  background: #111;
+}
+
+/* Animation */
+.hiking-route-card {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .route-image {
+    height: 150px;
+  }
+  
+  .route-content {
+    padding: 16px;
+  }
+  
+  .route-details {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+  
+  .route-meta {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

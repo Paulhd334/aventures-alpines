@@ -12,11 +12,11 @@ import Profile from './pages/Profile';
 import CreatePublication from './pages/CreatePublication';
 import Articles from './pages/Articles';
 import ProfilePublic from './pages/ProfilePublic';
-import Itineraires from './pages/Itineraires';
+import RoutesPage from './pages/Routes'; // ← CHANGEMENT ICI (anciennement Itineraires)
 import Randonnee from './pages/Randonnee';
 import Escalade from './pages/Escalade';
 import Ski from './pages/Ski';
-import VideosPage from './pages/Videos'; // ← CORRECTION ICI
+import VideosPage from './pages/Videos';
 
 function App() {
   return (
@@ -37,14 +37,13 @@ function App() {
             <Route path="/randonnee" element={<Randonnee />} />
             <Route path="/escalade" element={<Escalade />} />
             <Route path="/ski" element={<Ski />} />
-            <Route path="/itineraires" element={<Itineraires />} />
+            <Route path="/routes" element={<RoutesPage />} /> {/* ← CHANGEMENT ICI */}
             
             {/* Articles et publications */}
             <Route path="/blog/new" element={<CreatePublication />} />
             <Route path="/blog" element={<Articles />} />
             <Route path="/articles" element={<Articles />} />
-
-            <Route path="/videos" element={<VideosPage />} /> {/* ← Chemin en minuscule */}
+            <Route path="/videos" element={<VideosPage />} />
             
             {/* Route 404 */}
             <Route path="*" element={<Home />} />
