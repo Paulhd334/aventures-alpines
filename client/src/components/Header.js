@@ -4,6 +4,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMontagneOpen, setIsMontagneOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // ÉTAT utilisateur
   const [user, setUser] = useState(() => {
@@ -15,12 +17,10 @@ const Header = () => {
     }
   });
 
-  // DEBUG
   useEffect(() => {
     console.log('🔍 Header - Utilisateur:', user);
     console.log('🔍 Header - LocalStorage:', localStorage.getItem('user'));
     
-    // Écouter les connexions
     const handleUserLogin = () => {
       console.log('🔄 Header: Événement login reçu');
       const storedUser = localStorage.getItem('user');
@@ -35,7 +35,6 @@ const Header = () => {
 
     window.addEventListener('user-login', handleUserLogin);
     
-    // Écouter les changements de localStorage
     const handleStorageChange = () => {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
@@ -62,12 +61,22 @@ const Header = () => {
   const isLoggedIn = !!user;
   const userName = user?.username || user?.nom_utilisateur;
 
+  // Tous les liens en UNE ligne
   const navItems = [
     { path: '/', label: 'Accueil' },
     { path: '/activities', label: 'Activités' },
     { path: '/articles', label: 'Articles' },
-    { path: '/Itineraires', label: 'Itinéraires' },
     { path: '/contact', label: 'Contact' },
+    { 
+      type: 'dropdown',
+      label: 'Aventures',
+      submenu: [
+        { path: '/randonnee', label: 'Randonnée' },
+        { path: '/escalade', label: 'Escalade' },
+        { path: '/ski', label: 'Ski' },
+        { path: '/Itineraires', label: 'Itinéraires' }
+      ]
+    },
   ];
 
   const handleLogout = () => {
@@ -78,54 +87,136 @@ const Header = () => {
   };
 
   return (
-    <header className="navbar bg-white border-b border-gray-light">
-      <div className="container">
-        <div className="flex items-center justify-between min-h-[80px]">
+    <header style={{
+      backgroundColor: '#FFFFFF',
+      borderBottom: '1px solid #E8E8E8',
+      padding: '1rem 0',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+    }}>
+      <div style={{
+        maxWidth: '1280px',
+        margin: '0 auto',
+        padding: '0 2rem',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: '60px',
+        }}>
           
-          {/* Brand */}
+          {/* Logo */}
           <Link to="/" style={{ textDecoration: 'none' }}>
-            <div className="text-xl font-light tracking-tight leading-none">
+            <div style={{ fontSize: '1.25rem', fontWeight: 300, letterSpacing: '-0.01em' }}>
               AVENTURE
             </div>
-            <div className="text-xs text-gray-dark uppercase mt-1" 
-                 style={{ letterSpacing: '0.25em' }}>
+            <div style={{ 
+              fontSize: '0.75rem', 
+              color: '#7A7A7A', 
+              textTransform: 'uppercase',
+              marginTop: '0.25rem',
+              letterSpacing: '0.25em'
+            }}>
               ALPINES
             </div>
           </Link>
 
-          {/* Navigation */}
-          <nav style={{ display: 'flex', alignItems: 'center' }}>
+          {/* Menu Desktop - UNE SEULE LIGNE */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
             {navItems.map((item, index) => {
               const isActive = location.pathname === item.path;
+              const isDropdown = item.type === 'dropdown';
+              
+              if (isDropdown) {
+                return (
+                  <div 
+                    key={index} 
+                    style={{ position: 'relative' }}
+                    onMouseEnter={() => setIsMontagneOpen(true)}
+                    onMouseLeave={() => setIsMontagneOpen(false)}
+                  >
+                    <div style={{ 
+                      padding: '0 2rem',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      height: '60px',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ 
+                        fontSize: '0.875rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.15em',
+                        fontWeight: 300,
+                        color: item.submenu?.some(sub => location.pathname === sub.path) ? '#000' : '#7A7A7A',
+                        transition: 'color 0.3s ease'
+                      }}>
+                        {item.label}
+                        <span style={{ fontSize: '0.7em', marginLeft: '0.5rem' }}>▼</span>
+                      </span>
+                    </div>
+
+                    {/* Dropdown */}
+                    {isMontagneOpen && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: '0',
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+                        border: '1px solid #E8E8E8',
+                        minWidth: '250px',
+                        zIndex: 1000,
+                        animation: 'fadeIn 0.2s ease'
+                      }}>
+                        {item.submenu?.map((page, idx) => (
+                          <Link
+                            key={idx}
+                            to={page.path}
+                            style={{
+                              display: 'block',
+                              padding: '1rem',
+                              borderBottom: '1px solid #E8E8E8',
+                              textDecoration: 'none',
+                              color: '#2E2E2E',
+                              fontSize: '0.875rem',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onClick={() => setIsMontagneOpen(false)}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F8F8'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+                          >
+                            {page.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               
               return (
                 <div key={index} style={{ position: 'relative' }}>
                   <Link
                     to={item.path}
                     style={{ 
-                      padding: '1.5rem 2.5rem',
+                      padding: '0 2rem',
                       textDecoration: 'none',
-                      display: 'block',
+                      display: 'flex',
+                      alignItems: 'center',
+                      height: '60px',
                       position: 'relative'
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        const line = e.currentTarget.querySelector('.nav-hover-line');
-                        if (line) {
-                          line.style.width = '80px';
-                          line.style.opacity = '1';
-                        }
                         e.currentTarget.querySelector('.nav-text').style.color = '#000';
                       }
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) {
-                        const line = e.currentTarget.querySelector('.nav-hover-line');
-                        if (line) {
-                          line.style.width = '0px';
-                          line.style.opacity = '0';
-                        }
-                        e.currentTarget.querySelector('.nav-text').style.color = 'var(--gray-dark)';
+                        e.currentTarget.querySelector('.nav-text').style.color = '#7A7A7A';
                       }
                     }}
                   >
@@ -135,8 +226,8 @@ const Header = () => {
                         fontSize: '0.875rem',
                         textTransform: 'uppercase',
                         letterSpacing: '0.15em',
-                        fontWeight: isActive ? '500' : '300',
-                        color: isActive ? '#000' : 'var(--gray-dark)',
+                        fontWeight: isActive ? 500 : 300,
+                        color: isActive ? '#000' : '#7A7A7A',
                         transition: 'color 0.3s ease'
                       }}
                     >
@@ -144,34 +235,15 @@ const Header = () => {
                     </span>
                     
                     {isActive && (
-                      <div 
-                        style={{
-                          position: 'absolute',
-                          bottom: '0',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: '30px',
-                          height: '1px',
-                          backgroundColor: '#000'
-                        }}
-                      ></div>
-                    )}
-                    
-                    {!isActive && (
-                      <div 
-                        className="nav-hover-line"
-                        style={{
-                          position: 'absolute',
-                          bottom: '0',
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          width: '0px',
-                          height: '1px',
-                          backgroundColor: '#000',
-                          opacity: 0,
-                          transition: 'width 0.3s ease, opacity 0.3s ease'
-                        }}
-                      ></div>
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '0',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '30px',
+                        height: '1px',
+                        backgroundColor: '#000'
+                      }}></div>
                     )}
                   </Link>
                 </div>
@@ -180,30 +252,22 @@ const Header = () => {
             
             {/* Nom utilisateur (si connecté) */}
             {isLoggedIn && userName && (
-              <div style={{ position: 'relative', marginLeft: '1rem' }}>
+              <div style={{ position: 'relative', marginLeft: '2rem' }}>
                 <Link
                   to="/profile"
                   style={{ 
-                    padding: '1.5rem 2.5rem',
+                    padding: '0 2rem',
                     textDecoration: 'none',
-                    display: 'block',
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '60px',
                     position: 'relative'
                   }}
                   onMouseEnter={(e) => {
-                    const line = e.currentTarget.querySelector('.nav-hover-line');
-                    if (line) {
-                      line.style.width = '80px';
-                      line.style.opacity = '1';
-                    }
                     e.currentTarget.querySelector('.nav-text').style.color = '#000';
                   }}
                   onMouseLeave={(e) => {
-                    const line = e.currentTarget.querySelector('.nav-hover-line');
-                    if (line) {
-                      line.style.width = '0px';
-                      line.style.opacity = '0';
-                    }
-                    e.currentTarget.querySelector('.nav-text').style.color = 'var(--gray-dark)';
+                    e.currentTarget.querySelector('.nav-text').style.color = '#7A7A7A';
                   }}
                 >
                   <span 
@@ -212,50 +276,19 @@ const Header = () => {
                       fontSize: '0.875rem',
                       textTransform: 'uppercase',
                       letterSpacing: '0.15em',
-                      fontWeight: location.pathname === '/profile' ? '500' : '300',
-                      color: location.pathname === '/profile' ? '#000' : 'var(--gray-dark)',
+                      fontWeight: location.pathname === '/profile' ? 500 : 300,
+                      color: location.pathname === '/profile' ? '#000' : '#7A7A7A',
                       transition: 'color 0.3s ease'
                     }}
                   >
                     {userName}
                   </span>
-                  
-                  {location.pathname === '/profile' && (
-                    <div 
-                      style={{
-                        position: 'absolute',
-                        bottom: '0',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '30px',
-                        height: '1px',
-                        backgroundColor: '#000'
-                      }}
-                    ></div>
-                  )}
-                  
-                  {location.pathname !== '/profile' && (
-                    <div 
-                      className="nav-hover-line"
-                      style={{
-                        position: 'absolute',
-                        bottom: '0',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '0px',
-                        height: '1px',
-                        backgroundColor: '#000',
-                        opacity: 0,
-                        transition: 'width 0.3s ease, opacity 0.3s ease'
-                      }}
-                    ></div>
-                  )}
                 </Link>
               </div>
             )}
           </nav>
 
-          {/* Section authentification */}
+          {/* Authentification */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {isLoggedIn ? (
               <button
@@ -265,18 +298,19 @@ const Header = () => {
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em',
                   padding: '0.5rem 1rem',
-                  border: '1px solid var(--gray-light)',
+                  border: '1px solid #D9D9D9',
                   backgroundColor: 'transparent',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  color: '#7A7A7A'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.borderColor = '#000';
                   e.currentTarget.style.color = '#000';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'var(--gray-light)';
-                  e.currentTarget.style.color = 'var(--gray-dark)';
+                  e.currentTarget.style.borderColor = '#D9D9D9';
+                  e.currentTarget.style.color = '#7A7A7A';
                 }}
               >
                 Déconnexion
@@ -291,8 +325,8 @@ const Header = () => {
                     letterSpacing: '0.1em',
                     padding: '0.5rem 1rem',
                     textDecoration: 'none',
-                    color: 'var(--gray-dark)',
-                    border: '1px solid var(--gray-light)',
+                    color: '#7A7A7A',
+                    border: '1px solid #D9D9D9',
                     transition: 'all 0.3s ease'
                   }}
                   onMouseEnter={(e) => {
@@ -300,8 +334,8 @@ const Header = () => {
                     e.currentTarget.style.color = '#000';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--gray-light)';
-                    e.currentTarget.style.color = 'var(--gray-dark)';
+                    e.currentTarget.style.borderColor = '#D9D9D9';
+                    e.currentTarget.style.color = '#7A7A7A';
                   }}
                 >
                   Connexion
@@ -335,6 +369,20 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Animation CSS inline */}
+      <style jsx="true">{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </header>
   );
 };

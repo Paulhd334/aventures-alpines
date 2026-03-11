@@ -11,7 +11,6 @@ const Itineraires = () => {
   useEffect(() => {
     const fetchItineraires = async () => {
       try {
-        // IMPORTANT : Utiliser la bonne route avec majuscule
         const response = await axios.get('http://localhost:5000/api/Itineraires');
         console.log('Données reçues:', response.data);
         setItineraires(response.data);
@@ -26,7 +25,6 @@ const Itineraires = () => {
     fetchItineraires();
   }, []);
 
-  // Filtrer les itinéraires
   const itinerairesFiltres = itineraires.filter(it => {
     if (filtreDifficulte !== 'tous' && it.difficulte !== filtreDifficulte) return false;
     
@@ -45,14 +43,14 @@ const Itineraires = () => {
     return true;
   });
 
-  if (loading) return <p style={{ padding: '2rem', textAlign: 'center' }}>Chargement des itinéraires...</p>;
-  if (error) return <p style={{ padding: '2rem', color: 'red', textAlign: 'center' }}>{error}</p>;
+  if (loading) return <div className="loading">Chargement des itinéraires...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '3rem 1rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h1 style={{ marginBottom: '1rem', color: '#2c3e50' }}>Itinéraires de Randonnée</h1>
-        <p style={{ fontSize: '1.2rem', color: '#7f8c8d', maxWidth: '800px', margin: '0 auto' }}>
+    <div className="itineraires-container">
+      <div className="hero-section">
+        <h1>Itinéraires de Randonnée</h1>
+        <p className="hero-description">
           Planifiez votre prochaine aventure en explorant nos itinéraires soigneusement sélectionnés.
           Consultez les détails, les niveaux de difficulté et les vues panoramiques pour choisir
           la randonnée qui vous convient le mieux.
@@ -60,19 +58,12 @@ const Itineraires = () => {
       </div>
 
       {/* Filtres */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '1rem', 
-        marginBottom: '2rem', 
-        flexWrap: 'wrap',
-        justifyContent: 'center'
-      }}>
-        <div>
-          <label style={{ marginRight: '0.5rem', fontWeight: '500' }}>Difficulté :</label>
+      <div className="filtres-container">
+        <div className="filtre-item">
+          <label>Difficulté :</label>
           <select 
             value={filtreDifficulte} 
             onChange={(e) => setFiltreDifficulte(e.target.value)}
-            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
           >
             <option value="tous">Tous niveaux</option>
             <option value="Facile">Facile</option>
@@ -82,12 +73,11 @@ const Itineraires = () => {
           </select>
         </div>
         
-        <div>
-          <label style={{ marginRight: '0.5rem', fontWeight: '500' }}>Durée :</label>
+        <div className="filtre-item">
+          <label>Durée :</label>
           <select 
             value={filtreDuree} 
             onChange={(e) => setFiltreDuree(e.target.value)}
-            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ddd' }}
           >
             <option value="tous">Toutes durées</option>
             <option value="court">1-3 jours</option>
@@ -98,42 +88,24 @@ const Itineraires = () => {
       </div>
 
       {/* Résultats */}
-      <p style={{ marginBottom: '1rem', color: '#666' }}>
+      <p className="resultats-count">
         {itinerairesFiltres.length} itinéraire{itinerairesFiltres.length > 1 ? 's' : ''} trouvé{itinerairesFiltres.length > 1 ? 's' : ''}
       </p>
 
       {itinerairesFiltres.length === 0 ? (
-        <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>
+        <div className="aucun-resultat">
           Aucun itinéraire ne correspond à vos critères.
-        </p>
+        </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
+        <div className="itineraires-grid">
           {itinerairesFiltres.map((itineraire) => (
-            <div 
-              key={itineraire.id} 
-              style={{ 
-                border: '1px solid #ddd', 
-                borderRadius: '8px', 
-                overflow: 'hidden',
-                backgroundColor: '#fff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-              }}
-            >
+            <div key={itineraire.id} className="itineraire-card">
               {/* Image */}
               {itineraire.image_url && (
-                <div style={{ 
-                  height: '200px', 
-                  overflow: 'hidden',
-                  position: 'relative'
-                }}>
+                <div className="itineraire-image-container">
                   <img 
                     src={itineraire.image_url} 
                     alt={itineraire.nom}
-                    style={{ 
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop';
                     }}
@@ -142,87 +114,48 @@ const Itineraires = () => {
               )}
 
               {/* En-tête avec difficulté */}
-              <div style={{ 
-                backgroundColor: getDifficultyColor(itineraire.difficulte),
-                color: 'white',
-                padding: '0.75rem 1rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}>
-                <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{itineraire.nom}</h3>
-                <span style={{ 
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: '20px',
-                  fontSize: '0.9rem'
-                }}>
-                  {itineraire.difficulte}
-                </span>
+              <div className={`itineraire-header difficulte-${getDifficultyClass(itineraire.difficulte)}`}>
+                <h3>{itineraire.nom}</h3>
+                <span className="difficulte-badge">{itineraire.difficulte}</span>
               </div>
 
               {/* Contenu */}
-              <div style={{ padding: '1.5rem' }}>
-                <p style={{ marginBottom: '1rem', lineHeight: '1.6', color: '#555' }}>
-                  {itineraire.description}
-                </p>
+              <div className="itineraire-content">
+                <p className="description">{itineraire.description}</p>
                 
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(2, 1fr)', 
-                  gap: '1rem',
-                  marginBottom: '1rem'
-                }}>
-                  <div>
-                    <strong style={{ color: '#666', display: 'block', fontSize: '0.9rem' }}>⏱️ Durée</strong>
-                    <span style={{ color: '#333' }}>{itineraire.duree}</span>
+                <div className="details-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">⏱️ Durée</span>
+                    <span className="detail-value">{itineraire.duree}</span>
                   </div>
-                  <div>
-                    <strong style={{ color: '#666', display: 'block', fontSize: '0.9rem' }}>📏 Distance</strong>
-                    <span style={{ color: '#333' }}>{itineraire.distance}</span>
+                  <div className="detail-item">
+                    <span className="detail-label">📏 Distance</span>
+                    <span className="detail-value">{itineraire.distance}</span>
                   </div>
-                  <div>
-                    <strong style={{ color: '#666', display: 'block', fontSize: '0.9rem' }}>⬆️ Dénivelé</strong>
-                    <span style={{ color: '#333' }}>{itineraire.denivele}</span>
+                  <div className="detail-item">
+                    <span className="detail-label">⬆️ Dénivelé</span>
+                    <span className="detail-value">{itineraire.denivele}</span>
                   </div>
-                  <div>
-                    <strong style={{ color: '#666', display: 'block', fontSize: '0.9rem' }}>📍 Région</strong>
-                    <span style={{ color: '#333' }}>{itineraire.region}</span>
+                  <div className="detail-item">
+                    <span className="detail-label">📍 Région</span>
+                    <span className="detail-value">{itineraire.region}</span>
                   </div>
                 </div>
 
-                <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-                  <strong style={{ color: '#666', display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                    🌤️ Meilleure saison :
-                  </strong>
-                  <span style={{ color: '#333' }}>{itineraire.meilleure_saison}</span>
+                <div className="info-section">
+                  <span className="info-label">🌤️ Meilleure saison :</span>
+                  <span className="info-value">{itineraire.meilleure_saison}</span>
                 </div>
 
                 {itineraire.points_interet && (
-                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-                    <strong style={{ color: '#666', display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                      ✨ Points d'intérêt :
-                    </strong>
-                    <p style={{ fontSize: '0.9rem', color: '#555' }}>{itineraire.points_interet}</p>
+                  <div className="info-section">
+                    <span className="info-label">✨ Points d'intérêt :</span>
+                    <p className="info-value">{itineraire.points_interet}</p>
                   </div>
                 )}
 
                 <button 
-                  style={{
-                    marginTop: '1rem',
-                    width: '100%',
-                    padding: '0.75rem',
-                    backgroundColor: '#3498db',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '1rem',
-                    fontWeight: '500',
-                    transition: 'background-color 0.3s'
-                  }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#2980b9'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#3498db'}
+                  className="details-button"
                   onClick={() => console.log('Voir détails pour:', itineraire.nom)}
                 >
                   Voir les détails complets
@@ -234,27 +167,21 @@ const Itineraires = () => {
       )}
 
       {/* Information supplémentaire */}
-      <div style={{ 
-        marginTop: '3rem', 
-        padding: '2rem', 
-        backgroundColor: '#f8f9fa', 
-        borderRadius: '8px',
-        border: '1px solid #e9ecef'
-      }}>
-        <h3 style={{ marginBottom: '1rem', color: '#2c3e50' }}>Conseils pour choisir votre randonnée</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-          <div>
-            <h4 style={{ color: '#3498db' }}>📊 Niveaux de difficulté</h4>
-            <ul style={{ paddingLeft: '1.5rem', color: '#555' }}>
+      <div className="conseils-container">
+        <h3>Conseils pour choisir votre randonnée</h3>
+        <div className="conseils-grid">
+          <div className="conseil-categorie">
+            <h4>📊 Niveaux de difficulté</h4>
+            <ul>
               <li><strong>Facile :</strong> Sentiers bien marqués, peu de dénivelé</li>
               <li><strong>Moyen :</strong> Dénivelé modéré, bonne condition physique requise</li>
               <li><strong>Difficile :</strong> Dénivelé important, expérience recommandée</li>
               <li><strong>Très Difficile :</strong> Technicité élevée, réservé aux randonneurs expérimentés</li>
             </ul>
           </div>
-          <div>
-            <h4 style={{ color: '#3498db' }}>🎒 Équipement recommandé</h4>
-            <ul style={{ paddingLeft: '1.5rem', color: '#555' }}>
+          <div className="conseil-categorie">
+            <h4>🎒 Équipement recommandé</h4>
+            <ul>
               <li>Chaussures de randonnée imperméables</li>
               <li>Vêtements techniques (couches)</li>
               <li>Sac à dos (20-40L selon durée)</li>
@@ -268,14 +195,13 @@ const Itineraires = () => {
   );
 };
 
-// Fonction pour déterminer la couleur selon la difficulté
-function getDifficultyColor(difficulte) {
+function getDifficultyClass(difficulte) {
   switch(difficulte) {
-    case 'Facile': return '#27ae60';
-    case 'Moyen': return '#f39c12';
-    case 'Difficile': return '#e67e22';
-    case 'Très Difficile': return '#c0392b';
-    default: return '#3498db';
+    case 'Facile': return 'facile';
+    case 'Moyen': return 'moyen';
+    case 'Difficile': return 'difficile';
+    case 'Très Difficile': return 'tres-difficile';
+    default: return 'default';
   }
 }
 
