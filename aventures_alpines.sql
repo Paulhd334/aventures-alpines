@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : sam. 07 mars 2026 à 16:24
+-- Généré le : dim. 08 mars 2026 à 11:17
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -328,9 +328,9 @@ CREATE TABLE `sites_escalade` (
 --
 
 INSERT INTO `sites_escalade` (`id`, `nom`, `lieu`, `region`, `difficulte`, `image_url`, `created_at`) VALUES
-(1, 'Aiguille du Midi', 'Chamonix', 'Haute-Savoie', 'TD', 'https://images.pexels.com/photos/2481093/pexels-photo-2481093.jpeg?w=800', '2026-03-07 16:20:04'),
-(2, 'Céüse', 'Gap', 'Hautes-Alpes', '7a', 'https://images.pexels.com/photos/2161447/pexels-photo-2161447.jpeg?w=800', '2026-03-07 16:20:04'),
-(3, 'Saussois', 'Merry-sur-Yonne', 'Bourgogne', '6b', 'https://images.pexels.com/photos/2481094/pexels-photo-2481094.jpeg?w=800', '2026-03-07 16:20:04');
+(1, 'Aiguille du Midi', 'Chamonix', 'Haute-Savoie', 'TD', 'https://www.grimper.com/media/guide_falaises/sites/le-teillon-escalade-le-teillon.jpg', '2026-03-07 16:20:04'),
+(2, 'Céüse', 'Gap', 'Hautes-Alpes', '7a', 'https://www.escalosud.com/wp-content/uploads/Belvedere-vue-sur-les-falaises-du-Verdon-site-escalade.jpg', '2026-03-07 16:20:04'),
+(3, 'Saussois', 'Merry-sur-Yonne', 'Bourgogne', '6b', 'https://www.escalosud.com/wp-content/uploads/Vue-sur-les-falaises-des-calanques-site-escalade.jpg', '2026-03-07 16:20:04');
 
 -- --------------------------------------------------------
 
@@ -370,6 +370,38 @@ INSERT INTO `stations_ski` (`id`, `nom`, `region`, `description`, `type_station`
 (4, 'Tignes', 'Alpes du Nord', 'Station avec glacier accessible toute l\'année', 'très grande', 1550, 3456, 150, '300.0', 78, 155, '64.00', 'https://www.mmv.fr/images/cms/stations-ski-les-plus-connues/zermatt.jpg?frz-v=628', 'mmv.fr', '2024-11-23', '2025-05-04', '2026-01-28 13:48:19', '2026-01-28 13:53:50'),
 (5, 'Les 2 Alpes', 'Alpes du Nord', 'Deuxième plus grand domaine skiable de France', 'grande', 1300, 3600, 96, '220.0', 44, 130, '53.00', 'https://petit-montagnard.fr/wp-content/uploads/2024/02/Top-5-stations-ski-Suisse-Verbier.jpeg', 'petit-montagnard.fr', '2024-11-30', '2025-04-20', '2026-01-28 13:48:19', '2026-01-28 13:55:36'),
 (6, 'La Plagne', 'Alpes du Nord', 'Station familiale avec vaste domaine', 'très grande', 1250, 3250, 225, '225.0', 110, 95, '56.00', 'https://www.mmv.fr/images/cms/stations-ski-les-plus-connues/zermatt.jpg?frz-v=628', 'mmv.fr', '2024-12-14', '2025-04-20', '2026-01-28 13:48:19', '2026-01-28 13:54:41');
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `temoignages_escalade`
+--
+
+CREATE TABLE `temoignages_escalade` (
+  `id` int(11) NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `type_escalade` varchar(100) DEFAULT NULL,
+  `message` text NOT NULL,
+  `note` int(11) DEFAULT '5',
+  `approuve` tinyint(1) DEFAULT '1',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Déchargement des données de la table `temoignages_escalade`
+--
+
+INSERT INTO `temoignages_escalade` (`id`, `nom`, `email`, `type_escalade`, `message`, `note`, `approuve`, `created_at`) VALUES
+(1, 'paul', 'paul@gmail.com', 'sportive', 'super expérience', 5, 1, '2026-03-08 11:08:10'),
+(2, 'Marie Dupont', 'marie@gmail.com', 'sportive', 'Une expérience incroyable sur les falaises de Céüse ! Les voies sont magnifiques et bien équipées. Je recommande vivement à tous les grimpeurs.', 5, 1, '2026-03-08 11:12:07'),
+(3, 'Thomas Bernard', 'thomas@gmail.com', 'bloc', 'Fontainebleau est un spot exceptionnel pour le bloc. Des blocs pour tous les niveaux, une forêt magnifique. Parfait pour progresser en technique.', 5, 1, '2026-03-08 11:12:07'),
+(4, 'Sophie Martin', 'sophie@gmail.com', 'grande voie', 'Ma première grande voie dans le Verdon, un souvenir inoubliable. Les falaises sont impressionnantes, le vide est vertigineux mais la sensation au sommet est unique !', 5, 1, '2026-03-08 11:12:07'),
+(5, 'Lucas Petit', 'lucas@gmail.com', 'via ferrata', 'Via ferrata accessible et bien sécurisée. Idéal pour débuter et découvrir la verticalité sans trop de risques. Je reviendrai avec mes enfants.', 4, 1, '2026-03-08 11:12:07'),
+(6, 'Camille Leroy', 'camille@gmail.com', 'trad', 'L escalade traditionnelle c est une autre dimension. Placer ses propres protections demande de la réflexion. Une discipline exigeante mais tellement gratifiante.', 5, 1, '2026-03-08 11:12:07'),
+(7, 'Antoine Moreau', 'antoine@gmail.com', 'sportive', 'Journée parfaite à l Aiguille du Midi. Les voies sont engagées mais le panorama sur le Mont Blanc vaut tous les efforts. Moniteur au top !', 5, 1, '2026-03-08 11:12:07'),
+(8, 'Julie Roux', 'julie@gmail.com', 'bloc', 'Débutante en escalade, j ai adoré le bloc. Pas besoin de matériel compliqué, juste les chaussons et la magnésie. Ambiance super sympa au spot.', 4, 1, '2026-03-08 11:12:07'),
+(9, 'Nicolas Blanc', 'nicolas@gmail.com', 'grande voie', 'Trois jours dans le Verdon avec le club. Des voies mythiques, une organisation parfaite. Le moniteur était passionné et très pédagogue.', 5, 1, '2026-03-08 11:12:07');
 
 -- --------------------------------------------------------
 
@@ -516,6 +548,12 @@ ALTER TABLE `stations_ski`
   ADD KEY `idx_type` (`type_station`);
 
 --
+-- Index pour la table `temoignages_escalade`
+--
+ALTER TABLE `temoignages_escalade`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Index pour la table `temoignages_ski`
 --
 ALTER TABLE `temoignages_ski`
@@ -606,6 +644,12 @@ ALTER TABLE `sites_escalade`
 --
 ALTER TABLE `stations_ski`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT pour la table `temoignages_escalade`
+--
+ALTER TABLE `temoignages_escalade`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT pour la table `temoignages_ski`

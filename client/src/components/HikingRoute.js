@@ -3,7 +3,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-const HikingRoute = ({ itineraire }) => {
+// ✅ Valeurs par défaut directement dans les paramètres (plus de defaultProps)
+const HikingRoute = ({ itineraire = {
+  nom: "Itinéraire sans nom",
+  difficulte: "Non spécifié",
+  duree: "Non précisée",
+  distance: "Non précisée",
+  denivele: "Non précisé",
+  description: "Description non disponible",
+  meilleure_saison: "Non précisée",
+  region: "Non précisée"
+}}) => {
   const navigate = useNavigate();
 
   if (!itineraire || typeof itineraire !== "object") {
@@ -63,7 +73,7 @@ const HikingRoute = ({ itineraire }) => {
         e.currentTarget.style.borderColor = '#e0e4e8';
       }}
     >
-      {/* Image container - angles droits */}
+      {/* Image container */}
       <div style={{ 
         position: 'relative', 
         height: '200px', 
@@ -81,11 +91,12 @@ const HikingRoute = ({ itineraire }) => {
             display: 'block'
           }}
           onError={(e) => {
+            e.currentTarget.onerror = null;
             e.currentTarget.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop";
           }}
         />
 
-        {/* Badge difficulté - carré avec bords droits */}
+        {/* Badge difficulté */}
         <div style={{
           position: 'absolute',
           bottom: '12px',
@@ -96,13 +107,12 @@ const HikingRoute = ({ itineraire }) => {
           fontSize: '0.75rem',
           fontWeight: '600',
           textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          border: 'none'
+          letterSpacing: '0.5px'
         }}>
           {difficulte}
         </div>
 
-        {/* Badge région - carré avec bords droits */}
+        {/* Badge région */}
         {region && region !== "Non précisée" && (
           <div style={{
             position: 'absolute',
@@ -114,15 +124,14 @@ const HikingRoute = ({ itineraire }) => {
             fontSize: '0.75rem',
             fontWeight: '500',
             textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-            border: 'none'
+            letterSpacing: '0.5px'
           }}>
             {region}
           </div>
         )}
       </div>
 
-      {/* Content - structure carrée */}
+      {/* Content */}
       <div style={{ 
         padding: '1.25rem',
         display: 'flex',
@@ -143,7 +152,7 @@ const HikingRoute = ({ itineraire }) => {
           {nom}
         </h3>
 
-        {/* Métriques en grille carrée */}
+        {/* Métriques */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
@@ -157,10 +166,7 @@ const HikingRoute = ({ itineraire }) => {
             { label: 'Distance', value: distance },
             { label: 'Dénivelé', value: denivele }
           ].map((item, index) => (
-            <div key={index} style={{
-              textAlign: 'center',
-              padding: '0.25rem'
-            }}>
+            <div key={index} style={{ textAlign: 'center', padding: '0.25rem' }}>
               <div style={{
                 fontSize: '0.7rem',
                 color: '#7e8c9e',
@@ -170,32 +176,21 @@ const HikingRoute = ({ itineraire }) => {
               }}>
                 {item.label}
               </div>
-              <div style={{
-                fontSize: '0.9rem',
-                fontWeight: '600',
-                color: '#1a2634'
-              }}>
+              <div style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1a2634' }}>
                 {item.value}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Description - texte compact */}
+        {/* Description */}
         {description && (
-          <p style={{
-            margin: 0,
-            fontSize: '0.85rem',
-            lineHeight: '1.5',
-            color: '#3f4a5a'
-          }}>
-            {description.length > 100 
-              ? `${description.substring(0, 100)}...` 
-              : description}
+          <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: '1.5', color: '#3f4a5a' }}>
+            {description.length > 100 ? `${description.substring(0, 100)}...` : description}
           </p>
         )}
 
-        {/* Saison - badge carré */}
+        {/* Saison */}
         {meilleure_saison && meilleure_saison !== "Non précisée" && (
           <div style={{ 
             display: 'inline-block',
@@ -206,14 +201,13 @@ const HikingRoute = ({ itineraire }) => {
             fontWeight: '500',
             textTransform: 'uppercase',
             letterSpacing: '0.3px',
-            border: 'none',
             width: 'fit-content'
           }}>
             {meilleure_saison}
           </div>
         )}
 
-        {/* Indicateur clic - minimal */}
+        {/* Indicateur clic */}
         <div style={{
           marginTop: 'auto',
           paddingTop: '0.75rem',
@@ -231,6 +225,7 @@ const HikingRoute = ({ itineraire }) => {
   );
 };
 
+// ✅ PropTypes conservés pour la documentation, mais plus de defaultProps
 HikingRoute.propTypes = {
   itineraire: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
@@ -244,19 +239,6 @@ HikingRoute.propTypes = {
     meilleure_saison: PropTypes.string,
     region: PropTypes.string
   })
-};
-
-HikingRoute.defaultProps = {
-  itineraire: {
-    nom: "Itinéraire sans nom",
-    difficulte: "Non spécifié",
-    duree: "Non précisée",
-    distance: "Non précisée",
-    denivele: "Non précisé",
-    description: "Description non disponible",
-    meilleure_saison: "Non précisée",
-    region: "Non précisée"
-  }
 };
 
 export default HikingRoute;
