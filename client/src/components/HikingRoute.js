@@ -3,7 +3,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
-// ✅ Valeurs par défaut directement dans les paramètres (plus de defaultProps)
 const HikingRoute = ({ itineraire = {
   nom: "Itinéraire sans nom",
   difficulte: "Non spécifié",
@@ -16,9 +15,7 @@ const HikingRoute = ({ itineraire = {
 }}) => {
   const navigate = useNavigate();
 
-  if (!itineraire || typeof itineraire !== "object") {
-    return null;
-  }
+  if (!itineraire || typeof itineraire !== "object") return null;
 
   const {
     id,
@@ -30,28 +27,28 @@ const HikingRoute = ({ itineraire = {
     description = "Description non disponible",
     meilleure_saison = "Non précisée",
     region = "Non précisée",
-    image_url
+    image_url,
+    photo_url  // ← colonne réelle en BDD
   } = itineraire;
 
   const getDifficultyColor = (d) => {
     const difficulteLower = d?.toLowerCase() || '';
     if (difficulteLower.includes('facile')) return '#2e7d32';
     if (difficulteLower.includes('moyen')) return '#b85e00';
-    if (difficulteLower.includes('difficile')) return '#b71c1c';
     if (difficulteLower.includes('très difficile') || difficulteLower.includes('expert')) return '#4a0072';
+    if (difficulteLower.includes('difficile')) return '#b71c1c';
     return '#37474f';
   };
 
-  const handleClick = () => {
-    navigate(`/itineraires/${id}`);
-  };
+  const handleClick = () => navigate(`/itineraires/${id}`);
 
-  const imageSrc = image_url || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop";
+  // Priorité : photo_url (BDD) > image_url > fallback
+  const imageSrc = photo_url || image_url || "https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg?auto=compress&cs=tinysrgb&w=800";
 
   return (
-    <article 
+    <article
       onClick={handleClick}
-      style={{ 
+      style={{
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         border: '1px solid #e0e4e8',
@@ -73,10 +70,10 @@ const HikingRoute = ({ itineraire = {
         e.currentTarget.style.borderColor = '#e0e4e8';
       }}
     >
-      {/* Image container */}
-      <div style={{ 
-        position: 'relative', 
-        height: '200px', 
+      {/* Image */}
+      <div style={{
+        position: 'relative',
+        height: '200px',
         backgroundColor: '#f5f7fa',
         borderBottom: '1px solid #e0e4e8'
       }}>
@@ -84,15 +81,10 @@ const HikingRoute = ({ itineraire = {
           src={imageSrc}
           alt={nom}
           loading="lazy"
-          style={{ 
-            width: '100%', 
-            height: '100%', 
-            objectFit: 'cover',
-            display: 'block'
-          }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           onError={(e) => {
             e.currentTarget.onerror = null;
-            e.currentTarget.src = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop";
+            e.currentTarget.src = "https://images.pexels.com/photos/1054218/pexels-photo-1054218.jpeg?auto=compress&cs=tinysrgb&w=800";
           }}
         />
 
@@ -131,16 +123,15 @@ const HikingRoute = ({ itineraire = {
         )}
       </div>
 
-      {/* Content */}
-      <div style={{ 
+      {/* Contenu */}
+      <div style={{
         padding: '1.25rem',
         display: 'flex',
         flexDirection: 'column',
         gap: '1rem',
         flex: 1
       }}>
-        {/* Titre */}
-        <h3 style={{ 
+        <h3 style={{
           margin: 0,
           fontSize: '1.2rem',
           fontWeight: '600',
@@ -192,7 +183,7 @@ const HikingRoute = ({ itineraire = {
 
         {/* Saison */}
         {meilleure_saison && meilleure_saison !== "Non précisée" && (
-          <div style={{ 
+          <div style={{
             display: 'inline-block',
             backgroundColor: '#edf2f7',
             color: '#2a3a4a',
@@ -207,7 +198,6 @@ const HikingRoute = ({ itineraire = {
           </div>
         )}
 
-        {/* Indicateur clic */}
         <div style={{
           marginTop: 'auto',
           paddingTop: '0.75rem',
@@ -225,11 +215,11 @@ const HikingRoute = ({ itineraire = {
   );
 };
 
-// ✅ PropTypes conservés pour la documentation, mais plus de defaultProps
 HikingRoute.propTypes = {
   itineraire: PropTypes.shape({
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     nom: PropTypes.string,
+    photo_url: PropTypes.string,
     image_url: PropTypes.string,
     difficulte: PropTypes.string,
     duree: PropTypes.string,
