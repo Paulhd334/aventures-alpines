@@ -9,10 +9,9 @@ const Contact = () => {
     sujet: '',
     message: ''
   });
-  const [status, setStatus] = useState(''); // 'success', 'error', 'loading'
+  const [status, setStatus] = useState('');
   const [errors, setErrors] = useState({});
 
-  // Styles constants
   const styles = {
     container: {
       maxWidth: '1200px',
@@ -99,7 +98,6 @@ const Contact = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
     if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis';
     if (!formData.email.trim()) {
       newErrors.email = 'L\'email est requis';
@@ -110,71 +108,48 @@ const Contact = () => {
     if (!formData.message.trim() || formData.message.length < 10) {
       newErrors.message = 'Le message doit contenir au moins 10 caractères';
     }
-    
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
-    
+
     setStatus('loading');
     setErrors({});
-    
+
     try {
-      // Envoi réel à l'API
-      const response = await axios.post('http://localhost:5000/api/contact', {
-        ...formData,
-        date_envoi: new Date().toISOString()
-      });
-      
+      const response = await axios.post('http://localhost:5000/api/contact', formData);
+
       if (response.status === 201) {
         setStatus('success');
         setFormData({ nom: '', email: '', sujet: '', message: '' });
-        
-        // Reset du statut après 5 secondes
         setTimeout(() => setStatus(''), 5000);
-      } else {
-        throw new Error('Erreur serveur');
       }
     } catch (error) {
       console.error('Erreur envoi contact:', error);
+      const msg = error.response?.data?.error || 'Erreur serveur, veuillez réessayer.';
       setStatus('error');
-      
-      // Fallback: simuler l'envoi pour la démo
-      setTimeout(() => {
-        setStatus('success');
-        setFormData({ nom: '', email: '', sujet: '', message: '' });
-        setTimeout(() => setStatus(''), 5000);
-      }, 1000);
+      setErrors({ server: msg });
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Efface l'erreur quand l'utilisateur tape
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  const handleFocus = (e) => {
-    e.target.style.borderColor = '#000';
-  };
-
-  const handleBlur = (e) => {
-    e.target.style.borderColor = 'var(--gray-light)';
-  };
+  const handleFocus = (e) => { e.target.style.borderColor = '#000'; };
+  const handleBlur = (e) => { e.target.style.borderColor = 'var(--gray-light)'; };
 
   return (
     <div style={styles.container}>
-      {/* Header */}
       <div style={styles.header}>
         <h1 style={styles.title}>Contact</h1>
         <p style={styles.subtitle}>
@@ -187,52 +162,40 @@ const Contact = () => {
         {/* Formulaire */}
         <div>
           <div style={styles.formSection}>
-            <h2 style={{ 
-              fontSize: '1.25rem', 
-              marginBottom: '2rem',
-              fontWeight: '500'
-            }}>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '2rem', fontWeight: '500' }}>
               Envoyer un message
             </h2>
 
-            {/* Messages d'état */}
             {status === 'success' && (
               <div style={{
-                backgroundColor: 'rgba(0, 255, 0, 0.1)',
+                backgroundColor: 'rgba(0,200,0,0.08)',
                 color: '#000',
                 padding: '1rem',
                 marginBottom: '1.5rem',
-                border: '1px solid rgba(0, 255, 0, 0.3)',
+                border: '1px solid rgba(0,200,0,0.3)',
                 fontSize: '0.875rem'
               }}>
-                 Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.
+                ✅ Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.
               </div>
             )}
-            
+
             {status === 'error' && (
               <div style={{
-                backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                backgroundColor: 'rgba(255,0,0,0.06)',
                 color: '#000',
                 padding: '1rem',
                 marginBottom: '1.5rem',
-                border: '1px solid rgba(255, 0, 0, 0.3)',
+                border: '1px solid rgba(255,0,0,0.3)',
                 fontSize: '0.875rem'
               }}>
-                ❌ Une erreur est survenue. Veuillez réessayer ou nous contacter directement par email.
+                ❌ {errors.server || 'Une erreur est survenue. Veuillez réessayer.'}
               </div>
             )}
 
             <form onSubmit={handleSubmit}>
               {/* Nom */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  marginBottom: '0.5rem',
-                  color: 'var(--gray-dark)'
-                }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem', color: 'var(--gray-dark)' }}>
                   Nom complet *
                 </label>
                 <input
@@ -243,29 +206,15 @@ const Contact = () => {
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   disabled={status === 'loading'}
-                  style={{
-                    ...styles.input,
-                    borderColor: errors.nom ? '#dc3545' : 'var(--gray-light)'
-                  }}
+                  style={{ ...styles.input, borderColor: errors.nom ? '#dc3545' : 'var(--gray-light)' }}
                   placeholder="Votre nom"
                 />
-                {errors.nom && (
-                  <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                    {errors.nom}
-                  </p>
-                )}
+                {errors.nom && <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>{errors.nom}</p>}
               </div>
 
               {/* Email */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  marginBottom: '0.5rem',
-                  color: 'var(--gray-dark)'
-                }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem', color: 'var(--gray-dark)' }}>
                   Adresse email *
                 </label>
                 <input
@@ -276,29 +225,15 @@ const Contact = () => {
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   disabled={status === 'loading'}
-                  style={{
-                    ...styles.input,
-                    borderColor: errors.email ? '#dc3545' : 'var(--gray-light)'
-                  }}
+                  style={{ ...styles.input, borderColor: errors.email ? '#dc3545' : 'var(--gray-light)' }}
                   placeholder="votre@email.com"
                 />
-                {errors.email && (
-                  <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                    {errors.email}
-                  </p>
-                )}
+                {errors.email && <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>{errors.email}</p>}
               </div>
 
               {/* Sujet */}
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  marginBottom: '0.5rem',
-                  color: 'var(--gray-dark)'
-                }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem', color: 'var(--gray-dark)' }}>
                   Sujet *
                 </label>
                 <select
@@ -306,10 +241,7 @@ const Contact = () => {
                   value={formData.sujet}
                   onChange={handleChange}
                   disabled={status === 'loading'}
-                  style={{
-                    ...styles.select,
-                    borderColor: errors.sujet ? '#dc3545' : 'var(--gray-light)'
-                  }}
+                  style={{ ...styles.select, borderColor: errors.sujet ? '#dc3545' : 'var(--gray-light)' }}
                 >
                   <option value="">Sélectionnez un sujet</option>
                   <option value="information">Demande d'information</option>
@@ -319,23 +251,12 @@ const Contact = () => {
                   <option value="technique">Problème technique</option>
                   <option value="autre">Autre</option>
                 </select>
-                {errors.sujet && (
-                  <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                    {errors.sujet}
-                  </p>
-                )}
+                {errors.sujet && <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>{errors.sujet}</p>}
               </div>
 
               {/* Message */}
               <div style={{ marginBottom: '2rem' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.75rem',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
-                  marginBottom: '0.5rem',
-                  color: 'var(--gray-dark)'
-                }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.5rem', color: 'var(--gray-dark)' }}>
                   Message *
                 </label>
                 <textarea
@@ -345,20 +266,12 @@ const Contact = () => {
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   disabled={status === 'loading'}
-                  style={{
-                    ...styles.textarea,
-                    borderColor: errors.message ? '#dc3545' : 'var(--gray-light)'
-                  }}
+                  style={{ ...styles.textarea, borderColor: errors.message ? '#dc3545' : 'var(--gray-light)' }}
                   placeholder="Décrivez-nous votre demande..."
                 />
-                {errors.message && (
-                  <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                    {errors.message}
-                  </p>
-                )}
+                {errors.message && <p style={{ color: '#dc3545', fontSize: '0.75rem', marginTop: '0.5rem' }}>{errors.message}</p>}
               </div>
 
-              {/* Bouton */}
               <button
                 type="submit"
                 disabled={status === 'loading'}
@@ -368,12 +281,8 @@ const Contact = () => {
                   cursor: status === 'loading' ? 'not-allowed' : 'pointer',
                   width: '100%'
                 }}
-                onMouseEnter={(e) => {
-                  if (status !== 'loading') e.target.style.backgroundColor = '#333';
-                }}
-                onMouseLeave={(e) => {
-                  if (status !== 'loading') e.target.style.backgroundColor = '#000';
-                }}
+                onMouseEnter={(e) => { if (status !== 'loading') e.target.style.backgroundColor = '#333'; }}
+                onMouseLeave={(e) => { if (status !== 'loading') e.target.style.backgroundColor = '#000'; }}
               >
                 {status === 'loading' ? 'Envoi en cours...' : 'Envoyer le message'}
               </button>
@@ -384,15 +293,10 @@ const Contact = () => {
         {/* Informations */}
         <div>
           <div style={styles.infoCard}>
-            <h2 style={{ 
-              fontSize: '1.25rem', 
-              marginBottom: '2rem',
-              fontWeight: '500'
-            }}>
+            <h2 style={{ fontSize: '1.25rem', marginBottom: '2rem', fontWeight: '500' }}>
               Nos coordonnées
             </h2>
 
-            {/* Adresse */}
             <div style={styles.infoItem}>
               <div style={styles.infoTitle}>📍 Adresse</div>
               <div style={{ lineHeight: 1.8, fontSize: '0.875rem' }}>
@@ -403,39 +307,21 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* Contact */}
             <div style={styles.infoItem}>
-              <div style={styles.infoTitle}> Contact</div>
+              <div style={styles.infoTitle}>✉️ Contact</div>
               <div style={{ lineHeight: 1.8, fontSize: '0.875rem' }}>
                 <p style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ marginRight: '0.5rem' }}></span>
                   <strong>Email :</strong> contact@aventures-alpines.com
                 </p>
                 <p style={{ marginBottom: '0.5rem' }}>
-                  <span style={{ marginRight: '0.5rem' }}></span>
                   <strong>Téléphone :</strong> +33 4 50 00 00 00
                 </p>
                 <p>
-                  <span style={{ marginRight: '0.5rem' }}></span>
                   <strong>Support :</strong> support@aventures-alpines.com
                 </p>
               </div>
             </div>
-
-
           </div>
-        </div>
-      </div>
-
-      {/* CTA */}
-      <div style={{ 
-        textAlign: 'center', 
-        marginTop: '4rem',
-        padding: '2rem',
-        borderTop: '1px solid var(--gray-light)'
-      }}>
-
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
         </div>
       </div>
     </div>

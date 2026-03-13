@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Hôte : localhost:3306
--- Généré le : ven. 13 mars 2026 à 21:34
+-- Généré le : ven. 13 mars 2026 à 21:47
 -- Version du serveur : 5.7.24
 -- Version de PHP : 8.3.1
 
@@ -93,24 +93,26 @@ CREATE TABLE `commentaires` (
 -- --------------------------------------------------------
 
 --
--- Structure de la table `contact`
+-- Structure de la table `contact_messages`
 --
 
-CREATE TABLE `contact` (
+CREATE TABLE `contact_messages` (
   `id` int(11) NOT NULL,
-  `nom_complet` varchar(100) NOT NULL,
-  `email` varchar(150) NOT NULL,
-  `sujet` varchar(100) NOT NULL,
+  `nom` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `sujet` varchar(255) NOT NULL,
   `message` text NOT NULL,
   `date_envoi` datetime DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
--- Déchargement des données de la table `contact`
+-- Déchargement des données de la table `contact_messages`
 --
 
-INSERT INTO `contact` (`id`, `nom_complet`, `email`, `sujet`, `message`, `date_envoi`) VALUES
-(1, 'test', 'test@gmail.com', 'guide', 'TEST\ntest \ntg', '2026-01-22 13:44:08');
+INSERT INTO `contact_messages` (`id`, `nom`, `email`, `sujet`, `message`, `date_envoi`) VALUES
+(1, 'coucou', 'coucou@gmail.com', 'guide', 'hoieclgubjlbjm', '2026-03-13 22:42:37'),
+(2, 'buih,o', 'hio@gmail.com', 'guide', 'h,uioh,ibkiihuuhihui', '2026-03-13 22:43:19'),
+(3, 'BLGUI', 'HPU@gmail.com', 'reservation', 'hhhhihihhiuhiu', '2026-03-13 22:45:03');
 
 -- --------------------------------------------------------
 
@@ -352,8 +354,7 @@ CREATE TABLE `reservations` (
 INSERT INTO `reservations` (`id`, `membre_id`, `activite_id`, `type_activite`, `date_reservation`, `nb_personnes`, `notes`, `statut`, `date_creation`, `date_modification`, `heure_debut`, `heure_fin`) VALUES
 (8, 6, 1, 'ski', '2026-02-27', 1, '{\"offre\":\"Forfait 6 jours Early Bird\",\"station\":\"Chamonix Mont-Blanc\",\"dateFin\":\"2026-03-01\",\"options\":{\"forfaitSki\":true,\"coursSki\":false,\"locationMateriel\":false,\"typeCours\":\"collectif\",\"niveau\":\"débutant\",\"assurance\":false,\"parking\":false,\"garderie\":false,\"restauration\":false},\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"paul\",\"prenom\":\"paul\",\"email\":\"paul@gmail.com\",\"telephone\":\"08  89 89 86  54\",\"adresse\":\"PAUL\",\"cp\":\"788999\",\"ville\":\"PARIS\",\"pays\":\"France\"},\"prixTotal\":840,\"typeReservation\":\"ski\"}', 'confirmée', '2026-02-25 15:36:17', NULL, '09:00:00', '17:00:00'),
 (9, 6, 6, 'randonnee', '2026-02-25', 1, '{\"randonnee\":\"Lacs des Chéserys\",\"lieu\":\"Argentière\",\"duree\":\"4h\",\"difficulte\":\"Facile\",\"niveau\":\"débutant\",\"options\":{\"guide\":false,\"guide_inclus\":0},\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"paul\",\"prenom\":\"paul\",\"email\":\"paul@gmail.com\",\"telephone\":\"09\",\"adresse\":\"paul\",\"cp\":\"67\",\"ville\":\"PAR\",\"pays\":\"France\"},\"prixTotal\":22,\"notes\":\"\"}', 'confirmée', '2026-02-25 15:58:29', NULL, NULL, NULL),
-(10, 6, 5, 'escalade', '2026-02-26', 1, '{\"activite\":\"Via ferrata des Aiguilles Rouges\",\"lieu\":\"Chamonix\",\"duree\":\"5h\",\"difficulte\":\"Intermédiaire\",\"niveau\":\"débutant\",\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"paul\",\"prenom\":\"knl\",\"email\":\"paul@gmail.com\",\"telephone\":\"08089\",\"adresse\":\"BIG\",\"cp\":\"BJK\",\"ville\":\"KLJ\",\"pays\":\"France\"},\"prixTotal\":35,\"notes\":\"\"}', 'confirmée', '2026-02-25 16:45:16', NULL, NULL, NULL),
-(11, 6, 6, 'escalade', '2026-02-26', 6, '{\"activite\":\"Stage multivoies - Calanques\",\"lieu\":\"Calanques\",\"duree\":\"2 jours\",\"difficulte\":\"Intermédiaire\",\"niveau\":\"débutant\",\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"paul\",\"prenom\":\"?KM??\",\"email\":\"paul@gmail.com\",\"telephone\":\"09\",\"adresse\":\"PAUL\",\"cp\":\"78\",\"ville\":\"PAUL\",\"pays\":\"France\"},\"prixTotal\":1320,\"notes\":\"\"}', 'confirmée', '2026-02-25 17:36:15', NULL, NULL, NULL);
+(10, 6, 5, 'escalade', '2026-02-26', 1, '{\"activite\":\"Via ferrata des Aiguilles Rouges\",\"lieu\":\"Chamonix\",\"duree\":\"5h\",\"difficulte\":\"Intermédiaire\",\"niveau\":\"débutant\",\"clientInfo\":{\"civilite\":\"M.\",\"nom\":\"paul\",\"prenom\":\"knl\",\"email\":\"paul@gmail.com\",\"telephone\":\"08089\",\"adresse\":\"BIG\",\"cp\":\"BJK\",\"ville\":\"KLJ\",\"pays\":\"France\"},\"prixTotal\":35,\"notes\":\"\"}', 'confirmée', '2026-02-25 16:45:16', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -489,9 +490,9 @@ ALTER TABLE `commentaires`
   ADD KEY `membre_id` (`membre_id`);
 
 --
--- Index pour la table `contact`
+-- Index pour la table `contact_messages`
 --
-ALTER TABLE `contact`
+ALTER TABLE `contact_messages`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -603,7 +604,7 @@ ALTER TABLE `activites`
 -- AUTO_INCREMENT pour la table `articles`
 --
 ALTER TABLE `articles`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
 
 --
 -- AUTO_INCREMENT pour la table `commentaires`
@@ -612,10 +613,10 @@ ALTER TABLE `commentaires`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT pour la table `contact`
+-- AUTO_INCREMENT pour la table `contact_messages`
 --
-ALTER TABLE `contact`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+ALTER TABLE `contact_messages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT pour la table `galerie_randonnee`
