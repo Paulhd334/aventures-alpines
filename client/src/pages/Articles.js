@@ -6,7 +6,6 @@ const ArticlesList = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [hoveredId, setHoveredId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,9 +23,7 @@ const ArticlesList = () => {
     fetchArticles();
   }, []);
 
-  const handleArticleClick = (id) => {
-    navigate(`/article/${id}`);
-  };
+  const handleArticleClick = (id) => navigate(`/article/${id}`);
 
   const FALLBACK_IMAGES = [
     'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
@@ -37,36 +34,31 @@ const ArticlesList = () => {
     'https://images.unsplash.com/photo-1422466654108-5e533a591a64?w=800&q=80',
   ];
 
+  // Priorité : image_url BDD en premier, sinon fallback Unsplash par index
   const getImage = (article, index) =>
     article.image_url || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length];
 
   const formatDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
+      day: 'numeric', month: 'long', year: 'numeric',
     });
 
   const typeLabel = (type) => {
-    const map = { récit: 'RÉCIT', rando: 'RANDONNÉE', ski: 'SKI', escalade: 'ESCALADE', bivouac: 'BIVOUAC' };
-    return map[type] || (type || 'RÉCIT').toUpperCase();
+    const map = { récit: 'RÉCIT', rando: 'RANDONNÉE', ski: 'SKI', escalade: 'ESCALADE', bivouac: 'BIVOUAC', guide: 'GUIDE', article: 'ARTICLE' };
+    return map[type] || (type || 'ARTICLE').toUpperCase();
   };
 
   if (loading) return (
     <div style={styles.centerState}>
       <div style={styles.loadingDot} />
-      <p style={{ color: '#8a8a8a', fontSize: '0.8rem', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '1.5rem' }}>
-        Chargement
-      </p>
+      <p style={{ color: '#8a8a8a', fontSize: '0.8rem', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: '1.5rem' }}>Chargement</p>
     </div>
   );
 
   if (error) return (
     <div style={styles.centerState}>
       <p style={{ color: '#2c2c2c', marginBottom: '1.5rem', fontSize: '0.875rem' }}>{error}</p>
-      <button onClick={() => window.location.reload()} style={styles.retryBtn}>
-        Réessayer
-      </button>
+      <button onClick={() => window.location.reload()} style={styles.retryBtn}>Réessayer</button>
     </div>
   );
 
@@ -128,11 +120,12 @@ const ArticlesList = () => {
           transform: scale(1.0);
         }
 
+        /* FIX : titre centré verticalement dans le hero, plus en bas */
         .hero-title-block {
           position: absolute;
-          bottom: 3rem;
+          top: 50%;
           left: 50%;
-          transform: translateX(-50%);
+          transform: translate(-50%, -50%);
           text-align: center;
           z-index: 2;
           width: 100%;
@@ -428,7 +421,6 @@ const ArticlesList = () => {
 
         .grid-card:hover .grid-arrow { transform: translateX(4px); }
 
-        /* ─── LOADING DOT ─── */
         @keyframes pulse-dot {
           0%, 100% { opacity: 0.2; transform: scale(0.8); }
           50% { opacity: 1; transform: scale(1.2); }
@@ -436,6 +428,7 @@ const ArticlesList = () => {
       `}</style>
 
       <div className="articles-root">
+
         {/* Hero Banner */}
         <div className="hero-banner">
           <img
@@ -445,7 +438,7 @@ const ArticlesList = () => {
           />
           <div className="hero-title-block">
             <p className="hero-eyebrow">Club Alpin · Chroniques & récits</p>
-            <h1 className="hero-h1">Nos activités<br /><em>de montagne</em></h1>
+            <h1 className="hero-h1">Nos articles</h1>
           </div>
         </div>
 
@@ -453,19 +446,16 @@ const ArticlesList = () => {
         <div className="meta-bar">
           <span>{articles.length} articles</span>
           <div className="meta-sep" />
-          <span> {[...new Set(articles.map(a => a.auteur_nom))].length} auteurs</span>
+          <span>{[...new Set(articles.map(a => a.auteur_nom))].length} auteurs</span>
           <div className="meta-sep" />
-          <span>  Alpinisme & randonnée</span>
+          <span>Alpinisme & randonnée</span>
         </div>
 
         <div className="articles-wrapper">
 
           {/* Featured */}
           <div className="section-label">À la une</div>
-          <div
-            className="featured-card"
-            onClick={() => handleArticleClick(featured.id)}
-          >
+          <div className="featured-card" onClick={() => handleArticleClick(featured.id)}>
             <div className="featured-img-wrap">
               <img
                 src={getImage(featured, 0)}
