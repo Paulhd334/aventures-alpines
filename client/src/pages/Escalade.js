@@ -451,6 +451,12 @@ const Escalade = () => {
                 <p className="offre-description">{offre.description}</p>
                 <div className="offre-details">
                   <div className="offre-price"><span className="price-label">Prix :</span><span className="price-value">{offre.prix}€</span></div>
+                  {/* ── AJOUTE ICI ── */}
+{offre.type_sport && (
+  <div className="offre-type"><span className="type-label">Type Sport :</span><span className="type-value">{offre.type_sport}</span></div>
+)}
+
+
                   <div className="offre-type"><span className="type-label">Difficulté :</span><span className="type-value">{offre.difficulte}</span></div>
                   <div className="offre-dates"><span className="dates-label">Durée :</span><span className="dates-value">{offre.duree}</span></div>
                   {offre.capacite_max && <div className="offre-dates"><span className="dates-label">Capacité :</span><span className="dates-value">{offre.capacite_max} pers.</span></div>}

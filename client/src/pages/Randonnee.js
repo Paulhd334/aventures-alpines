@@ -476,7 +476,13 @@ const Randonnee = () => {
                         <div className="offre-price">
                           <span className="price-label">Prix :</span>
                           <span className="price-value">{parseFloat(offre.prix).toFixed(2)}€ / pers.</span>
-                        </div>
+
+                        </div>                          {offre.type_sport && (
+  <div className="offre-type">
+    <span className="type-label">Type Sport :</span>
+    <span className="type-value">{offre.type_sport}</span>
+  </div>
+)}
                         <div className="offre-type">
                           <span className="type-label">Durée :</span>
                           <span className="type-value">{offre.duree}</span>

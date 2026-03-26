@@ -15,7 +15,7 @@ const Ski = () => {
   });
   const [messageSuccess, setMessageSuccess] = useState('');
 
-  // ── États réservation (intégrés, plus de ReservationSki.js) ──
+  // ── États réservation ──
   const [showReservation, setShowReservation] = useState(false);
   const [selectedOffre, setSelectedOffre] = useState(null);
   const [step, setStep] = useState(1);
@@ -32,10 +32,47 @@ const Ski = () => {
     notes: ''
   });
 
+  // ── État fenêtre Val Thorens ──
+  const [showValThorens, setShowValThorens] = useState(false);
+  const [valThorensOffre, setValThorensOffre] = useState(null);
+
   const navigate = useNavigate();
   const API = 'http://localhost:5000';
 
-  // ── Fetch données ──
+  // Activités Val Thorens hardcodées (issues de la BDD)
+  const activitesValThorens = [
+    {
+      nom: 'Ski Alpin — Domaine skiable',
+      description: 'Accès à 600km de pistes reliées des Trois Vallées. Pistes de tous niveaux, du vert à l\'extrême noir.',
+      date_debut: '2024-12-01',
+      date_fin: '2025-04-27'
+    },
+    {
+      nom: 'Cours de ski ESF',
+      description: 'Cours collectifs ou privés avec les moniteurs de l\'École du Ski Français. Débutants et perfectionnement.',
+      date_debut: '2024-12-07',
+      date_fin: '2025-04-20'
+    },
+    {
+      nom: 'Ski de Randonnée',
+      description: 'Sorties guidées hors-piste avec guide certifié. Découverte de la montagne sauvage en peaux de phoque.',
+      date_debut: '2025-01-05',
+      date_fin: '2025-03-30'
+    },
+    {
+      nom: 'Freestyle & Snowpark',
+      description: 'Le snowpark de Val Thorens propose des modules pour tous niveaux : kickers, rails, boxes et big air.',
+      date_debut: '2024-12-15',
+      date_fin: '2025-04-15'
+    },
+    {
+      nom: 'Ski Familial — Jardin des neiges',
+      description: 'Espace dédié aux enfants dès 3 ans avec tapis roulants, moniteurs spécialisés et équipement adapté.',
+      date_debut: '2024-12-20',
+      date_fin: '2025-04-13'
+    }
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -59,7 +96,6 @@ const Ski = () => {
     fetchData();
   }, [activeTab]);
 
-  // ── Animation modal ──
   useEffect(() => {
     if (showReservation) {
       setAnimation('opening');
@@ -73,7 +109,6 @@ const Ski = () => {
     return () => { document.body.style.overflow = 'auto'; };
   }, [showReservation]);
 
-  // ── Calcul prix ──
   useEffect(() => {
     if (!selectedOffre) return;
     let total = parseFloat(selectedOffre.prix) || 0;
@@ -91,7 +126,6 @@ const Ski = () => {
     setPrixTotal(Math.round(total));
   }, [formData, selectedOffre]);
 
-  // ── Ouvrir réservation ──
   const handleReservation = (offre) => {
     const stored = localStorage.getItem('user');
     if (!stored) {
@@ -123,7 +157,6 @@ const Ski = () => {
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  // ── FIX PRINCIPAL : type_activite: 'ski' ajouté ──
   const handleSubmitReservation = async (e) => {
     e.preventDefault();
     const stored = localStorage.getItem('user');
@@ -137,7 +170,7 @@ const Ski = () => {
       const response = await axios.post(`${API}/api/reservations`, {
         userId: userData.id,
         activityId: selectedOffre.id,
-        type_activite: 'ski',            // ✅ FIX : était absent, causait le 400
+        type_activite: 'ski',
         date: formData.dateDebut,
         nbPersonnes: parseInt(formData.nbPersonnes),
         notes: JSON.stringify({
@@ -177,7 +210,6 @@ const Ski = () => {
     }
   };
 
-  // ── Témoignage ──
   const handleSubmitTemoignage = async (e) => {
     e.preventDefault();
     try {
@@ -207,6 +239,8 @@ const Ski = () => {
     const moyenneNeige = stationsFiltrees.length > 0 ? Math.round(totalNeige / stationsFiltrees.length) : 0;
     return { totalKm, totalRemontees, moyenneNeige };
   };
+
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
 
   // ════════════════════════════════════════════
   // RENDER DISCIPLINES
@@ -308,6 +342,23 @@ const Ski = () => {
                       </span>
                     </div>
                     {station.site_web && <a href={station.site_web} target="_blank" rel="noopener noreferrer" className="station-website">Visiter le site web →</a>}
+                    {station.nom === 'Val Thorens' && (
+                      <button
+                        onClick={() => { setValThorensOffre(station); setShowValThorens(true); }}
+                        style={{
+                          display: 'block', width: '100%', marginTop: '0.75rem',
+                          padding: '0.65rem', border: '1px solid #000',
+                          background: 'white', color: '#000',
+                          fontSize: '0.78rem', fontWeight: '600',
+                          letterSpacing: '0.05em', textTransform: 'uppercase',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={e => e.target.style.background = '#f5f5f5'}
+                        onMouseLeave={e => e.target.style.background = 'white'}
+                      >
+                         Sport
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -398,7 +449,7 @@ const Ski = () => {
   );
 
   // ════════════════════════════════════════════
-  // RENDER OFFRES
+  // RENDER OFFRES — badge type_sport + bouton Val Thorens
   // ════════════════════════════════════════════
   const renderOffres = () => {
     if (loading) return (
@@ -432,9 +483,32 @@ const Ski = () => {
                   <h3>{offre.titre}</h3>
                   <span className="offre-station">{offre.station_nom}</span>
                 </div>
+
+                {/* ── Badge type_sport ── */}
+                {offre.type_sport && (
+                  <span style={{
+                    display: 'inline-block',
+                    background: '#f0f0f0',
+                    color: '#444',
+                    fontSize: '0.68rem',
+                    fontWeight: '600',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    padding: '0.2rem 0.7rem',
+                    borderRadius: '20px',
+                    marginBottom: '0.6rem',
+                    border: '1px solid #ddd'
+                  }}>
+                    {offre.type_sport}
+                  </span>
+                )}
+
                 <p className="offre-description">{offre.description}</p>
                 <div className="offre-details">
                   <div className="offre-price"><span className="price-label">Prix :</span><span className="price-value">{offre.prix}€</span></div>
+                  {offre.type_sport && (
+                    <div className="offre-type"><span className="type-label">Type Sport :</span><span className="type-value">{offre.type_sport}</span></div>
+                  )}
                   <div className="offre-type"><span className="type-label">Type :</span><span className="type-value">{offre.type_offre}</span></div>
                   {offre.date_debut && offre.date_fin && (
                     <div className="offre-dates">
@@ -446,7 +520,34 @@ const Ski = () => {
                     </div>
                   )}
                 </div>
-                <button onClick={() => handleReservation(offre)} className="reservation-button">Réserver maintenant</button>
+
+                {/* ── Bouton activités Val Thorens uniquement ── */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  {offre.station_nom === 'Val Thorens' && (
+                    <button
+                      onClick={() => { setValThorensOffre(offre); setShowValThorens(true); }}
+                      style={{
+                        width: '100%',
+                        padding: '0.6rem',
+                        border: '1px solid #000',
+                        background: 'white',
+                        color: '#000',
+                        fontSize: '0.78rem',
+                        fontWeight: '600',
+                        letterSpacing: '0.05em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer'
+                      }}
+                      onMouseEnter={e => e.target.style.background = '#f5f5f5'}
+                      onMouseLeave={e => e.target.style.background = 'white'}
+                    >
+                       Activités  réalisable
+                    </button>
+                  )}
+                  <button onClick={() => handleReservation(offre)} className="reservation-button">
+                    Réserver maintenant
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -456,7 +557,131 @@ const Ski = () => {
   };
 
   // ════════════════════════════════════════════
-  // RENDER MODAL RÉSERVATION (intégrée)
+  // FENÊTRE ACTIVITÉS VAL THORENS
+  // ════════════════════════════════════════════
+  const renderValThorensModal = () => {
+    if (!showValThorens) return null;
+    return (
+      <div
+        style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 2000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '1rem'
+        }}
+        onClick={() => setShowValThorens(false)}
+      >
+        <div
+          style={{
+            backgroundColor: 'var(--white)',
+            border: '1px solid var(--platinum)',
+            width: '100%',
+            maxWidth: '660px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative',
+            boxShadow: 'var(--shadow-intense)'
+          }}
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '2.5rem 2.5rem 2rem',
+            borderBottom: '1px solid var(--platinum)',
+            position: 'relative'
+          }}>
+            <button
+              onClick={() => setShowValThorens(false)}
+              style={{
+                position: 'absolute', top: '1.5rem', right: '1.5rem',
+                width: '32px', height: '32px',
+                background: 'none', border: '1px solid var(--silver)',
+                cursor: 'pointer', color: 'var(--charcoal)',
+                fontSize: '1rem', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--ink)'; e.currentTarget.style.color = 'var(--white)'; e.currentTarget.style.borderColor = 'var(--ink)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--charcoal)'; e.currentTarget.style.borderColor = 'var(--silver)'; }}
+            >✕</button>
+
+            <p style={{
+              fontSize: '0.7rem', letterSpacing: '0.2em',
+              textTransform: 'uppercase', color: 'var(--charcoal-light)',
+              marginBottom: '0.5rem', fontWeight: '400'
+            }}>
+              Station · Val Thorens
+            </p>
+            <h2 style={{
+              fontSize: '1.75rem', fontWeight: '300',
+              color: 'var(--ink)', margin: '0 0 0.5rem',
+              letterSpacing: '-0.01em'
+            }}>
+              Activités réalisables
+            </h2>
+
+          </div>
+
+          {/* Liste activités */}
+          <div style={{ padding: '2rem 2.5rem' }}>
+            {activitesValThorens.map((activite, i) => (
+              <div key={i} style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: '1.5rem',
+                alignItems: 'start',
+                padding: '1.5rem 0',
+                borderBottom: '1px solid var(--platinum)'
+              }}>
+                <div>
+                  <h4 style={{
+                    margin: '0 0 0.5rem',
+                    fontSize: '1rem', fontWeight: '400',
+                    color: 'var(--ink)', letterSpacing: '0.01em'
+                  }}>
+                    {activite.nom}
+                  </h4>
+                  <p style={{
+                    margin: 0, fontSize: '0.875rem',
+                    color: 'var(--charcoal)', lineHeight: '1.6',
+                    fontWeight: '300'
+                  }}>
+                    {activite.description}
+                  </p>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '110px' }}>
+                  <div style={{
+                    fontSize: '0.65rem', color: 'var(--charcoal-light)',
+                    textTransform: 'uppercase', letterSpacing: '0.1em',
+                    marginBottom: '0.3rem', fontWeight: '400'
+                  }}>Période</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--ink)', fontWeight: '400' }}>
+                    {formatDate(activite.date_debut)}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)', fontWeight: '300' }}>
+                    → {formatDate(activite.date_fin)}
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              onClick={() => setShowValThorens(false)}
+              className="station-website"
+              style={{ display: 'block', width: '100%', marginTop: '2rem', cursor: 'pointer' }}
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  // RENDER MODAL RÉSERVATION
   // ════════════════════════════════════════════
   const inputStyle = {
     width: '100%', padding: '0.75rem', border: '1px solid #e5e5e5',
@@ -488,7 +713,6 @@ const Ski = () => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Bouton fermer */}
           <button onClick={closeModal} style={{
             position: 'absolute', top: '20px', right: '20px', width: '40px', height: '40px',
             background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
@@ -496,7 +720,6 @@ const Ski = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>✕</button>
 
-          {/* Header */}
           <div style={{
             background: `linear-gradient(135deg, rgba(0,0,0,0.7), rgba(0,0,0,0.4)), url(${selectedOffre.station_photo || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&auto=format&fit=crop'})`,
             backgroundSize: 'cover', backgroundPosition: 'center',
@@ -518,9 +741,7 @@ const Ski = () => {
             <p style={{ fontSize: '1.1rem', opacity: 0.9, maxWidth: '600px', color: 'white' }}>{selectedOffre.description}</p>
           </div>
 
-          {/* Corps */}
           <div style={{ padding: '2rem' }}>
-            {/* Stepper */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', position: 'relative', padding: '0 1rem' }}>
               <div style={{ position: 'absolute', top: '15px', left: '50px', right: '50px', height: '2px', background: '#e5e5e5', zIndex: 0 }}>
                 <div style={{ height: '100%', width: `${(step - 1) * 33.33}%`, background: '#000', transition: 'width 0.3s ease' }} />
@@ -536,7 +757,6 @@ const Ski = () => {
             </div>
 
             <form onSubmit={handleSubmitReservation}>
-              {/* Étape 1 */}
               {step === 1 && (
                 <div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem', color: '#333' }}>1. Choisissez vos options</h3>
@@ -598,7 +818,6 @@ const Ski = () => {
                 </div>
               )}
 
-              {/* Étape 2 */}
               {step === 2 && (
                 <div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem', color: '#333' }}>2. Vos informations personnelles</h3>
@@ -621,7 +840,6 @@ const Ski = () => {
                 </div>
               )}
 
-              {/* Étape 3 */}
               {step === 3 && (
                 <div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem', color: '#333' }}>3. Votre adresse</h3>
@@ -653,7 +871,6 @@ const Ski = () => {
                 </div>
               )}
 
-              {/* Étape 4 */}
               {step === 4 && (
                 <div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '2rem', color: '#1a1a1a', fontWeight: '500' }}>Confirmation de votre réservation</h3>
@@ -701,7 +918,6 @@ const Ski = () => {
                 </div>
               )}
 
-              {/* Navigation */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '3rem', paddingTop: '2rem', borderTop: '2px solid #f0f0f0' }}>
                 {step > 1 && (
                   <button type="button" onClick={() => setStep(s => s - 1)}
@@ -769,6 +985,7 @@ const Ski = () => {
       </div>
 
       {renderModal()}
+      {renderValThorensModal()}
     </div>
   );
 };
