@@ -7,19 +7,19 @@ Application web full-stack pour explorer et partager des aventures en montagne.
 [![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com)
 [![MySQL](https://img.shields.io/badge/MySQL-MariaDB-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
 
+## 🏗️ Architecture
 
-┌─────────────────┐     HTTP/JSON     ┌─────────────────┐
-│   FRONTEND      │◄────────────────►│    BACKEND       │
-│   React 18      │     Port: 5000    │   Node.js 18    │
-│   Port: 3000    │                   │   Express 4.x   │
-└────────┬────────┘                   └────────┬────────┘
-         │                                     │
-         │                                     │
-         ▼                                     ▼
-┌─────────────────┐                   ┌─────────────────┐
-│    Navigateur   │                   │   PHP MY ADMIN  │
-│    Chrome       │                   │      MAMP       │
-└─────────────────┘                   └─────────────────┘
+    ┌─────────────────┐     HTTP/JSON     ┌─────────────────┐
+    │   FRONTEND      │◄────────────────►│    BACKEND       │
+    │   React 18      │     Port: 5000    │   Node.js 18    │
+    │   Port: 3000    │                   │   Express 4.x   │
+    └────────┬────────┘                   └────────┬────────┘
+             │                                     │
+             ▼                                     ▼
+    ┌─────────────────┐                   ┌─────────────────┐
+    │    Navigateur   │                   │   PHP MY ADMIN  │
+    │    Chrome       │                   │      MAMP       │
+    └─────────────────┘                   └─────────────────┘
 
 
 
