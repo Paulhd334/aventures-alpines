@@ -1,9 +1,7 @@
 Aventures Alpines
 
 Application web full-stack pour explorer et partager des aventures en montagne.
-https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white&v=2
-
-
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
 ┌─────────────────┐     HTTP/JSON     ┌─────────────────┐
 │   FRONTEND      │◄────────────────►│    BACKEND       │
 │   React 18      │     Port: 5000    │   Node.js 18    │
