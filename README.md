@@ -29,3 +29,26 @@ Backend API : http://localhost:5000/api
 
 phpMyAdmin : http://localhost/phpmyadmin (MAMP)
 
+
+## Quick Start
+
+1. Start MAMP and open phpMyAdmin. For a fresh setup, create a database named `aventures_alpines` and import `aventures_alpines.sql`. Make sure the MySQL settings in `server/server.js` match MAMP.
+
+2. With Node.js 20.x installed, start the backend from the project root.
+
+   ```bash
+   cd server
+   npm install
+   npm start
+   ```
+
+3. Open a second terminal at the project root and start the frontend.
+
+   ```bash
+   cd client
+   npm install
+   npm start
+   ```
+
+Open [Aventures Alpines](http://localhost:3000) in your browser. Keep both terminals running. You only need to run `npm install` once per folder.
+
